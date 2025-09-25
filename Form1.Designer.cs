@@ -73,57 +73,68 @@ namespace Restart
             // 
             // statusLabel
             // 
-            this.statusLabel.Location = new System.Drawing.Point(50, 47);
+            this.statusLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.statusLabel.Location = new System.Drawing.Point(50, 45);
             this.statusLabel.Name = "statusLabel";
-            this.statusLabel.Size = new System.Drawing.Size(700, 94);
+            this.statusLabel.Size = new System.Drawing.Size(1117, 94);
             this.statusLabel.TabIndex = 0;
             // 
             // killButton
             // 
-            this.killButton.Location = new System.Drawing.Point(50, 150);
+            this.killButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.killButton.Location = new System.Drawing.Point(50, 151);
             this.killButton.Name = "killButton";
             this.killButton.Size = new System.Drawing.Size(501, 54);
             this.killButton.TabIndex = 1;
             this.killButton.Text = "手动关闭生存战争服务端";
+            this.killButton.UseVisualStyleBackColor = false;
             this.killButton.Click += new System.EventHandler(this.killButton_Click);
             // 
             // exitButton
             // 
+            this.exitButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.exitButton.Location = new System.Drawing.Point(53, 241);
             this.exitButton.Name = "exitButton";
             this.exitButton.Size = new System.Drawing.Size(498, 63);
             this.exitButton.TabIndex = 2;
             this.exitButton.Text = "退出程序";
+            this.exitButton.UseVisualStyleBackColor = false;
             this.exitButton.Click += new System.EventHandler(this.exitButton_Click);
             // 
             // selectButton
             // 
+            this.selectButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.selectButton.Location = new System.Drawing.Point(53, 330);
             this.selectButton.Name = "selectButton";
             this.selectButton.Size = new System.Drawing.Size(240, 63);
             this.selectButton.TabIndex = 3;
             this.selectButton.Text = "选择程序";
+            this.selectButton.UseVisualStyleBackColor = false;
             this.selectButton.Click += new System.EventHandler(this.selectButton_Click);
             // 
             // defaultButton
             // 
+            this.defaultButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.defaultButton.Location = new System.Drawing.Point(311, 330);
             this.defaultButton.Name = "defaultButton";
             this.defaultButton.Size = new System.Drawing.Size(240, 63);
             this.defaultButton.TabIndex = 4;
             this.defaultButton.Text = "设为默认程序保存配置";
+            this.defaultButton.UseVisualStyleBackColor = false;
             this.defaultButton.Click += new System.EventHandler(this.defaultButton_Click);
             // 
             // scheduleLabel
             // 
+            this.scheduleLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.scheduleLabel.Location = new System.Drawing.Point(600, 150);
             this.scheduleLabel.Name = "scheduleLabel";
-            this.scheduleLabel.Size = new System.Drawing.Size(250, 30);
+            this.scheduleLabel.Size = new System.Drawing.Size(173, 30);
             this.scheduleLabel.TabIndex = 5;
             this.scheduleLabel.Text = "每日关闭时间 (HH:mm):";
             // 
             // timeInput
             // 
+            this.timeInput.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.timeInput.Location = new System.Drawing.Point(600, 180);
             this.timeInput.Name = "timeInput";
             this.timeInput.Size = new System.Drawing.Size(100, 25);
@@ -132,23 +143,27 @@ namespace Restart
             // 
             // saveTimeButton
             // 
+            this.saveTimeButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.saveTimeButton.Location = new System.Drawing.Point(720, 180);
             this.saveTimeButton.Name = "saveTimeButton";
             this.saveTimeButton.Size = new System.Drawing.Size(80, 25);
             this.saveTimeButton.TabIndex = 7;
             this.saveTimeButton.Text = "保存";
+            this.saveTimeButton.UseVisualStyleBackColor = false;
             this.saveTimeButton.Click += new System.EventHandler(this.saveTimeButton_Click);
             // 
             // intervalLabel
             // 
+            this.intervalLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.intervalLabel.Location = new System.Drawing.Point(600, 220);
             this.intervalLabel.Name = "intervalLabel";
-            this.intervalLabel.Size = new System.Drawing.Size(350, 30);
+            this.intervalLabel.Size = new System.Drawing.Size(567, 30);
             this.intervalLabel.TabIndex = 8;
             this.intervalLabel.Text = "间隔关闭时间 (小时/分钟, 0=禁用, 如0.6=36分钟):";
             // 
             // intervalInput
             // 
+            this.intervalInput.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.intervalInput.Location = new System.Drawing.Point(600, 250);
             this.intervalInput.Name = "intervalInput";
             this.intervalInput.Size = new System.Drawing.Size(100, 25);
@@ -157,15 +172,18 @@ namespace Restart
             // 
             // saveIntervalButton
             // 
-            this.saveIntervalButton.Location = new System.Drawing.Point(720, 250);
+            this.saveIntervalButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.saveIntervalButton.Location = new System.Drawing.Point(720, 248);
             this.saveIntervalButton.Name = "saveIntervalButton";
             this.saveIntervalButton.Size = new System.Drawing.Size(80, 25);
             this.saveIntervalButton.TabIndex = 10;
             this.saveIntervalButton.Text = "保存";
+            this.saveIntervalButton.UseVisualStyleBackColor = false;
             this.saveIntervalButton.Click += new System.EventHandler(this.saveIntervalButton_Click);
             // 
             // ipInput
             // 
+            this.ipInput.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.ipInput.Location = new System.Drawing.Point(600, 307);
             this.ipInput.Name = "ipInput";
             this.ipInput.Size = new System.Drawing.Size(150, 25);
@@ -174,6 +192,7 @@ namespace Restart
             // 
             // portInput
             // 
+            this.portInput.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.portInput.Location = new System.Drawing.Point(773, 307);
             this.portInput.Name = "portInput";
             this.portInput.Size = new System.Drawing.Size(100, 25);
@@ -182,6 +201,7 @@ namespace Restart
             // 
             // commandInput
             // 
+            this.commandInput.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.commandInput.Location = new System.Drawing.Point(600, 368);
             this.commandInput.Name = "commandInput";
             this.commandInput.Size = new System.Drawing.Size(270, 25);
@@ -189,16 +209,19 @@ namespace Restart
             // 
             // sendButton
             // 
+            this.sendButton.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.sendButton.Location = new System.Drawing.Point(897, 368);
             this.sendButton.Name = "sendButton";
             this.sendButton.Size = new System.Drawing.Size(270, 25);
             this.sendButton.TabIndex = 14;
             this.sendButton.Text = "发送";
+            this.sendButton.UseVisualStyleBackColor = false;
             this.sendButton.Click += new System.EventHandler(this.sendButton_Click);
             // 
             // commandStatusLabel
             // 
-            this.commandStatusLabel.Location = new System.Drawing.Point(600, 417);
+            this.commandStatusLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.commandStatusLabel.Location = new System.Drawing.Point(600, 412);
             this.commandStatusLabel.Name = "commandStatusLabel";
             this.commandStatusLabel.Size = new System.Drawing.Size(567, 30);
             this.commandStatusLabel.TabIndex = 15;
@@ -207,39 +230,44 @@ namespace Restart
             // 
             // ipLabel
             // 
+            this.ipLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.ipLabel.Location = new System.Drawing.Point(600, 284);
             this.ipLabel.Name = "ipLabel";
-            this.ipLabel.Size = new System.Drawing.Size(100, 20);
+            this.ipLabel.Size = new System.Drawing.Size(69, 20);
             this.ipLabel.TabIndex = 16;
             this.ipLabel.Text = "IP 地址:";
             // 
             // portLabel
             // 
+            this.portLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.portLabel.Location = new System.Drawing.Point(770, 284);
             this.portLabel.Name = "portLabel";
-            this.portLabel.Size = new System.Drawing.Size(100, 20);
+            this.portLabel.Size = new System.Drawing.Size(60, 20);
             this.portLabel.TabIndex = 17;
             this.portLabel.Text = "端口号:";
             this.portLabel.Click += new System.EventHandler(this.portLabel_Click);
             // 
             // commandLabel
             // 
-            this.commandLabel.Location = new System.Drawing.Point(600, 335);
+            this.commandLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.commandLabel.Location = new System.Drawing.Point(600, 345);
             this.commandLabel.Name = "commandLabel";
-            this.commandLabel.Size = new System.Drawing.Size(100, 20);
+            this.commandLabel.Size = new System.Drawing.Size(47, 20);
             this.commandLabel.TabIndex = 18;
             this.commandLabel.Text = "指令:";
             // 
             // passwordLabel
             // 
-            this.passwordLabel.Location = new System.Drawing.Point(903, 284);
+            this.passwordLabel.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.passwordLabel.Location = new System.Drawing.Point(894, 284);
             this.passwordLabel.Name = "passwordLabel";
-            this.passwordLabel.Size = new System.Drawing.Size(100, 20);
+            this.passwordLabel.Size = new System.Drawing.Size(56, 20);
             this.passwordLabel.TabIndex = 19;
             this.passwordLabel.Text = "密码:";
             // 
             // passwordInput
             // 
+            this.passwordInput.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.passwordInput.Location = new System.Drawing.Point(897, 307);
             this.passwordInput.Name = "passwordInput";
             this.passwordInput.Size = new System.Drawing.Size(270, 25);
@@ -247,6 +275,8 @@ namespace Restart
             // 
             // Form1
             // 
+            this.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
             this.ClientSize = new System.Drawing.Size(1339, 483);
             this.Controls.Add(this.statusLabel);
             this.Controls.Add(this.killButton);
