@@ -301,7 +301,7 @@ namespace Restart
             this.Controls.Add(this.passwordInput);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "生存战争服务端程序自动重启工具v4.0";
+            this.Text = "生存战争服务端程序自动重启工具v5.0";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

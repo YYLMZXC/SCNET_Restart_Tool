@@ -7,7 +7,7 @@
     <ProjectGuid>{F9F154A9-BC63-40D8-807E-C465C52006A7}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Restart</RootNamespace>
-    <AssemblyName>生存战争服务端程序自动重启工具4.0</AssemblyName>
+    <AssemblyName>生存战争服务端程序自动重启工具5.0</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
