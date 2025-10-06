@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Net.Sockets;
 
-namespace Restart
+namespace SCNET_Restart_Tool
 {
     public partial class Form1 : Form
     {

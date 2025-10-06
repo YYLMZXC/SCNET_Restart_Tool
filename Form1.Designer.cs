@@ -1,8 +1,8 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System;
 using System.Windows.Forms;
 
-namespace Restart
+namespace SCNET_Restart_Tool
 {
     partial class Form1
     {
