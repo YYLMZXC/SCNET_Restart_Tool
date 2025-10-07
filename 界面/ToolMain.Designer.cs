@@ -113,8 +113,8 @@ namespace SCNET_Restart_Tool
             // mainSplitContainer.Panel2
             // 
             this.mainSplitContainer.Panel2.Controls.Add(this.rightPanel);
-            this.mainSplitContainer.Size = new System.Drawing.Size(1280, 816);
-            this.mainSplitContainer.SplitterDistance = 989;
+            this.mainSplitContainer.Size = new System.Drawing.Size(1724, 999);
+            this.mainSplitContainer.SplitterDistance = 1332;
             this.mainSplitContainer.TabIndex = 0;
             // 
             // leftPanel
@@ -124,7 +124,7 @@ namespace SCNET_Restart_Tool
             this.leftPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.leftPanel.Location = new System.Drawing.Point(0, 0);
             this.leftPanel.Name = "leftPanel";
-            this.leftPanel.Size = new System.Drawing.Size(989, 816);
+            this.leftPanel.Size = new System.Drawing.Size(1332, 999);
             this.leftPanel.TabIndex = 0;
             // 
             // serverEditPanel
@@ -151,7 +151,7 @@ namespace SCNET_Restart_Tool
             this.serverEditPanel.Location = new System.Drawing.Point(0, 477);
             this.serverEditPanel.Name = "serverEditPanel";
             this.serverEditPanel.Padding = new System.Windows.Forms.Padding(15);
-            this.serverEditPanel.Size = new System.Drawing.Size(989, 339);
+            this.serverEditPanel.Size = new System.Drawing.Size(1332, 522);
             this.serverEditPanel.TabIndex = 1;
             // 
             // commandPanel
@@ -160,9 +160,9 @@ namespace SCNET_Restart_Tool
             this.commandPanel.Controls.Add(this.commandInput);
             this.commandPanel.Controls.Add(this.commandLabel);
             this.commandPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.commandPanel.Location = new System.Drawing.Point(15, 264);
+            this.commandPanel.Location = new System.Drawing.Point(15, 447);
             this.commandPanel.Name = "commandPanel";
-            this.commandPanel.Size = new System.Drawing.Size(959, 60);
+            this.commandPanel.Size = new System.Drawing.Size(1302, 60);
             this.commandPanel.TabIndex = 18;
             // 
             // sendCommandBtn
@@ -364,7 +364,7 @@ namespace SCNET_Restart_Tool
             // serverListSplit.Panel2
             // 
             this.serverListSplit.Panel2.Controls.Add(this.operationPanel);
-            this.serverListSplit.Size = new System.Drawing.Size(989, 477);
+            this.serverListSplit.Size = new System.Drawing.Size(1332, 477);
             this.serverListSplit.SplitterDistance = 343;
             this.serverListSplit.TabIndex = 0;
             // 
@@ -375,7 +375,7 @@ namespace SCNET_Restart_Tool
             this.serverListPanel.Location = new System.Drawing.Point(0, 0);
             this.serverListPanel.Name = "serverListPanel";
             this.serverListPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.serverListPanel.Size = new System.Drawing.Size(989, 343);
+            this.serverListPanel.Size = new System.Drawing.Size(1332, 343);
             this.serverListPanel.TabIndex = 0;
             this.serverListPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.serverListPanel_Paint);
             // 
@@ -391,7 +391,7 @@ namespace SCNET_Restart_Tool
             this.serversGridView.RowHeadersVisible = false;
             this.serversGridView.RowTemplate.Height = 25;
             this.serversGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.serversGridView.Size = new System.Drawing.Size(969, 323);
+            this.serversGridView.Size = new System.Drawing.Size(1312, 323);
             this.serversGridView.TabIndex = 0;
             this.serversGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.serversGridView_CellContentClick);
             this.serversGridView.SelectionChanged += new System.EventHandler(this.serversGridView_SelectionChanged);
@@ -405,7 +405,7 @@ namespace SCNET_Restart_Tool
             this.operationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.operationPanel.Location = new System.Drawing.Point(0, 0);
             this.operationPanel.Name = "operationPanel";
-            this.operationPanel.Size = new System.Drawing.Size(989, 130);
+            this.operationPanel.Size = new System.Drawing.Size(1332, 130);
             this.operationPanel.TabIndex = 0;
             // 
             // monitorGroup
@@ -413,9 +413,9 @@ namespace SCNET_Restart_Tool
             this.monitorGroup.Controls.Add(this.stopMonitorBtn);
             this.monitorGroup.Controls.Add(this.startMonitorBtn);
             this.monitorGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.monitorGroup.Location = new System.Drawing.Point(765, 0);
+            this.monitorGroup.Location = new System.Drawing.Point(982, 0);
             this.monitorGroup.Name = "monitorGroup";
-            this.monitorGroup.Size = new System.Drawing.Size(220, 130);
+            this.monitorGroup.Size = new System.Drawing.Size(303, 130);
             this.monitorGroup.TabIndex = 3;
             this.monitorGroup.TabStop = false;
             this.monitorGroup.Text = "监控控制";
@@ -449,9 +449,9 @@ namespace SCNET_Restart_Tool
             this.controlGroup.Controls.Add(this.stopBtn);
             this.controlGroup.Controls.Add(this.startBtn);
             this.controlGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.controlGroup.Location = new System.Drawing.Point(450, 0);
+            this.controlGroup.Location = new System.Drawing.Point(643, 0);
             this.controlGroup.Name = "controlGroup";
-            this.controlGroup.Size = new System.Drawing.Size(315, 130);
+            this.controlGroup.Size = new System.Drawing.Size(339, 130);
             this.controlGroup.TabIndex = 2;
             this.controlGroup.TabStop = false;
             this.controlGroup.Text = "运行控制";
@@ -507,9 +507,9 @@ namespace SCNET_Restart_Tool
             this.manageGroup.Controls.Add(this.editBtn);
             this.manageGroup.Controls.Add(this.addBtn);
             this.manageGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.manageGroup.Location = new System.Drawing.Point(200, 0);
+            this.manageGroup.Location = new System.Drawing.Point(312, 0);
             this.manageGroup.Name = "manageGroup";
-            this.manageGroup.Size = new System.Drawing.Size(250, 130);
+            this.manageGroup.Size = new System.Drawing.Size(331, 130);
             this.manageGroup.TabIndex = 1;
             this.manageGroup.TabStop = false;
             this.manageGroup.Text = "服务器管理";
@@ -564,7 +564,7 @@ namespace SCNET_Restart_Tool
             this.editGroup.Dock = System.Windows.Forms.DockStyle.Left;
             this.editGroup.Location = new System.Drawing.Point(0, 0);
             this.editGroup.Name = "editGroup";
-            this.editGroup.Size = new System.Drawing.Size(200, 130);
+            this.editGroup.Size = new System.Drawing.Size(312, 130);
             this.editGroup.TabIndex = 0;
             this.editGroup.TabStop = false;
             this.editGroup.Text = "编辑操作";
@@ -598,7 +598,7 @@ namespace SCNET_Restart_Tool
             this.rightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rightPanel.Location = new System.Drawing.Point(0, 0);
             this.rightPanel.Name = "rightPanel";
-            this.rightPanel.Size = new System.Drawing.Size(287, 816);
+            this.rightPanel.Size = new System.Drawing.Size(388, 999);
             this.rightPanel.TabIndex = 0;
             // 
             // logSplit
@@ -615,8 +615,8 @@ namespace SCNET_Restart_Tool
             // logSplit.Panel2
             // 
             this.logSplit.Panel2.Controls.Add(this.logControlPanel);
-            this.logSplit.Size = new System.Drawing.Size(287, 484);
-            this.logSplit.SplitterDistance = 441;
+            this.logSplit.Size = new System.Drawing.Size(388, 667);
+            this.logSplit.SplitterDistance = 607;
             this.logSplit.TabIndex = 1;
             // 
             // logPanel
@@ -626,7 +626,7 @@ namespace SCNET_Restart_Tool
             this.logPanel.Location = new System.Drawing.Point(0, 0);
             this.logPanel.Name = "logPanel";
             this.logPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.logPanel.Size = new System.Drawing.Size(287, 441);
+            this.logPanel.Size = new System.Drawing.Size(388, 607);
             this.logPanel.TabIndex = 0;
             // 
             // logTextBox
@@ -636,7 +636,7 @@ namespace SCNET_Restart_Tool
             this.logTextBox.Location = new System.Drawing.Point(10, 10);
             this.logTextBox.Name = "logTextBox";
             this.logTextBox.ReadOnly = true;
-            this.logTextBox.Size = new System.Drawing.Size(267, 421);
+            this.logTextBox.Size = new System.Drawing.Size(368, 587);
             this.logTextBox.TabIndex = 0;
             this.logTextBox.Text = "";
             // 
@@ -646,7 +646,7 @@ namespace SCNET_Restart_Tool
             this.logControlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logControlPanel.Location = new System.Drawing.Point(0, 0);
             this.logControlPanel.Name = "logControlPanel";
-            this.logControlPanel.Size = new System.Drawing.Size(287, 39);
+            this.logControlPanel.Size = new System.Drawing.Size(388, 56);
             this.logControlPanel.TabIndex = 0;
             // 
             // clearLogBtn
@@ -666,7 +666,7 @@ namespace SCNET_Restart_Tool
             this.infoPanel.Location = new System.Drawing.Point(0, 0);
             this.infoPanel.Name = "infoPanel";
             this.infoPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.infoPanel.Size = new System.Drawing.Size(287, 332);
+            this.infoPanel.Size = new System.Drawing.Size(388, 332);
             this.infoPanel.TabIndex = 0;
             // 
             // infoLabel
@@ -675,7 +675,7 @@ namespace SCNET_Restart_Tool
             this.infoLabel.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.infoLabel.Location = new System.Drawing.Point(10, 10);
             this.infoLabel.Name = "infoLabel";
-            this.infoLabel.Size = new System.Drawing.Size(267, 312);
+            this.infoLabel.Size = new System.Drawing.Size(368, 312);
             this.infoLabel.TabIndex = 0;
             this.infoLabel.Text = "服务端管理工具\r\n\r\n功能说明：\r\n1. 增删改查服务器配置\r\n2. 启动/停止/重启服务器\r\n3. 监控服务器状态并自动重启\r\n4. 发送指令控制服务器\r\n5." +
     " 管理服务器相关文件夹";
@@ -684,7 +684,7 @@ namespace SCNET_Restart_Tool
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1280, 816);
+            this.ClientSize = new System.Drawing.Size(1724, 999);
             this.Controls.Add(this.mainSplitContainer);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ToolMain";
