@@ -1,647 +1,416 @@
 using System;
-using System.Diagnostics;
-using System.IO;
+using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Globalization;
-using System.Net.Sockets;
+using System.IO;
 
 namespace SCNET_Restart_Tool
 {
     public partial class ToolMain : Form
     {
-        private System.Windows.Forms.Timer timerDaily;
-        private System.Windows.Forms.Timer timerContinuous;
-        private const string ConfigFileName = "default_program.config"; // 配置文件
-        private string defaultDirectory = Path.GetDirectoryName(Application.ExecutablePath);
-        private const string DefaultExe = "TerminalEntry.exe";
-        private string targetExecutableName; // 存储文件名
-        private string targetExecutablePath; // 存储完整路径
-
-        // 定时关闭相关变量
-        private DateTime scheduledCloseTime = new DateTime(1, 1, 1, 1, 0, 0);
-
-        // 间隔关闭相关变量（支持小数小时）
-        private double intervalHours = 0;
-        private DateTime lastIntervalCloseTime = DateTime.MinValue;
-
-        // 服务IP、端口、密码和命令
-        private string serviceIp = "127.0.0.1"; // 默认IP
-        private int servicePort = 5612; // 默认端口
-        private string servicePassword = ""; // 默认密码
-        private string serviceCommand = ""; // 默认命令
-
-        // 新增：监控状态变量
-        private bool isMonitoring = false;
+        private List<ServerConfig> _servers = new List<ServerConfig>();
+        private Dictionary<int, ServerMonitor> _monitors = new Dictionary<int, ServerMonitor>();
+        private ServerConfig _selectedServer;
+        private LogManager _logManager;
 
         public ToolMain()
         {
             InitializeComponent();
-            LoadDefaultProgram();
-            InitializeTimers();
-            FindTargetExecutable();
-            UpdateMonitorButtonState(); // 初始化按钮状态
+            _logManager = LogManager.GetInstance();
+            _logManager.OnLogAdded += LogManager_OnLogAdded;
+            InitializeUI();
+            LoadServerConfigs();
         }
 
-        // 新增：监控按钮状态更新
-        private void UpdateMonitorButtonState()
+        /// <summary>
+        /// 初始化UI控件
+        /// </summary>
+        private void InitializeUI()
         {
-            if (isMonitoring)
+            // 服务端列表配置
+            dgvServers.AutoGenerateColumns = false;
+            dgvServers.Columns.AddRange(new DataGridViewColumn[]
             {
-                monitorButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(76)))), ((int)(((byte)(60)))));
-                monitorButton.Text = "关闭服务端监控";
-            }
-            else
-            {
-                monitorButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
-                monitorButton.Text = "开启服务端监控";
-            }
-        }
-
-        // 新增：监控按钮点击事件
-        private void MonitorButton_Click(object sender, EventArgs e)
-        {
-            isMonitoring = !isMonitoring;
-            UpdateMonitorButtonState();
-
-            if (isMonitoring)
-            {
-                UpdateStatusLabel("服务端监控已开启");
-                timerContinuous.Start();
-                timerDaily.Start();
-            }
-            else
-            {
-                UpdateStatusLabel("服务端监控已关闭");
-                timerContinuous.Stop();
-                timerDaily.Stop();
-            }
-        }
-
-        private void LoadDefaultProgram()
-        {
-            if (!File.Exists(ConfigFileName))
-            {
-                // 配置文件不存在，创建默认配置
-                SetDefaultExecutable();
-                SaveDefaultProgram();
-                UpdateStatusLabel($"创建默认配置: {targetExecutablePath}");
-            }
-            else
-            {
-                try
+                new DataGridViewTextBoxColumn
                 {
-                    string[] configLines = File.ReadAllLines(ConfigFileName);
-
-                    // 处理空白配置文件
-                    if (configLines.Length == 0)
-                    {
-                        SetDefaultExecutable();
-                        SaveDefaultProgram();
-                        UpdateStatusLabel($"配置文件空白，使用默认程序: {targetExecutablePath}");
-                        return;
-                    }
-
-                    // [0] 完整路径
-                    // [1] 文件名
-                    // [2] 定时关闭时间 (HH:mm)
-                    // [3] 间隔小时数
-                    // [4] 上次间隔关闭时间 (DateTime格式)
-                    // [5] 服务IP
-                    // [6] 服务端口
-                    // [7] 服务密码
-                    // [8] 服务命令
-                    if (configLines.Length >= 9)
-                    {
-                        string savedPath = configLines[0];
-                        string savedName = configLines[1];
-
-                        // 验证配置路径是否有效
-                        if (File.Exists(savedPath) && Path.GetFileName(savedPath) == savedName)
-                        {
-                            targetExecutablePath = savedPath;
-                            targetExecutableName = savedName;
-                        }
-                        else
-                        {
-                            SetDefaultExecutable();
-                        }
-
-                        if (TimeSpan.TryParse(configLines[2], out TimeSpan time))
-                        {
-                            scheduledCloseTime = DateTime.Today.Add(time);
-                        }
-                        else
-                        {
-                            scheduledCloseTime = new DateTime(1, 1, 1, 1, 0, 0);
-                        }
-
-                        // 使用InvariantCulture解析小数小时
-                        if (double.TryParse(configLines[3], NumberStyles.Any, CultureInfo.InvariantCulture, out double hours) && hours >= 0)
-                        {
-                            intervalHours = hours;
-                        }
-                        else
-                        {
-                            intervalHours = 0;
-                        }
-
-                        if (DateTime.TryParse(configLines[4], out DateTime lastClose))
-                        {
-                            lastIntervalCloseTime = lastClose;
-                        }
-                        else
-                        {
-                            lastIntervalCloseTime = DateTime.MinValue;
-                        }
-
-                        serviceIp = configLines[5];
-                        if (int.TryParse(configLines[6], out int port))
-                        {
-                            servicePort = port;
-                        }
-                        servicePassword = configLines[7];
-                        serviceCommand = configLines[8];
-
-                        // 显示友好的时间描述
-                        string intervalDesc = intervalHours < 1 ?
-                            $"{(intervalHours * 60):0}分钟" :
-                            $"{intervalHours:0.###}小时";
-
-                        UpdateStatusLabel($"配置加载成功\n定时关闭: {scheduledCloseTime:HH:mm}\n间隔关闭: {intervalDesc}\n服务IP: {serviceIp}\n服务端口: {servicePort}");
-                    }
-                    else
-                    {
-                        SetDefaultExecutable();
-
-                        if (configLines.Length >= 1)
-                        {
-                            string savedPath = configLines[0];
-                            if (File.Exists(savedPath))
-                            {
-                                targetExecutablePath = savedPath;
-                                targetExecutableName = Path.GetFileName(savedPath);
-                            }
-                        }
-
-                        SaveDefaultProgram();
-                        UpdateStatusLabel($"升级旧配置成功: {targetExecutablePath}");
-                    }
+                    Name = "Name",
+                    HeaderText = "服务端名称",
+                    DataPropertyName = "Name",
+                    Width = 120
+                },
+                new DataGridViewTextBoxColumn
+                {
+                    Name = "Status",
+                    HeaderText = "状态",
+                    DataPropertyName = "Status",
+                    Width = 80
+                },
+                new DataGridViewTextBoxColumn
+                {
+                    Name = "IpPort",
+                    HeaderText = "IP:端口",
+                    Width = 100
                 }
-                catch (Exception ex)
+            });
+
+            // 日志表格配置
+            dgvLogs.AutoGenerateColumns = false;
+            dgvLogs.Columns.AddRange(new DataGridViewColumn[]
+            {
+                new DataGridViewTextBoxColumn
                 {
-                    SetDefaultExecutable();
-                    SaveDefaultProgram();
-                    UpdateStatusLabel($"配置读取错误: {ex.Message}\n使用默认程序: {targetExecutablePath}");
+                    Name = "Time",
+                    HeaderText = "时间",
+                    DataPropertyName = "Time",
+                    Width = 150
+                },
+                new DataGridViewTextBoxColumn
+                {
+                    Name = "ServerName",
+                    HeaderText = "服务端",
+                    DataPropertyName = "ServerName",
+                    Width = 100
+                },
+                new DataGridViewTextBoxColumn
+                {
+                    Name = "Content",
+                    HeaderText = "内容",
+                    DataPropertyName = "Content",
+                    Width = 350
+                },
+                new DataGridViewTextBoxColumn
+                {
+                    Name = "Level",
+                    HeaderText = "级别",
+                    DataPropertyName = "Level",
+                    Width = 80
                 }
-            }
+            });
 
-            // 更新UI控件显示的值（使用不变文化格式）
-            timeInput.Text = scheduledCloseTime.ToString("HH:mm");
-            intervalInput.Text = intervalHours.ToString("0.###", CultureInfo.InvariantCulture);
-            ipInput.Text = serviceIp;
-            portInput.Text = servicePort.ToString();
-            passwordInput.Text = servicePassword;
-            commandInput.Text = serviceCommand;
+            dgvLogs.DataSource = new BindingSource(_logManager.GetAllLogs(), null);
         }
 
-        private void SetDefaultExecutable()
+        /// <summary>
+        /// 日志更新事件（实时刷新UI）
+        /// </summary>
+        private void LogManager_OnLogAdded(LogItem log)
         {
-            targetExecutablePath = Path.Combine(defaultDirectory, DefaultExe);
-            targetExecutableName = DefaultExe;
-        }
-
-        private void SaveDefaultProgram()
-        {
-            try
+            if (dgvLogs.InvokeRequired)
             {
-                File.WriteAllLines(ConfigFileName, new[] {
-                    targetExecutablePath,
-                    targetExecutableName,
-                    scheduledCloseTime.ToString("HH:mm"),
-                    intervalHours.ToString(CultureInfo.InvariantCulture), // 使用不变格式保存小数
-                    lastIntervalCloseTime.ToString("O"),
-                    serviceIp,
-                    servicePort.ToString(),
-                    servicePassword,
-                    serviceCommand
-                });
+                dgvLogs.Invoke(new Action<LogItem>(LogManager_OnLogAdded), log);
+                return;
             }
-            catch (Exception ex)
+
+            ((BindingSource)dgvLogs.DataSource).ResetBindings(false);
+            if (dgvLogs.Rows.Count > 0)
             {
-                UpdateStatusLabel($"保存配置失败: {ex.Message}");
+                dgvLogs.FirstDisplayedScrollingRowIndex = dgvLogs.Rows.Count - 1;
             }
         }
 
-        private void VerifyTargetExecutable()
+        /// <summary>
+        /// 加载服务端配置
+        /// </summary>
+        private void LoadServerConfigs()
         {
-            if (File.Exists(targetExecutablePath))
-            {
-                UpdateStatusLabel($"找到目标程序：{targetExecutablePath}");
-            }
-            else
-            {
-                UpdateStatusLabel($"未找到目标程序：{targetExecutableName}\n路径：{targetExecutablePath}");
-            }
+            _servers = ServerConfigManager.LoadAll();
+            dgvServers.DataSource = new BindingSource(_servers, null);
+            InitializeMonitors();
+            _logManager.AddLog("系统", "程序启动，加载服务端配置完成");
         }
 
-        private void InitializeTimers()
+        /// <summary>
+        /// 初始化所有服务端监控器
+        /// </summary>
+        private void InitializeMonitors()
         {
-            timerDaily = new System.Windows.Forms.Timer();
-            timerDaily.Interval = 1000;
-            timerDaily.Tick += TimerDaily_Tick;
-            timerDaily.Stop(); // 初始停止
-
-            timerContinuous = new System.Windows.Forms.Timer();
-            timerContinuous.Interval = 1000;
-            timerContinuous.Tick += TimerContinuous_Tick;
-            timerContinuous.Stop(); // 初始停止
-        }
-
-        private void TimerDaily_Tick(object sender, EventArgs e)
-        {
-            DateTime now = DateTime.Now;
-            DateTime scheduledTimeToday = DateTime.Today.Add(scheduledCloseTime.TimeOfDay);
-
-            if (now > scheduledTimeToday)
+            _monitors.Clear();
+            foreach (var server in _servers)
             {
-                scheduledTimeToday = scheduledTimeToday.AddDays(1);
-            }
-
-            if (now.Hour == scheduledCloseTime.Hour &&
-                now.Minute == scheduledCloseTime.Minute &&
-                now.Second == 0)
-            {
-                UpdateStatusLabel($"定时关闭时间到 ({scheduledCloseTime:HH:mm})，关闭程序...");
-                KillTargetProcess();
-            }
-
-            // 间隔关闭检查（支持小数小时）
-            if (intervalHours > 0)
-            {
-                if (lastIntervalCloseTime == DateTime.MinValue)
+                var monitor = new ServerMonitor(server, OnServerStatusChanged);
+                _monitors.Add(server.Id, monitor);
+                if (server.IsMonitoring)
                 {
-                    lastIntervalCloseTime = DateTime.Now;
-                    SaveDefaultProgram();
-                }
-
-                DateTime nextIntervalClose = lastIntervalCloseTime.AddHours(intervalHours);
-
-                if (DateTime.Now >= nextIntervalClose)
-                {
-                    // 显示友好的时间描述
-                    string intervalDesc = intervalHours < 1 ?
-                        $"{(intervalHours * 60):0}分钟" :
-                        $"{intervalHours:0.###}小时";
-
-                    UpdateStatusLabel($"间隔关闭时间到 ({intervalDesc})，关闭程序...");
-                    KillTargetProcess();
-                    lastIntervalCloseTime = DateTime.Now;
-                    SaveDefaultProgram();
+                    monitor.Start();
                 }
             }
         }
 
-        private void TimerContinuous_Tick(object sender, EventArgs e)
+        /// <summary>
+        /// 服务端状态变更回调
+        /// </summary>
+        private void OnServerStatusChanged(ServerConfig server)
         {
-            if (!IsProcessRunning(targetExecutableName))
+            if (dgvServers.InvokeRequired)
             {
-                UpdateStatusLabel($"未检测到 {targetExecutableName} 正在运行，将在5秒后启动...");
-                System.Threading.Thread.Sleep(5000);
-                StartTargetProcess();
+                dgvServers.Invoke(new Action<ServerConfig>(OnServerStatusChanged), server);
+                return;
             }
-            else
-            {
-                UpdateStatusLabel($"{targetExecutableName} 正在运行...");
-            }
-        }
 
-        private void FindTargetExecutable()
-        {
-            string currentDirectory = Path.GetDirectoryName(Application.ExecutablePath);
-            targetExecutablePath = Path.Combine(currentDirectory, targetExecutableName);
-
-            if (File.Exists(targetExecutablePath))
+            dgvServers.Refresh();
+            if (_selectedServer != null && _selectedServer.Id == server.Id)
             {
-                UpdateStatusLabel($"找到目标程序：{targetExecutablePath}");
-            }
-            else
-            {
-                UpdateStatusLabel($"未找到目标程序：{targetExecutableName}\n请确保该程序与本程序在同一目录下！");
+                LoadServerToDetails(server);
             }
         }
 
-        private bool IsProcessRunning(string processName)
+        /// <summary>
+        /// 服务端列表选择变更
+        /// </summary>
+        private void DgvServers_SelectionChanged(object sender, EventArgs e)
         {
-            return Process.GetProcessesByName(Path.GetFileNameWithoutExtension(processName)).Length > 0;
+            if (dgvServers.SelectedRows.Count == 0)
+                return;
+
+            _selectedServer = dgvServers.SelectedRows[0].DataBoundItem as ServerConfig;
+            if (_selectedServer != null)
+            {
+                LoadServerToDetails(_selectedServer);
+            }
         }
 
-        private void KillTargetProcess()
+        /// <summary>
+        /// 加载服务端详情到表单
+        /// </summary>
+        private void LoadServerToDetails(ServerConfig server)
         {
-            try
+            txtServerName.Text = server.Name;
+            txtExePath.Text = server.ExePath;
+            txtIp.Text = server.Ip;
+            txtPort.Text = server.Port.ToString();
+            txtPassword.Text = server.Password;
+            txtScheduleTime.Text = server.ScheduleTime;
+            txtIntervalHours.Text = server.IntervalHours.ToString();
+            btnStartMonitor.Text = server.IsMonitoring ? "关闭监控" : "开启监控";
+            btnStartMonitor.BackColor = server.IsMonitoring ? System.Drawing.Color.Red : System.Drawing.Color.LimeGreen;
+        }
+
+        /// <summary>
+        /// 添加服务端按钮
+        /// </summary>
+        private void BtnAddServer_Click(object sender, EventArgs e)
+        {
+            var newServer = new ServerConfig
             {
-                // 在关闭目标程序之前，发送命令到指定的服务
-                SendServiceCommand("close 9 例行维护");
-                UpdateStatusLabel($"延迟关闭程序：{targetExecutableName}");
+                Id = ServerConfigManager.GenerateNewId(_servers),
+                Name = $"服务端{_servers.Count + 1}",
+                Ip = "127.0.0.1",
+                Port = 25565
+            };
+
+            _servers.Add(newServer);
+            _monitors.Add(newServer.Id, new ServerMonitor(newServer, OnServerStatusChanged));
+            ServerConfigManager.SaveAll(_servers);
+            dgvServers.DataSource = new BindingSource(_servers, null);
+            _logManager.AddLog("系统", $"新增服务端：{newServer.Name}");
+        }
+
+        /// <summary>
+        /// 删除服务端按钮
+        /// </summary>
+        private void BtnDeleteServer_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null)
+            {
+                MessageBox.Show("请先选中要删除的服务端");
+                return;
+            }
+
+            var serverName = _selectedServer.Name;
+            _monitors[_selectedServer.Id].Stop();
+            _monitors.Remove(_selectedServer.Id);
+            _servers.Remove(_selectedServer);
+            ServerConfigManager.SaveAll(_servers);
+            dgvServers.DataSource = new BindingSource(_servers, null);
+            _selectedServer = null;
+            _logManager.AddLog("系统", $"删除服务端：{serverName}");
+        }
+
+        /// <summary>
+        /// 批量重启按钮
+        /// </summary>
+        private void BtnBatchRestart_Click(object sender, EventArgs e)
+        {
+            _logManager.AddLog("系统", "开始批量重启所有服务端");
+            foreach (var server in _servers)
+            {
+                _monitors[server.Id].KillProcess();
                 System.Threading.Thread.Sleep(1000);
-
-                // 关闭目标程序
-                Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(targetExecutableName));
-                foreach (Process process in processes)
-                {
-                    process.Kill();
-                    process.WaitForExit();
-                }
-
-                UpdateStatusLabel($"已关闭程序：{targetExecutableName}");
+                _monitors[server.Id].StartProcess();
             }
-            catch (Exception ex)
-            {
-                UpdateStatusLabel($"关闭程序时出错：{ex.Message}，尝试强制关闭...");
+            _logManager.AddLog("系统", "批量重启完成");
+            MessageBox.Show("批量重启完成");
+        }
 
-                // 尝试强制关闭目标程序
-                try
+        /// <summary>
+        /// 选择程序路径按钮
+        /// </summary>
+        private void BtnSelectExe_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null) return;
+
+            using (var ofd = new OpenFileDialog { Filter = "可执行文件|*.exe" })
+            {
+                if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(targetExecutableName));
-                    foreach (Process process in processes)
-                    {
-                        process.Kill();
-                        process.WaitForExit();
-                    }
-                    UpdateStatusLabel($"已强制关闭程序：{targetExecutableName}");
-                }
-                catch (Exception forceEx)
-                {
-                    UpdateStatusLabel($"强制关闭程序时出错：{forceEx.Message}");
+                    _selectedServer.ExePath = ofd.FileName;
+                    txtExePath.Text = ofd.FileName;
+                    _logManager.AddLog(_selectedServer.Name, $"已选择程序路径：{ofd.FileName}");
                 }
             }
         }
 
-        private void SendServiceCommand(string command)
+        /// <summary>
+        /// 保存设置按钮
+        /// </summary>
+        private void BtnSaveSettings_Click(object sender, EventArgs e)
         {
-            try
-            {
-                using (TcpClient client = new TcpClient())
-                {
-                    client.SendTimeout = 5000;
-                    client.ReceiveTimeout = 5000;
-                    client.Connect(serviceIp, servicePort);
+            if (_selectedServer == null) return;
 
-                    using (NetworkStream stream = client.GetStream())
-                    using (StreamWriter writer = new StreamWriter(stream))
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        writer.AutoFlush = true;
+            _selectedServer.Name = txtServerName.Text;
+            _selectedServer.Ip = txtIp.Text;
+            _selectedServer.Password = txtPassword.Text;
+            _selectedServer.ScheduleTime = txtScheduleTime.Text;
 
-                        // 创建组合消息：password <密码> command <命令>
-                        string combinedMessage;
-                        if (!string.IsNullOrEmpty(servicePassword))
-                        {
-                            combinedMessage = $"password {servicePassword} command {command}";
-                        }
-                        else
-                        {
-                            combinedMessage = $"command {command}";
-                        }
+            if (int.TryParse(txtPort.Text, out int port))
+                _selectedServer.Port = port;
 
-                        // 发送组合消息
-                        writer.WriteLine(combinedMessage);
+            if (double.TryParse(txtIntervalHours.Text, out double interval))
+                _selectedServer.IntervalHours = interval;
 
-                        // 读取响应
-                        string response = reader.ReadLine();
-
-                        // 显示响应
-                        UpdateStatusLabel($"发送命令到服务: {command}\n服务响应: {response}");
-
-                        // 如果响应为空（可能是连接断开），显示错误信息
-                        if (string.IsNullOrEmpty(response))
-                        {
-                            UpdateStatusLabel("未收到服务器响应，可能连接已断开");
-                        }
-                    }
-                }
-            }
-            catch (SocketException ex)
-            {
-                UpdateStatusLabel($"网络连接失败: {ex.Message}");
-            }
-            catch (IOException ex)
-            {
-                UpdateStatusLabel($"通信超时或失败: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                UpdateStatusLabel($"发送指令失败: {ex.Message}");
-            }
+            ServerConfigManager.SaveAll(_servers);
+            _logManager.AddLog(_selectedServer.Name, "服务端设置已保存");
+            MessageBox.Show("设置已保存");
         }
 
-        private void StartTargetProcess()
+        /// <summary>
+        /// 开启/关闭监控按钮
+        /// </summary>
+        private void BtnStartMonitor_Click(object sender, EventArgs e)
         {
-            try
-            {
-                ProcessStartInfo startInfo = new ProcessStartInfo
-                {
-                    FileName = targetExecutablePath,
-                    Arguments = "world=1",
-                    UseShellExecute = true
-                };
-                Process.Start(startInfo);
-                UpdateStatusLabel($"已启动程序：{targetExecutablePath}");
-            }
-            catch (Exception ex)
-            {
-                UpdateStatusLabel($"启动程序时出错：{ex.Message}");
-            }
-        }
+            if (_selectedServer == null) return;
 
-        private void UpdateStatusLabel(string message)
-        {
-            if (statusLabel.InvokeRequired)
+            if (_selectedServer.IsMonitoring)
             {
-                statusLabel.Invoke(new Action<string>(UpdateStatusLabel), message);
+                _monitors[_selectedServer.Id].Stop();
             }
             else
             {
-                statusLabel.Text = message;
+                _monitors[_selectedServer.Id].Start();
             }
+
+            btnStartMonitor.Text = _selectedServer.IsMonitoring ? "关闭监控" : "开启监控";
+            btnStartMonitor.BackColor = _selectedServer.IsMonitoring ? System.Drawing.Color.Red : System.Drawing.Color.LimeGreen;
+            ServerConfigManager.SaveAll(_servers);
         }
 
-        private void killButton_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 手动关闭当前服务端按钮
+        /// </summary>
+        private void BtnStopServer_Click(object sender, EventArgs e)
         {
-            KillTargetProcess();
-        }
-
-        private void exitButton_Click(object sender, EventArgs e)
-        {
-            Application.Exit();
-        }
-
-        private void selectButton_Click(object sender, EventArgs e)
-        {
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            if (_selectedServer == null)
             {
-                openFileDialog.Filter = "可执行文件|*.exe";
-                openFileDialog.Title = "选择要监控的程序";
-                openFileDialog.InitialDirectory = defaultDirectory;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    targetExecutablePath = openFileDialog.FileName;
-                    targetExecutableName = Path.GetFileName(openFileDialog.FileName);
-                    SaveDefaultProgram();
-                    VerifyTargetExecutable();
-                }
-            }
-        }
-
-        private void defaultButton_Click(object sender, EventArgs e)
-        {
-            serviceIp = ipInput.Text.Trim();
-            if (int.TryParse(portInput.Text, out int port))
-            {
-                servicePort = port;
-            }
-            else
-            {
-                UpdateStatusLabel("端口号无效，请输入有效的数字端口");
-                return;
-            }
-            servicePassword = passwordInput.Text.Trim();
-            serviceCommand = commandInput.Text.Trim();
-
-            SaveDefaultProgram();
-            UpdateStatusLabel($"服务设置已保存\nIP: {serviceIp}\n端口: {servicePort}\n密码: {servicePassword}\n命令: {serviceCommand}");
-        }
-
-        private void saveTimeButton_Click(object sender, EventArgs e)
-        {
-            if (TimeSpan.TryParse(timeInput.Text, out TimeSpan time))
-            {
-                scheduledCloseTime = DateTime.Today.Add(time);
-                SaveDefaultProgram();
-                UpdateStatusLabel($"定时关闭时间已设置为: {timeInput.Text}");
-            }
-            else
-            {
-                UpdateStatusLabel("时间格式无效，请输入HH:mm格式");
-            }
-        }
-
-        private void saveIntervalButton_Click(object sender, EventArgs e)
-        {
-            // 使用不变文化解析小数
-            if (double.TryParse(intervalInput.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out double hours) && hours >= 0)
-            {
-                intervalHours = hours;
-                lastIntervalCloseTime = DateTime.MinValue;
-                SaveDefaultProgram();
-
-                // 显示友好的时间描述
-                string intervalDesc = hours < 1 ?
-                    $"{(hours * 60):0}分钟" :
-                    $"{hours:0.###}小时";
-
-                UpdateStatusLabel($"间隔关闭已设置为: {intervalDesc}");
-            }
-            else
-            {
-                UpdateStatusLabel("间隔时间无效，请输入0或正数（如0.6表示36分钟）");
-            }
-        }
-
-        private void sendButton_Click(object sender, EventArgs e)
-        {
-            // 获取当前输入框中的IP、端口、密码和命令
-            string ip = ipInput.Text.Trim();
-            int port;
-            if (!int.TryParse(portInput.Text, out port))
-            {
-                commandStatusLabel.Text = "端口号无效";
+                MessageBox.Show("请先选中要关闭的服务端");
                 return;
             }
 
-            string command = commandInput.Text.Trim();
+            _monitors[_selectedServer.Id].KillProcess();
+            _logManager.AddLog("系统", $"执行关闭当前服务端：{_selectedServer.Name}");
+        }
+
+        /// <summary>
+        /// 手动启动当前服务端按钮
+        /// </summary>
+        private void BtnStartServer_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null)
+            {
+                MessageBox.Show("请先选中服务端");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(_selectedServer.ExePath))
+            {
+                MessageBox.Show("请先选择服务端程序路径");
+                return;
+            }
+
+            _monitors[_selectedServer.Id].StartProcess();
+        }
+
+        /// <summary>
+        /// 关闭所有服务端按钮
+        /// </summary>
+        private void BtnStopAllServers_Click(object sender, EventArgs e)
+        {
+            if (_servers.Count == 0)
+            {
+                MessageBox.Show("没有可关闭的服务端");
+                return;
+            }
+
+            if (MessageBox.Show($"确定要关闭所有{_servers.Count}个服务端吗？", "确认", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            {
+                _logManager.AddLog("系统", "开始关闭所有服务端");
+                foreach (var server in _servers)
+                {
+                    _monitors[server.Id].KillProcess();
+                    System.Threading.Thread.Sleep(500);
+                }
+                _logManager.AddLog("系统", "所有服务端关闭操作已执行");
+                MessageBox.Show("所有服务端关闭操作已执行");
+            }
+        }
+
+        /// <summary>
+        /// 发送指令按钮
+        /// </summary>
+        private void BtnSendCommand_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null) return;
+
+            var command = txtCommand.Text.Trim();
             if (string.IsNullOrEmpty(command))
             {
-                commandStatusLabel.Text = "指令不能为空";
+                lblCommandStatus.Text = "指令不能为空";
                 return;
             }
 
-            string password = passwordInput.Text.Trim();
+            var result = _monitors[_selectedServer.Id].SendServiceCommand(command);
+            lblCommandStatus.Text = $"响应：{result}";
+        }
 
-            try
+        /// <summary>
+        /// 清空日志按钮
+        /// </summary>
+        private void BtnClearLogs_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("确定要清空所有日志吗？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
-                using (TcpClient client = new TcpClient())
+                _logManager.ClearLogs();
+                ((BindingSource)dgvLogs.DataSource).ResetBindings(false);
+                _logManager.AddLog("系统", "日志已清空");
+            }
+        }
+
+        /// <summary>
+        /// 服务端列表单元格格式化（显示IP:端口）
+        /// </summary>
+        private void dgvServers_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.ColumnIndex == 2 && e.RowIndex >= 0)
+            {
+                var server = dgvServers.Rows[e.RowIndex].DataBoundItem as ServerConfig;
+                if (server != null)
                 {
-                    client.SendTimeout = 5000;
-                    client.ReceiveTimeout = 5000;
-                    client.Connect(ip, port);
-
-                    using (NetworkStream stream = client.GetStream())
-                    using (StreamWriter writer = new StreamWriter(stream))
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        writer.AutoFlush = true;
-
-                        // 创建组合消息：password <密码> command <命令>
-                        string combinedMessage;
-                        if (!string.IsNullOrEmpty(password))
-                        {
-                            combinedMessage = $"password {password} command {command}";
-                        }
-                        else
-                        {
-                            combinedMessage = $"command {command}";
-                        }
-
-                        // 发送组合消息
-                        writer.WriteLine(combinedMessage);
-
-                        // 读取响应
-                        string response = reader.ReadLine();
-
-                        // 显示响应
-                        commandStatusLabel.Text = response;
-
-                        // 如果响应为空（可能是连接断开），显示错误信息
-                        if (string.IsNullOrEmpty(response))
-                        {
-                            commandStatusLabel.Text = "未收到服务器响应，可能连接已断开";
-                        }
-                    }
+                    e.Value = $"{server.Ip}:{server.Port}";
                 }
-
-                // 发送成功后，更新配置文件
-                serviceIp = ip;
-                servicePort = port;
-                servicePassword = password;
-                serviceCommand = command;
-                SaveDefaultProgram();
-                UpdateStatusLabel($"发送成功，配置已更新\nIP: {serviceIp}\n端口: {servicePort}");
             }
-            catch (SocketException ex)
-            {
-                commandStatusLabel.Text = $"网络连接失败: {ex.Message}";
-            }
-            catch (IOException ex)
-            {
-                commandStatusLabel.Text = $"通信超时或失败: {ex.Message}";
-            }
-            catch (Exception ex)
-            {
-                commandStatusLabel.Text = $"发送指令失败: {ex.Message}";
-            }
-        }
-
-        private void commandStatusLabel_Click(object sender, EventArgs e)
-        {
-        }
-
-        private void portLabel_Click(object sender, EventArgs e)
-        {
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            // 初始化加载
         }
     }
 }
