@@ -2,8 +2,16 @@ namespace SCNET_Restart_Tool
 {
     partial class ToolMain
     {
+        /// <summary>
+        /// 必需的设计器变量。
+        /// </summary>
         private System.ComponentModel.IContainer components = null;
         private System.Windows.Forms.ToolTip buttonToolTip;
+
+        /// <summary>
+        /// 清理所有正在使用的资源。
+        /// </summary>
+        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -13,13 +21,17 @@ namespace SCNET_Restart_Tool
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
+        #region Windows 窗体设计器生成的代码
 
+        /// <summary>
+        /// 设计器支持所需的方法 - 不要修改
+        /// 使用代码编辑器修改此方法的内容。
+        /// </summary>
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.buttonToolTip = new System.Windows.Forms.ToolTip(this.components);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolMain));
+            this.buttonToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.mainSplitContainer = new System.Windows.Forms.SplitContainer();
             this.leftPanel = new System.Windows.Forms.Panel();
             this.serverEditPanel = new System.Windows.Forms.Panel();
@@ -115,18 +127,17 @@ namespace SCNET_Restart_Tool
             // mainSplitContainer.Panel2
             // 
             this.mainSplitContainer.Panel2.Controls.Add(this.rightPanel);
-            this.mainSplitContainer.Size = new System.Drawing.Size(1724, 999);
-            this.mainSplitContainer.SplitterDistance = 1332;
+            this.mainSplitContainer.Size = new System.Drawing.Size(1650, 710);
+            this.mainSplitContainer.SplitterDistance = 1200;
             this.mainSplitContainer.TabIndex = 0;
             // 
             // leftPanel
             // 
             this.leftPanel.Controls.Add(this.serverEditPanel);
             this.leftPanel.Controls.Add(this.serverListSplit);
-            this.leftPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.leftPanel.Location = new System.Drawing.Point(0, 0);
             this.leftPanel.Name = "leftPanel";
-            this.leftPanel.Size = new System.Drawing.Size(1332, 999);
+            this.leftPanel.Size = new System.Drawing.Size(1207, 710);
             this.leftPanel.TabIndex = 0;
             // 
             // serverEditPanel
@@ -149,11 +160,10 @@ namespace SCNET_Restart_Tool
             this.serverEditPanel.Controls.Add(this.exePathInput);
             this.serverEditPanel.Controls.Add(this.serverNameLabel);
             this.serverEditPanel.Controls.Add(this.serverNameInput);
-            this.serverEditPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.serverEditPanel.Location = new System.Drawing.Point(0, 477);
+            this.serverEditPanel.Location = new System.Drawing.Point(0, 338);
             this.serverEditPanel.Name = "serverEditPanel";
             this.serverEditPanel.Padding = new System.Windows.Forms.Padding(15);
-            this.serverEditPanel.Size = new System.Drawing.Size(1332, 522);
+            this.serverEditPanel.Size = new System.Drawing.Size(1207, 372);
             this.serverEditPanel.TabIndex = 1;
             // 
             // commandPanel
@@ -162,9 +172,9 @@ namespace SCNET_Restart_Tool
             this.commandPanel.Controls.Add(this.commandInput);
             this.commandPanel.Controls.Add(this.commandLabel);
             this.commandPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.commandPanel.Location = new System.Drawing.Point(15, 447);
+            this.commandPanel.Location = new System.Drawing.Point(15, 297);
             this.commandPanel.Name = "commandPanel";
-            this.commandPanel.Size = new System.Drawing.Size(1302, 60);
+            this.commandPanel.Size = new System.Drawing.Size(1177, 60);
             this.commandPanel.TabIndex = 18;
             // 
             // sendCommandBtn
@@ -175,7 +185,6 @@ namespace SCNET_Restart_Tool
             this.sendCommandBtn.TabIndex = 2;
             this.sendCommandBtn.Text = "发送";
             this.sendCommandBtn.UseVisualStyleBackColor = true;
-            this.sendCommandBtn.Click += new System.EventHandler(this.sendCommandBtn_Click);
             // 
             // commandInput
             // 
@@ -318,7 +327,6 @@ namespace SCNET_Restart_Tool
             this.browseExeBtn.TabIndex = 5;
             this.browseExeBtn.Text = "浏览";
             this.browseExeBtn.UseVisualStyleBackColor = true;
-            this.browseExeBtn.Click += new System.EventHandler(this.browseExeBtn_Click);
             // 
             // exePathLabel
             // 
@@ -366,18 +374,17 @@ namespace SCNET_Restart_Tool
             // serverListSplit.Panel2
             // 
             this.serverListSplit.Panel2.Controls.Add(this.operationPanel);
-            this.serverListSplit.Size = new System.Drawing.Size(1332, 477);
-            this.serverListSplit.SplitterDistance = 343;
+            this.serverListSplit.Size = new System.Drawing.Size(1207, 339);
+            this.serverListSplit.SplitterDistance = 173;
             this.serverListSplit.TabIndex = 0;
             // 
             // serverListPanel
             // 
             this.serverListPanel.Controls.Add(this.serversGridView);
-            this.serverListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.serverListPanel.Location = new System.Drawing.Point(0, 0);
             this.serverListPanel.Name = "serverListPanel";
             this.serverListPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.serverListPanel.Size = new System.Drawing.Size(1332, 343);
+            this.serverListPanel.Size = new System.Drawing.Size(1207, 170);
             this.serverListPanel.TabIndex = 0;
             // 
             // serversGridView
@@ -386,16 +393,13 @@ namespace SCNET_Restart_Tool
             this.serversGridView.BackgroundColor = System.Drawing.Color.White;
             this.serversGridView.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.serversGridView.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
-            this.serversGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.serversGridView.Location = new System.Drawing.Point(10, 10);
             this.serversGridView.Name = "serversGridView";
             this.serversGridView.RowHeadersVisible = false;
             this.serversGridView.RowTemplate.Height = 25;
             this.serversGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.serversGridView.Size = new System.Drawing.Size(1312, 323);
+            this.serversGridView.Size = new System.Drawing.Size(1187, 147);
             this.serversGridView.TabIndex = 0;
-            this.serversGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.serversGridView_CellContentClick);
-            this.serversGridView.SelectionChanged += new System.EventHandler(this.serversGridView_SelectionChanged);
             // 
             // operationPanel
             // 
@@ -406,7 +410,7 @@ namespace SCNET_Restart_Tool
             this.operationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.operationPanel.Location = new System.Drawing.Point(0, 0);
             this.operationPanel.Name = "operationPanel";
-            this.operationPanel.Size = new System.Drawing.Size(1332, 130);
+            this.operationPanel.Size = new System.Drawing.Size(1207, 162);
             this.operationPanel.TabIndex = 0;
             // 
             // monitorGroup
@@ -414,9 +418,9 @@ namespace SCNET_Restart_Tool
             this.monitorGroup.Controls.Add(this.stopMonitorBtn);
             this.monitorGroup.Controls.Add(this.startMonitorBtn);
             this.monitorGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.monitorGroup.Location = new System.Drawing.Point(982, 0);
+            this.monitorGroup.Location = new System.Drawing.Point(889, 0);
             this.monitorGroup.Name = "monitorGroup";
-            this.monitorGroup.Size = new System.Drawing.Size(303, 130);
+            this.monitorGroup.Size = new System.Drawing.Size(315, 162);
             this.monitorGroup.TabIndex = 3;
             this.monitorGroup.TabStop = false;
             this.monitorGroup.Text = "监控控制";
@@ -424,24 +428,22 @@ namespace SCNET_Restart_Tool
             // stopMonitorBtn
             // 
             this.stopMonitorBtn.Enabled = false;
-            this.stopMonitorBtn.Location = new System.Drawing.Point(105, 25);
+            this.stopMonitorBtn.Location = new System.Drawing.Point(142, 25);
             this.stopMonitorBtn.Name = "stopMonitorBtn";
-            this.stopMonitorBtn.Size = new System.Drawing.Size(80, 30);
+            this.stopMonitorBtn.Size = new System.Drawing.Size(102, 30);
             this.stopMonitorBtn.TabIndex = 1;
             this.stopMonitorBtn.Text = "关闭监控";
             this.stopMonitorBtn.UseVisualStyleBackColor = true;
-            this.stopMonitorBtn.Click += new System.EventHandler(this.stopMonitorBtn_Click);
             // 
             // startMonitorBtn
             // 
             this.startMonitorBtn.Enabled = false;
             this.startMonitorBtn.Location = new System.Drawing.Point(15, 25);
             this.startMonitorBtn.Name = "startMonitorBtn";
-            this.startMonitorBtn.Size = new System.Drawing.Size(80, 30);
+            this.startMonitorBtn.Size = new System.Drawing.Size(101, 30);
             this.startMonitorBtn.TabIndex = 0;
             this.startMonitorBtn.Text = "开启监控";
             this.startMonitorBtn.UseVisualStyleBackColor = true;
-            this.startMonitorBtn.Click += new System.EventHandler(this.startMonitorBtn_Click);
             // 
             // controlGroup
             // 
@@ -450,9 +452,9 @@ namespace SCNET_Restart_Tool
             this.controlGroup.Controls.Add(this.stopBtn);
             this.controlGroup.Controls.Add(this.startBtn);
             this.controlGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.controlGroup.Location = new System.Drawing.Point(643, 0);
+            this.controlGroup.Location = new System.Drawing.Point(564, 0);
             this.controlGroup.Name = "controlGroup";
-            this.controlGroup.Size = new System.Drawing.Size(339, 130);
+            this.controlGroup.Size = new System.Drawing.Size(325, 162);
             this.controlGroup.TabIndex = 2;
             this.controlGroup.TabStop = false;
             this.controlGroup.Text = "运行控制";
@@ -460,46 +462,42 @@ namespace SCNET_Restart_Tool
             // stopAllBtn
             // 
             this.stopAllBtn.Enabled = false;
-            this.stopAllBtn.Location = new System.Drawing.Point(210, 25);
+            this.stopAllBtn.Location = new System.Drawing.Point(214, 25);
             this.stopAllBtn.Name = "stopAllBtn";
             this.stopAllBtn.Size = new System.Drawing.Size(80, 30);
             this.stopAllBtn.TabIndex = 3;
             this.stopAllBtn.Text = "停止全部";
             this.stopAllBtn.UseVisualStyleBackColor = true;
-            this.stopAllBtn.Click += new System.EventHandler(this.stopAllBtn_Click);
             // 
             // restartBtn
             // 
             this.restartBtn.Enabled = false;
-            this.restartBtn.Location = new System.Drawing.Point(130, 25);
+            this.restartBtn.Location = new System.Drawing.Point(149, 24);
             this.restartBtn.Name = "restartBtn";
             this.restartBtn.Size = new System.Drawing.Size(70, 30);
             this.restartBtn.TabIndex = 2;
             this.restartBtn.Text = "重启";
             this.restartBtn.UseVisualStyleBackColor = true;
-            this.restartBtn.Click += new System.EventHandler(this.restartBtn_Click);
             // 
             // stopBtn
             // 
             this.stopBtn.Enabled = false;
-            this.stopBtn.Location = new System.Drawing.Point(60, 25);
+            this.stopBtn.Location = new System.Drawing.Point(79, 25);
             this.stopBtn.Name = "stopBtn";
-            this.stopBtn.Size = new System.Drawing.Size(60, 30);
+            this.stopBtn.Size = new System.Drawing.Size(69, 30);
             this.stopBtn.TabIndex = 1;
             this.stopBtn.Text = "停止";
             this.stopBtn.UseVisualStyleBackColor = true;
-            this.stopBtn.Click += new System.EventHandler(this.stopBtn_Click);
             // 
             // startBtn
             // 
             this.startBtn.Enabled = false;
             this.startBtn.Location = new System.Drawing.Point(10, 25);
             this.startBtn.Name = "startBtn";
-            this.startBtn.Size = new System.Drawing.Size(40, 30);
+            this.startBtn.Size = new System.Drawing.Size(69, 30);
             this.startBtn.TabIndex = 0;
             this.startBtn.Text = "启动";
             this.startBtn.UseVisualStyleBackColor = true;
-            this.startBtn.Click += new System.EventHandler(this.startBtn_Click);
             // 
             // manageGroup
             // 
@@ -508,9 +506,9 @@ namespace SCNET_Restart_Tool
             this.manageGroup.Controls.Add(this.editBtn);
             this.manageGroup.Controls.Add(this.addBtn);
             this.manageGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.manageGroup.Location = new System.Drawing.Point(312, 0);
+            this.manageGroup.Location = new System.Drawing.Point(225, 0);
             this.manageGroup.Name = "manageGroup";
-            this.manageGroup.Size = new System.Drawing.Size(331, 130);
+            this.manageGroup.Size = new System.Drawing.Size(339, 162);
             this.manageGroup.TabIndex = 1;
             this.manageGroup.TabStop = false;
             this.manageGroup.Text = "服务器管理";
@@ -518,45 +516,42 @@ namespace SCNET_Restart_Tool
             // folderManagerBtn
             // 
             this.folderManagerBtn.Enabled = false;
-            this.folderManagerBtn.Location = new System.Drawing.Point(110, 25);
+            this.folderManagerBtn.Location = new System.Drawing.Point(229, 25);
             this.folderManagerBtn.Name = "folderManagerBtn";
             this.folderManagerBtn.Size = new System.Drawing.Size(80, 30);
             this.folderManagerBtn.TabIndex = 3;
             this.folderManagerBtn.Text = "文件夹";
             this.folderManagerBtn.UseVisualStyleBackColor = true;
-            this.folderManagerBtn.Click += new System.EventHandler(this.folderManagerBtn_Click);
             // 
             // deleteBtn
             // 
             this.deleteBtn.Enabled = false;
-            this.deleteBtn.Location = new System.Drawing.Point(70, 25);
+            this.deleteBtn.Location = new System.Drawing.Point(162, 24);
             this.deleteBtn.Name = "deleteBtn";
-            this.deleteBtn.Size = new System.Drawing.Size(35, 30);
+            this.deleteBtn.Size = new System.Drawing.Size(61, 30);
             this.deleteBtn.TabIndex = 2;
-            this.deleteBtn.Text = "删";
+            this.deleteBtn.Text = "删除";
             this.deleteBtn.UseVisualStyleBackColor = true;
             this.deleteBtn.Click += new System.EventHandler(this.deleteBtn_Click);
             // 
             // editBtn
             // 
             this.editBtn.Enabled = false;
-            this.editBtn.Location = new System.Drawing.Point(35, 25);
+            this.editBtn.Location = new System.Drawing.Point(104, 24);
             this.editBtn.Name = "editBtn";
-            this.editBtn.Size = new System.Drawing.Size(35, 30);
+            this.editBtn.Size = new System.Drawing.Size(52, 30);
             this.editBtn.TabIndex = 1;
-            this.editBtn.Text = "改";
+            this.editBtn.Text = "修改";
             this.editBtn.UseVisualStyleBackColor = true;
-            this.editBtn.Click += new System.EventHandler(this.editBtn_Click);
             // 
             // addBtn
             // 
-            this.addBtn.Location = new System.Drawing.Point(0, 25);
+            this.addBtn.Location = new System.Drawing.Point(6, 24);
             this.addBtn.Name = "addBtn";
-            this.addBtn.Size = new System.Drawing.Size(35, 30);
+            this.addBtn.Size = new System.Drawing.Size(69, 30);
             this.addBtn.TabIndex = 0;
-            this.addBtn.Text = "增";
+            this.addBtn.Text = "增加";
             this.addBtn.UseVisualStyleBackColor = true;
-            this.addBtn.Click += new System.EventHandler(this.addBtn_Click);
             // 
             // editGroup
             // 
@@ -565,7 +560,7 @@ namespace SCNET_Restart_Tool
             this.editGroup.Dock = System.Windows.Forms.DockStyle.Left;
             this.editGroup.Location = new System.Drawing.Point(0, 0);
             this.editGroup.Name = "editGroup";
-            this.editGroup.Size = new System.Drawing.Size(312, 130);
+            this.editGroup.Size = new System.Drawing.Size(225, 162);
             this.editGroup.TabIndex = 0;
             this.editGroup.TabStop = false;
             this.editGroup.Text = "编辑操作";
@@ -579,7 +574,6 @@ namespace SCNET_Restart_Tool
             this.cancelEditBtn.TabIndex = 1;
             this.cancelEditBtn.Text = "取消";
             this.cancelEditBtn.UseVisualStyleBackColor = true;
-            this.cancelEditBtn.Click += new System.EventHandler(this.cancelEditBtn_Click);
             // 
             // saveEditBtn
             // 
@@ -590,7 +584,6 @@ namespace SCNET_Restart_Tool
             this.saveEditBtn.TabIndex = 0;
             this.saveEditBtn.Text = "保存";
             this.saveEditBtn.UseVisualStyleBackColor = true;
-            this.saveEditBtn.Click += new System.EventHandler(this.saveEditBtn_Click);
             // 
             // rightPanel
             // 
@@ -599,7 +592,7 @@ namespace SCNET_Restart_Tool
             this.rightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rightPanel.Location = new System.Drawing.Point(0, 0);
             this.rightPanel.Name = "rightPanel";
-            this.rightPanel.Size = new System.Drawing.Size(388, 999);
+            this.rightPanel.Size = new System.Drawing.Size(446, 710);
             this.rightPanel.TabIndex = 0;
             // 
             // logSplit
@@ -616,8 +609,8 @@ namespace SCNET_Restart_Tool
             // logSplit.Panel2
             // 
             this.logSplit.Panel2.Controls.Add(this.logControlPanel);
-            this.logSplit.Size = new System.Drawing.Size(388, 667);
-            this.logSplit.SplitterDistance = 607;
+            this.logSplit.Size = new System.Drawing.Size(446, 378);
+            this.logSplit.SplitterDistance = 343;
             this.logSplit.TabIndex = 1;
             // 
             // logPanel
@@ -627,7 +620,7 @@ namespace SCNET_Restart_Tool
             this.logPanel.Location = new System.Drawing.Point(0, 0);
             this.logPanel.Name = "logPanel";
             this.logPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.logPanel.Size = new System.Drawing.Size(388, 607);
+            this.logPanel.Size = new System.Drawing.Size(446, 343);
             this.logPanel.TabIndex = 0;
             // 
             // logTextBox
@@ -637,7 +630,7 @@ namespace SCNET_Restart_Tool
             this.logTextBox.Location = new System.Drawing.Point(10, 10);
             this.logTextBox.Name = "logTextBox";
             this.logTextBox.ReadOnly = true;
-            this.logTextBox.Size = new System.Drawing.Size(368, 587);
+            this.logTextBox.Size = new System.Drawing.Size(426, 323);
             this.logTextBox.TabIndex = 0;
             this.logTextBox.Text = "";
             // 
@@ -647,18 +640,17 @@ namespace SCNET_Restart_Tool
             this.logControlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logControlPanel.Location = new System.Drawing.Point(0, 0);
             this.logControlPanel.Name = "logControlPanel";
-            this.logControlPanel.Size = new System.Drawing.Size(388, 56);
+            this.logControlPanel.Size = new System.Drawing.Size(446, 31);
             this.logControlPanel.TabIndex = 0;
             // 
             // clearLogBtn
             // 
-            this.clearLogBtn.Location = new System.Drawing.Point(280, 8);
+            this.clearLogBtn.Location = new System.Drawing.Point(286, 2);
             this.clearLogBtn.Name = "clearLogBtn";
             this.clearLogBtn.Size = new System.Drawing.Size(80, 30);
             this.clearLogBtn.TabIndex = 0;
             this.clearLogBtn.Text = "清空日志";
             this.clearLogBtn.UseVisualStyleBackColor = true;
-            this.clearLogBtn.Click += new System.EventHandler(this.clearLogBtn_Click);
             // 
             // infoPanel
             // 
@@ -667,7 +659,7 @@ namespace SCNET_Restart_Tool
             this.infoPanel.Location = new System.Drawing.Point(0, 0);
             this.infoPanel.Name = "infoPanel";
             this.infoPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.infoPanel.Size = new System.Drawing.Size(388, 332);
+            this.infoPanel.Size = new System.Drawing.Size(446, 332);
             this.infoPanel.TabIndex = 0;
             // 
             // infoLabel
@@ -676,7 +668,7 @@ namespace SCNET_Restart_Tool
             this.infoLabel.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.infoLabel.Location = new System.Drawing.Point(10, 10);
             this.infoLabel.Name = "infoLabel";
-            this.infoLabel.Size = new System.Drawing.Size(368, 312);
+            this.infoLabel.Size = new System.Drawing.Size(426, 312);
             this.infoLabel.TabIndex = 0;
             this.infoLabel.Text = "服务端管理工具\r\n\r\n功能说明：\r\n1. 增删改查服务器配置\r\n2. 启动/停止/重启服务器\r\n3. 监控服务器状态并自动重启\r\n4. 发送指令控制服务器\r\n5." +
     " 管理服务器相关文件夹";
@@ -685,12 +677,11 @@ namespace SCNET_Restart_Tool
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1724, 999);
+            this.ClientSize = new System.Drawing.Size(1650, 710);
             this.Controls.Add(this.mainSplitContainer);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ToolMain";
             this.Text = "SCNET服务端管理工具";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ToolMain_FormClosing);
             this.mainSplitContainer.Panel1.ResumeLayout(false);
             this.mainSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).EndInit();
