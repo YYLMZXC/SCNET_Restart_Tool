@@ -14,14 +14,12 @@ namespace SCNET_Restart_Tool
             Formatting = Formatting.Indented,
             TypeNameHandling = TypeNameHandling.Objects
         };
-
         public static List<ServerConfig> LoadAll()
         {
             if (!File.Exists(ConfigPath))
             {
                 return new List<ServerConfig> { new ServerConfig { Id = 1 } };
             }
-
             try
             {
                 string json = File.ReadAllText(ConfigPath);
@@ -34,7 +32,6 @@ namespace SCNET_Restart_Tool
                 return new List<ServerConfig> { new ServerConfig { Id = 1 } };
             }
         }
-
         public static void SaveAll(List<ServerConfig> servers)
         {
             try
@@ -47,7 +44,6 @@ namespace SCNET_Restart_Tool
                 MessageBox.Show($"配置保存失败：{ex.Message}");
             }
         }
-
         public static int GenerateNewId(List<ServerConfig> servers)
         {
             int maxId = 0;

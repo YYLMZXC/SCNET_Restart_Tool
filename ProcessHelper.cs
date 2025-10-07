@@ -5,9 +5,7 @@ namespace SCNET_Restart_Tool
 {
     public static class ProcessHelper
     {
-        /// <summary>
         /// 通过WMI获取进程信息（兼容32/64位）
-        /// </summary>
         public static ManagementObjectCollection GetAllProcesses()
         {
             try

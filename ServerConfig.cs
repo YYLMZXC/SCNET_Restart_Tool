@@ -2,8 +2,6 @@
 
 namespace SCNET_Restart_Tool
 {
-   
-
     [Serializable]
     public class ServerConfig
     {
@@ -18,8 +16,8 @@ namespace SCNET_Restart_Tool
         public double IntervalHours { get; set; } = 0;
         public DateTime LastIntervalClose { get; set; } = DateTime.MinValue;
         public bool IsMonitoring { get; set; } = false;
-
         [NonSerialized]
         public ServerStatus Status = ServerStatus.Stopped;
+        public bool EnableCommands { get; set; } = false;
     }
 }

@@ -1,3 +1,5 @@
+using System.Windows.Forms;
+
 namespace SCNET_Restart_Tool
 {
     partial class ToolMain
@@ -37,6 +39,7 @@ namespace SCNET_Restart_Tool
         private System.Windows.Forms.DataGridView dgvLogs;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Button btnClearLogs;
+        private Button btnToggleCommands;
 
         protected override void Dispose(bool disposing)
         {
@@ -96,6 +99,17 @@ namespace SCNET_Restart_Tool
             this.splitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvLogs)).BeginInit();
             this.SuspendLayout();
+
+            // 指令切换按钮
+            this.btnToggleCommands = new System.Windows.Forms.Button();
+            this.btnToggleCommands.Location = new System.Drawing.Point(430, 260);
+            this.btnToggleCommands.Name = "btnToggleCommands";
+            this.btnToggleCommands.Size = new System.Drawing.Size(100, 23);
+            this.btnToggleCommands.TabIndex = 33;
+            this.btnToggleCommands.Text = "启用指令";
+            this.btnToggleCommands.UseVisualStyleBackColor = true;
+            this.btnToggleCommands.Click += new System.EventHandler(this.BtnToggleCommands_Click);
+
 
             // dgvServers
             this.dgvServers.AllowUserToAddRows = false;

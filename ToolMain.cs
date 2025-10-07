@@ -21,9 +21,9 @@ namespace SCNET_Restart_Tool
             LoadServerConfigs();
         }
 
-        /// <summary>
+        
         /// 初始化UI控件
-        /// </summary>
+        
         private void InitializeUI()
         {
             // 服务端列表配置
@@ -87,11 +87,12 @@ namespace SCNET_Restart_Tool
             });
 
             dgvLogs.DataSource = new BindingSource(_logManager.GetAllLogs(), null);
+            UpdateCommandControlsState();
         }
 
-        /// <summary>
+        
         /// 日志更新事件（实时刷新UI）
-        /// </summary>
+        
         private void LogManager_OnLogAdded(LogItem log)
         {
             if (dgvLogs.InvokeRequired)
@@ -107,9 +108,9 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+        
         /// 加载服务端配置
-        /// </summary>
+        
         private void LoadServerConfigs()
         {
             _servers = ServerConfigManager.LoadAll();
@@ -118,9 +119,9 @@ namespace SCNET_Restart_Tool
             _logManager.AddLog("系统", "程序启动，加载服务端配置完成");
         }
 
-        /// <summary>
+        
         /// 初始化所有服务端监控器
-        /// </summary>
+        
         private void InitializeMonitors()
         {
             _monitors.Clear();
@@ -135,9 +136,9 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+        
         /// 服务端状态变更回调
-        /// </summary>
+        
         private void OnServerStatusChanged(ServerConfig server)
         {
             if (dgvServers.InvokeRequired)
@@ -153,13 +154,17 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+
         /// 服务端列表选择变更
-        /// </summary>
+
         private void DgvServers_SelectionChanged(object sender, EventArgs e)
         {
             if (dgvServers.SelectedRows.Count == 0)
+            {
+                _selectedServer = null;
+                UpdateCommandControlsState(); // 未选中时更新状态
                 return;
+            }
 
             _selectedServer = dgvServers.SelectedRows[0].DataBoundItem as ServerConfig;
             if (_selectedServer != null)
@@ -168,9 +173,9 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+
         /// 加载服务端详情到表单
-        /// </summary>
+
         private void LoadServerToDetails(ServerConfig server)
         {
             txtServerName.Text = server.Name;
@@ -182,11 +187,13 @@ namespace SCNET_Restart_Tool
             txtIntervalHours.Text = server.IntervalHours.ToString();
             btnStartMonitor.Text = server.IsMonitoring ? "关闭监控" : "开启监控";
             btnStartMonitor.BackColor = server.IsMonitoring ? System.Drawing.Color.Red : System.Drawing.Color.LimeGreen;
+            //更新指令控件状态
+    UpdateCommandControlsState();
         }
 
-        /// <summary>
+        
         /// 添加服务端按钮
-        /// </summary>
+        
         private void BtnAddServer_Click(object sender, EventArgs e)
         {
             var newServer = new ServerConfig
@@ -204,9 +211,9 @@ namespace SCNET_Restart_Tool
             _logManager.AddLog("系统", $"新增服务端：{newServer.Name}");
         }
 
-        /// <summary>
+        
         /// 删除服务端按钮
-        /// </summary>
+        
         private void BtnDeleteServer_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null)
@@ -225,9 +232,9 @@ namespace SCNET_Restart_Tool
             _logManager.AddLog("系统", $"删除服务端：{serverName}");
         }
 
-        /// <summary>
+        
         /// 批量重启按钮
-        /// </summary>
+        
         private void BtnBatchRestart_Click(object sender, EventArgs e)
         {
             _logManager.AddLog("系统", "开始批量重启所有服务端");
@@ -241,9 +248,9 @@ namespace SCNET_Restart_Tool
             MessageBox.Show("批量重启完成");
         }
 
-        /// <summary>
+        
         /// 选择程序路径按钮
-        /// </summary>
+        
         private void BtnSelectExe_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -259,9 +266,9 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+        
         /// 保存设置按钮
-        /// </summary>
+        
         private void BtnSaveSettings_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -282,9 +289,9 @@ namespace SCNET_Restart_Tool
             MessageBox.Show("设置已保存");
         }
 
-        /// <summary>
+        
         /// 开启/关闭监控按钮
-        /// </summary>
+        
         private void BtnStartMonitor_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -303,9 +310,9 @@ namespace SCNET_Restart_Tool
             ServerConfigManager.SaveAll(_servers);
         }
 
-        /// <summary>
+        
         /// 手动关闭当前服务端按钮
-        /// </summary>
+        
         private void BtnStopServer_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null)
@@ -318,9 +325,9 @@ namespace SCNET_Restart_Tool
             _logManager.AddLog("系统", $"执行关闭当前服务端：{_selectedServer.Name}");
         }
 
-        /// <summary>
+        
         /// 手动启动当前服务端按钮
-        /// </summary>
+        
         private void BtnStartServer_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null)
@@ -338,9 +345,9 @@ namespace SCNET_Restart_Tool
             _monitors[_selectedServer.Id].StartProcess();
         }
 
-        /// <summary>
+        
         /// 关闭所有服务端按钮
-        /// </summary>
+        
         private void BtnStopAllServers_Click(object sender, EventArgs e)
         {
             if (_servers.Count == 0)
@@ -377,9 +384,9 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+        
         /// 发送指令按钮
-        /// </summary>
+        
         private void BtnSendCommand_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -395,9 +402,9 @@ namespace SCNET_Restart_Tool
             lblCommandStatus.Text = $"响应：{result}";
         }
 
-        /// <summary>
+        
         /// 清空日志按钮
-        /// </summary>
+        
         private void BtnClearLogs_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("确定要清空所有日志吗？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
@@ -408,9 +415,9 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
+        
         /// 服务端列表单元格格式化（显示IP:端口）
-        /// </summary>
+        
         private void dgvServers_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.ColumnIndex == 2 && e.RowIndex >= 0)
@@ -423,6 +430,59 @@ namespace SCNET_Restart_Tool
             }
         }
 
+
+        /// 指令启用/禁用切换按钮
+        private void BtnToggleCommands_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null)
+            {
+                MessageBox.Show("请先选中服务端");
+                return;
+            }
+
+            // 切换状态
+            _selectedServer.EnableCommands = !_selectedServer.EnableCommands;
+            // 更新按钮显示
+            UpdateCommandControlsState();
+            // 保存配置
+            ServerConfigManager.SaveAll(_servers);
+            // 记录日志
+            _logManager.AddLog(_selectedServer.Name,
+                _selectedServer.EnableCommands ? "已启用指令功能" : "已禁用指令功能");
+        }
+
+        /// 更新指令相关控件状态（启用/禁用）
+        private void UpdateCommandControlsState()
+        {
+            if (_selectedServer == null)
+            {
+                // 未选中服务端时禁用所有控件
+                txtCommand.Enabled = false;
+                btnSendCommand.Enabled = false;
+                btnToggleCommands.Enabled = false;
+                btnToggleCommands.Text = "启用指令";
+                btnToggleCommands.BackColor = System.Drawing.Color.Gray;
+            }
+            else
+            {
+                // 根据配置启用/禁用控件
+                txtCommand.Enabled = _selectedServer.EnableCommands;
+                btnSendCommand.Enabled = _selectedServer.EnableCommands;
+                btnToggleCommands.Enabled = true;
+
+                // 更新按钮文本和颜色
+                if (_selectedServer.EnableCommands)
+                {
+                    btnToggleCommands.Text = "禁用指令";
+                    btnToggleCommands.BackColor = System.Drawing.Color.Orange;
+                }
+                else
+                {
+                    btnToggleCommands.Text = "启用指令";
+                    btnToggleCommands.BackColor = System.Drawing.Color.Gray;
+                }
+            }
+        }
         private void Form1_Load(object sender, EventArgs e)
         {
             // 初始化加载

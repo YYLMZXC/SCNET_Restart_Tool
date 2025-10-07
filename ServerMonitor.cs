@@ -8,9 +8,7 @@ using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
 {
-    /// <summary>
     /// 服务端监控器
-    /// </summary>
     public class ServerMonitor
     {
         private readonly ServerConfig _config;
@@ -35,9 +33,7 @@ namespace SCNET_Restart_Tool
             UpdateStatus();
         }
 
-        /// <summary>
         /// 启动监控
-        /// </summary>
         public void Start()
         {
             if (!_config.IsMonitoring)
@@ -50,9 +46,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
         /// 停止监控
-        /// </summary>
         public void Stop()
         {
             if (_config.IsMonitoring)
@@ -65,9 +59,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
         /// 定时任务检查（每日关闭/间隔关闭）
-        /// </summary>
         private void TimerDaily_Tick(object sender, EventArgs e)
         {
             // 每日定时关闭
@@ -98,9 +90,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// <summary>
         /// 持续检查服务端状态，自动启动
-        /// </summary>
         private void TimerContinuous_Tick(object sender, EventArgs e)
         {
             UpdateStatus();
@@ -111,10 +101,7 @@ namespace SCNET_Restart_Tool
                 StartProcess();
             }
         }
-
-        /// <summary>
         /// 更新服务端状态
-        /// </summary>
         private void UpdateStatus()
         {
             var isRunning = IsProcessRunning();
@@ -132,13 +119,7 @@ namespace SCNET_Restart_Tool
 
             _onStatusChanged.Invoke(_config);
         }
-
-        /// <summary>
-        /// 检查进程是否运行
-        /// </summary>
-        /// <summary>
         /// 检查进程是否运行（增强版：兼容权限问题，使用WMI获取路径）
-        /// </summary>
         public bool IsProcessRunning()
         {
             if (string.IsNullOrEmpty(_config.ExePath))
@@ -216,9 +197,7 @@ namespace SCNET_Restart_Tool
             return false;
         }
 
-        /// <summary>
         /// 启动服务端进程
-        /// </summary>
         public void StartProcess()
         {
             // 先检查是否已运行（使用改进后的IsProcessRunning）
@@ -257,9 +236,8 @@ namespace SCNET_Restart_Tool
                 MessageBox.Show(error);
             }
         }
-        /// <summary>
+
         /// 关闭服务端进程（仅当前配置的服务端）
-        /// </summary>
         public void KillProcess()
         {
             if (string.IsNullOrEmpty(_config.ExePath))
@@ -275,70 +253,141 @@ namespace SCNET_Restart_Tool
 
             try
             {
-                // 通过WMI查询并终止进程
-                using (var searcher = new ManagementObjectSearcher(
-                    "SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process"))
+                // 优先使用Process直接关闭（更高效）
+                string processName = Path.GetFileNameWithoutExtension(targetFileName);
+                foreach (var process in Process.GetProcessesByName(processName))
                 {
-                    foreach (ManagementObject obj in searcher.Get()) // 明确指定为ManagementObject
+                    try
                     {
+                        // 获取进程路径（处理权限问题）
+                        string processPath = "";
                         try
                         {
-                            string processPath = obj["ExecutablePath"]?.ToString()?.ToLowerInvariant() ?? string.Empty;
-                            string commandLine = obj["CommandLine"]?.ToString()?.ToLowerInvariant() ?? string.Empty;
-                            int processId = Convert.ToInt32(obj["ProcessId"]);
+                            processPath = process.MainModule?.FileName?.ToLowerInvariant() ?? "";
+                        }
+                        catch (Exception ex)
+                        {
+                            _logManager.AddLog(_config.Name, $"获取进程路径失败：{ex.Message}", "警告");
+                        }
 
-                            // 匹配目标进程
-                            bool isMatch = processPath == targetPath ||
-                                          (processPath.EndsWith(targetFileName) && commandLine.Contains(targetArgs));
-
-                            if (isMatch)
+                        // 获取命令行参数（用于精准匹配）
+                        string commandLine = "";
+                        try
+                        {
+                            using (var searcher = new ManagementObjectSearcher(
+                                $"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {process.Id}"))
                             {
-                                _logManager.AddLog(_config.Name, $"尝试关闭进程（PID：{processId}）");
-
-                                // 关键修正：使用ManagementObject的InvokeMethod
-                                object[] parameters = { 0 }; // 终止操作的参数（0表示成功）
-                                var result = obj.InvokeMethod("Terminate", parameters);
-                                int exitCode = Convert.ToInt32(result);
-
-                                if (exitCode == 0)
+                                foreach (var obj in searcher.Get())
                                 {
-                                    _logManager.AddLog(_config.Name, $"进程已关闭（PID：{processId}）");
-                                    isKilled = true;
+                                    commandLine = obj["CommandLine"]?.ToString()?.ToLowerInvariant() ?? "";
                                     break;
-                                }
-                                else
-                                {
-                                    _logManager.AddLog(_config.Name, $"关闭失败（PID：{processId}），错误码：{exitCode}", "警告");
                                 }
                             }
                         }
                         catch (Exception ex)
                         {
-                            _logManager.AddLog(_config.Name, $"关闭进程出错：{ex.Message}", "警告");
+                            _logManager.AddLog(_config.Name, $"获取命令行失败：{ex.Message}", "警告");
                         }
-                        finally
+
+                        // 匹配目标进程
+                        bool isMatch = processPath == targetPath ||
+                                      (processPath.EndsWith(targetFileName) && commandLine.Contains(targetArgs));
+
+                        if (isMatch)
                         {
-                            obj.Dispose(); // 释放资源
+                            _logManager.AddLog(_config.Name, $"尝试关闭进程（PID：{process.Id}）");
+
+                            // 先尝试正常关闭（发送关闭消息）
+                            if (process.CloseMainWindow())
+                            {
+                                // 等待2秒确认关闭
+                                if (process.WaitForExit(2000))
+                                {
+                                    _logManager.AddLog(_config.Name, $"进程正常关闭（PID：{process.Id}）");
+                                    isKilled = true;
+                                    break;
+                                }
+                            }
+
+                            // 正常关闭失败，尝试强制终止
+                            try
+                            {
+                                process.Kill();
+                                if (process.WaitForExit(2000))
+                                {
+                                    _logManager.AddLog(_config.Name, $"进程强制关闭（PID：{process.Id}）");
+                                    isKilled = true;
+                                    break;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logManager.AddLog(_config.Name, $"强制关闭失败：{ex.Message}", "警告");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logManager.AddLog(_config.Name, $"处理进程时出错：{ex.Message}", "警告");
+                    }
+                }
+
+                // 如果直接关闭失败，尝试WMI方法（兼容更多场景）
+                if (!isKilled)
+                {
+                    using (var searcher = new ManagementObjectSearcher(
+                        "SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process"))
+                    {
+                        foreach (ManagementObject obj in searcher.Get())
+                        {
+                            try
+                            {
+                                string processPath = obj["ExecutablePath"]?.ToString()?.ToLowerInvariant() ?? "";
+                                string commandLine = obj["CommandLine"]?.ToString()?.ToLowerInvariant() ?? "";
+                                int processId = Convert.ToInt32(obj["ProcessId"]);
+
+                                bool isMatch = processPath == targetPath ||
+                                              (processPath.EndsWith(targetFileName) && commandLine.Contains(targetArgs));
+
+                                if (isMatch)
+                                {
+                                    _logManager.AddLog(_config.Name, $"尝试WMI关闭进程（PID：{processId}）");
+                                    object[] parameters = { 0 };
+                                    var result = obj.InvokeMethod("Terminate", parameters);
+                                    int exitCode = Convert.ToInt32(result);
+
+                                    if (exitCode == 0)
+                                    {
+                                        _logManager.AddLog(_config.Name, $"WMI关闭成功（PID：{processId}）");
+                                        isKilled = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logManager.AddLog(_config.Name, $"WMI操作出错：{ex.Message}", "警告");
+                            }
+                            finally
+                            {
+                                obj.Dispose();
+                            }
                         }
                     }
                 }
             }
             catch (ManagementException ex)
             {
-                _logManager.AddLog(_config.Name, $"WMI关闭失败（可能权限不足）：{ex.Message}", "错误");
-                // 降级方案：尝试通过Process.Kill()关闭
-                isKilled = DegradeKillProcess(targetFileName, targetArgs);
+                _logManager.AddLog(_config.Name, $"WMI服务错误：{ex.Message}", "错误");
             }
 
             if (!isKilled)
             {
-                _logManager.AddLog(_config.Name, "关闭失败：未找到匹配的运行进程或无权限");
+                _logManager.AddLog(_config.Name, "关闭失败：未找到进程或无操作权限", "错误");
             }
         }
 
-        /// <summary>
         /// 降级方案：使用Process.Kill()关闭（WMI失败时）
-        /// </summary>
         private bool DegradeKillProcess(string fileName, string targetArgs)
         {
             string processName = Path.GetFileNameWithoutExtension(fileName);
@@ -361,9 +410,7 @@ namespace SCNET_Restart_Tool
             return false;
         }
 
-        /// <summary>
         /// 发送指令到服务端
-        /// </summary>
         public string SendServiceCommand(string command)
         {
             try
