@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SettingsForm));
             this.label1 = new System.Windows.Forms.Label();
             this.txtLogPath = new System.Windows.Forms.TextBox();
             this.btnSelectLogPath = new System.Windows.Forms.Button();
@@ -52,7 +53,7 @@
             // txtLogPath
             // 
             this.txtLogPath.Location = new System.Drawing.Point(167, 21);
-            this.txtLogPath.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.txtLogPath.Margin = new System.Windows.Forms.Padding(4);
             this.txtLogPath.Name = "txtLogPath";
             this.txtLogPath.ReadOnly = true;
             this.txtLogPath.Size = new System.Drawing.Size(332, 25);
@@ -61,7 +62,7 @@
             // btnSelectLogPath
             // 
             this.btnSelectLogPath.Location = new System.Drawing.Point(507, 19);
-            this.btnSelectLogPath.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnSelectLogPath.Margin = new System.Windows.Forms.Padding(4);
             this.btnSelectLogPath.Name = "btnSelectLogPath";
             this.btnSelectLogPath.Size = new System.Drawing.Size(100, 29);
             this.btnSelectLogPath.TabIndex = 8;
@@ -73,7 +74,7 @@
             // 
             this.chkAutoClearLogs.AutoSize = true;
             this.chkAutoClearLogs.Location = new System.Drawing.Point(31, 69);
-            this.chkAutoClearLogs.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.chkAutoClearLogs.Margin = new System.Windows.Forms.Padding(4);
             this.chkAutoClearLogs.Name = "chkAutoClearLogs";
             this.chkAutoClearLogs.Size = new System.Drawing.Size(149, 19);
             this.chkAutoClearLogs.TabIndex = 7;
@@ -92,7 +93,7 @@
             // numAutoClearDays
             // 
             this.numAutoClearDays.Location = new System.Drawing.Point(400, 69);
-            this.numAutoClearDays.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.numAutoClearDays.Margin = new System.Windows.Forms.Padding(4);
             this.numAutoClearDays.Maximum = new decimal(new int[] {
             365,
             0,
@@ -115,7 +116,7 @@
             // btnSaveSettings
             // 
             this.btnSaveSettings.Location = new System.Drawing.Point(333, 162);
-            this.btnSaveSettings.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnSaveSettings.Margin = new System.Windows.Forms.Padding(4);
             this.btnSaveSettings.Name = "btnSaveSettings";
             this.btnSaveSettings.Size = new System.Drawing.Size(100, 29);
             this.btnSaveSettings.TabIndex = 1;
@@ -126,7 +127,7 @@
             // btnCancel
             // 
             this.btnCancel.Location = new System.Drawing.Point(507, 162);
-            this.btnCancel.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnCancel.Margin = new System.Windows.Forms.Padding(4);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(100, 29);
             this.btnCancel.TabIndex = 0;
@@ -148,11 +149,12 @@
             this.Controls.Add(this.txtLogPath);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "SettingsForm";
-            this.Text = "程序隐藏设置";
+            this.Text = "程序设置";
             ((System.ComponentModel.ISupportInitialize)(this.numAutoClearDays)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
