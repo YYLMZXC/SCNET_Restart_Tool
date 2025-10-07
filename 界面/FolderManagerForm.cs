@@ -106,19 +106,21 @@ namespace SCNET_Restart_Tool
 
         private void InitFolderTabs()
         {
+            // 关键：先移除已有的事件绑定，避免重复触发
+            tabControlFolders.SelectedIndexChanged -= TabControlFolders_SelectedIndexChanged;
+
             tabControlFolders.TabPages.Clear();
 
             if (_currentServer == null)
             {
                 var emptyTab = new TabPage("提示");
                 emptyTab.BackColor = Color.White;
-
                 var tipLabel = new Label
                 {
                     Text = "请先在主窗口选中服务端！",
                     Dock = DockStyle.Fill,
                     TextAlign = ContentAlignment.MiddleCenter,
-                    Font = new Font("微软雅黑", 12F, FontStyle.Regular),
+                    Font = new Font("微软雅黑", 12F),
                     ForeColor = _darkGray
                 };
                 emptyTab.Controls.Add(tipLabel);
@@ -126,7 +128,7 @@ namespace SCNET_Restart_Tool
                 return;
             }
 
-            // 添加带图标和样式的标签页
+            // 添加标签页（原逻辑不变）
             AddFileListTab("Bugs日志", _currentServer.BugsLogPath, true, Properties.Resources.log_icon);
             AddFileListTab("CharacterSkins（皮肤）", _currentServer.CharacterSkinsPath, false, Properties.Resources.skin_icon);
             AddFileListTab("Configs（配置）", _currentServer.ConfigsPath, false, Properties.Resources.config_icon);
@@ -135,11 +137,17 @@ namespace SCNET_Restart_Tool
             AddFileListTab("Plugins（插件）", _currentServer.PluginsPath, false, Properties.Resources.plugin_icon);
             AddFileListTab("Worlds（地图）", _currentServer.WorldsPath, false, Properties.Resources.world_icon);
 
-            tabControlFolders.SelectedIndexChanged += (s, e) =>
+            // 重新绑定事件（使用命名方法）
+            tabControlFolders.SelectedIndexChanged += TabControlFolders_SelectedIndexChanged;
+        }
+
+        // 新增事件处理方法（判断空值）
+        private void TabControlFolders_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControlFolders.SelectedTab != null && tabControlFolders.SelectedTab.Tag != null)
             {
-                if (tabControlFolders.SelectedTab.Tag != null)
-                    _activeFolderPath = tabControlFolders.SelectedTab.Tag.ToString();
-            };
+                _activeFolderPath = tabControlFolders.SelectedTab.Tag.ToString();
+            }
         }
 
         private void AddFileListTab(string tabName, string folderPath, bool hasCleanButton, Image tabIcon)
