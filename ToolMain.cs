@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Net.Sockets;
 
 namespace SCNET_Restart_Tool
@@ -12,10 +11,6 @@ namespace SCNET_Restart_Tool
     {
         private System.Windows.Forms.Timer timerDaily;
         private System.Windows.Forms.Timer timerContinuous;
-        private Label statusLabel;
-        private Button killButton;
-        private Button exitButton;
-        private Button selectButton;
         private const string ConfigFileName = "default_program.config"; // 配置文件
         private string defaultDirectory = Path.GetDirectoryName(Application.ExecutablePath);
         private const string DefaultExe = "TerminalEntry.exe";
@@ -24,16 +19,10 @@ namespace SCNET_Restart_Tool
 
         // 定时关闭相关变量
         private DateTime scheduledCloseTime = new DateTime(1, 1, 1, 1, 0, 0);
-        private TextBox timeInput;
-        private Button saveTimeButton;
-        private Label scheduleLabel;
 
         // 间隔关闭相关变量（支持小数小时）
         private double intervalHours = 0;
         private DateTime lastIntervalCloseTime = DateTime.MinValue;
-        private TextBox intervalInput;
-        private Button saveIntervalButton;
-        private Label intervalLabel;
 
         // 服务IP、端口、密码和命令
         private string serviceIp = "127.0.0.1"; // 默认IP
@@ -139,7 +128,7 @@ namespace SCNET_Restart_Tool
                             $"{(intervalHours * 60):0}分钟" :
                             $"{intervalHours:0.###}小时";
 
-                        UpdateStatusLabel($"配置加载成功\n定时关闭: {scheduledCloseTime:HH:mm}\n间隔关闭: {intervalDesc}\n服务IP: {serviceIp}\n服务端口: {servicePort}\n服务密码: {servicePassword}\n服务命令: {serviceCommand}");
+                        UpdateStatusLabel($"配置加载成功\n定时关闭: {scheduledCloseTime:HH:mm}\n间隔关闭: {intervalDesc}\n服务IP: {serviceIp}\n服务端口: {servicePort}");
                     }
                     else
                     {
@@ -203,29 +192,7 @@ namespace SCNET_Restart_Tool
                 UpdateStatusLabel($"保存配置失败: {ex.Message}");
             }
         }
-        private void saveSettingsButton_Click(object sender, EventArgs e)
-        {
-            // 获取当前输入框中的IP、端口、密码和命令
-            serviceIp = ipInput.Text.Trim();
-            if (int.TryParse(portInput.Text, out int port))
-            {
-                servicePort = port;
-            }
-            else
-            {
-                UpdateStatusLabel("端口号无效，请输入有效的数字端口");
-                return;
-            }
 
-            servicePassword = passwordInput.Text.Trim();
-            serviceCommand = commandInput.Text.Trim();
-
-            // 保存到配置文件
-            SaveDefaultProgram();
-
-            // 更新状态标签
-            UpdateStatusLabel($"配置已保存\nIP: {serviceIp}\n端口: {servicePort}\n密码: {servicePassword}\n命令: {serviceCommand}");
-        }
         private void VerifyTargetExecutable()
         {
             if (File.Exists(targetExecutablePath))
@@ -337,7 +304,7 @@ namespace SCNET_Restart_Tool
                 SendServiceCommand("close 9 例行维护");
                 UpdateStatusLabel($"延迟关闭程序：{targetExecutableName}");
                 System.Threading.Thread.Sleep(7000);
-                
+
                 // 关闭目标程序
                 Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(targetExecutableName));
                 foreach (Process process in processes)
@@ -369,7 +336,7 @@ namespace SCNET_Restart_Tool
                 }
             }
         }
-        //重发命令
+
         private void SendServiceCommand(string command)
         {
             try
@@ -427,6 +394,7 @@ namespace SCNET_Restart_Tool
                 UpdateStatusLabel($"发送指令失败: {ex.Message}");
             }
         }
+
         private void StartTargetProcess()
         {
             try
@@ -488,7 +456,6 @@ namespace SCNET_Restart_Tool
 
         private void defaultButton_Click(object sender, EventArgs e)
         {
-            SaveDefaultProgram();
             serviceIp = ipInput.Text.Trim();
             if (int.TryParse(portInput.Text, out int port))
             {
@@ -541,8 +508,6 @@ namespace SCNET_Restart_Tool
                 UpdateStatusLabel("间隔时间无效，请输入0或正数（如0.6表示36分钟）");
             }
         }
-
-       
 
         private void sendButton_Click(object sender, EventArgs e)
         {
@@ -612,7 +577,7 @@ namespace SCNET_Restart_Tool
                 servicePassword = password;
                 serviceCommand = command;
                 SaveDefaultProgram();
-                UpdateStatusLabel($"发送成功，配置已更新\nIP: {serviceIp}\n端口: {servicePort}\n密码: {servicePassword}\n命令: {serviceCommand}");
+                UpdateStatusLabel($"发送成功，配置已更新\nIP: {serviceIp}\n端口: {servicePort}");
             }
             catch (SocketException ex)
             {
