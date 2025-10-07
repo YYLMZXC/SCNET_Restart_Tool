@@ -15,8 +15,10 @@ namespace SCNET_Restart_Tool
         {
             InitializeComponent();
             AppSettings = currentSettings ?? new SettingsModel();
+
             // 加载当前设置到界面
             LoadSettingsToUI();
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
         }
 
         // 加载现有设置
@@ -68,6 +70,11 @@ namespace SCNET_Restart_Tool
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private void SettingsForm_Load(object sender, EventArgs e)
+        {
+           
         }
     }
 

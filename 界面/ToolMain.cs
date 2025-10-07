@@ -51,6 +51,7 @@ namespace SCNET_Restart_Tool
 
         #region 初始化与基础设置
         // 初始化右上角设置按钮
+        // 初始化右上角设置按钮（原有代码，无需修改）
         private void InitializeSettingsButton()
         {
             settingsBtn = new Button();
@@ -71,9 +72,44 @@ namespace SCNET_Restart_Tool
             this.Resize += (s, e) =>
             {
                 settingsBtn.Location = new Point(this.ClientSize.Width - 90, 10);
+                // 同步调整关于按钮位置（新增）
+                if (aboutBtn != null)
+                    aboutBtn.Location = new Point(this.ClientSize.Width - 180, 10);
             };
+
+            // 初始化关于按钮（新增：在设置按钮初始化后补充）
+            InitializeAboutButton();
         }
 
+        // 新增：初始化关于按钮的方法
+        private void InitializeAboutButton()
+        {
+            aboutBtn = new Button();
+            aboutBtn.Text = "关于";
+            aboutBtn.Size = new Size(80, 30);
+            aboutBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            aboutBtn.Location = new Point(this.ClientSize.Width - 180, 10);
+            aboutBtn.Click += aboutBtn_Click; // 绑定点击事件
+
+            // 应用样式（复用现有 SetButtonStyle 方法，保持一致性）
+            SetButtonStyle(aboutBtn, _colorManage, "查看软件版本与功能说明");
+
+            // 添加到主窗体并置于顶层
+            this.Controls.Add(aboutBtn);
+            aboutBtn.BringToFront();
+        }
+        // 新增：关于按钮点击事件
+        private void aboutBtn_Click(object sender, EventArgs e)
+        {
+            // 使用 using 确保窗口关闭后释放资源
+            using (var aboutForm = new AboutForm())
+            {
+                // 以模态窗口显示（阻止主窗口操作，提升用户体验）
+                aboutForm.ShowDialog(this);
+            }
+            // 记录日志（可选，便于追踪用户操作）
+            _logManager.AddLog("系统", "打开软件关于界面");
+        }
         private void InitializeUI()
         {
             try
@@ -945,5 +981,20 @@ namespace SCNET_Restart_Tool
             SaveServerConfigs();
         }
         #endregion
+
+        private void folderManagerBtn_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void restartBtn_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void serverNameInput_TextChanged(object sender, EventArgs e)
+        {
+
+        }
     }
 }

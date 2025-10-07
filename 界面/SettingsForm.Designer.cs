@@ -139,7 +139,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(640, 212);
+            this.ClientSize = new System.Drawing.Size(671, 231);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnSaveSettings);
             this.Controls.Add(this.numAutoClearDays);
@@ -155,6 +155,7 @@
             this.MinimizeBox = false;
             this.Name = "SettingsForm";
             this.Text = "程序设置";
+            this.Load += new System.EventHandler(this.SettingsForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.numAutoClearDays)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
