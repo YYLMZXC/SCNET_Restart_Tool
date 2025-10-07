@@ -36,7 +36,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        public string BugsLogPath => Path.Combine(ServerRootPath, "Bugs日志");
+        public string BugsLogPath => Path.Combine(ServerRootPath, "Bugs");
         public string CharacterSkinsPath => Path.Combine(ServerRootPath, "CharacterSkins");
         public string ConfigsPath => Path.Combine(ServerRootPath, "Configs");
         public string TexturePacksPath => Path.Combine(ServerRootPath, "TexturePacks");

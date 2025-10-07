@@ -117,10 +117,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FolderManager.cs" />
     <Compile Include="界面\FolderManagerCode\BugsLogTabCreator.cs" />
     <Compile Include="界面\FolderManagerCode\ControlFactory.cs" />
-    <Compile Include="界面\FolderManagerCode\FolderManager.cs" />
+    <Compile Include="界面\FolderManagerCode\FolderOperations.cs" />
     <Compile Include="界面\FolderManagerCode\NormalFolderTabCreator.cs" />
     <Compile Include="界面\FolderManagerCode\FolderManagerForm.cs">
       <SubType>Form</SubType>

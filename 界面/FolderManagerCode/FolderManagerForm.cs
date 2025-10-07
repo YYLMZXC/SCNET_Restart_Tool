@@ -19,7 +19,7 @@ namespace SCNET_Restart_Tool
         internal readonly Color WarningColor = Color.FromArgb(241, 196, 15);
         internal readonly Color DangerColor = Color.FromArgb(231, 76, 60);
 
-        // 新增：用于按钮提示的ToolTip
+        // 用于按钮提示的ToolTip
         private readonly ToolTip _toolTip = new ToolTip();
 
         public FolderManagerForm(ServerConfig selectedServer)
@@ -40,16 +40,6 @@ namespace SCNET_Restart_Tool
             Font = new Font("微软雅黑", 9F);
             FormBorderStyle = FormBorderStyle.Sizable;
             MinimumSize = new Size(800, 600);
-
-            // 批量备份按钮样式
-            btnBatchBackupAll.BackColor = PrimaryColor;
-            btnBatchBackupAll.ForeColor = Color.White;
-            btnBatchBackupAll.FlatStyle = FlatStyle.Flat;
-            btnBatchBackupAll.FlatAppearance.BorderSize = 0;
-            btnBatchBackupAll.Padding = new Padding(5, 0, 5, 0);
-            btnBatchBackupAll.Cursor = Cursors.Hand;
-            btnBatchBackupAll.MouseEnter += (s, e) => btnBatchBackupAll.BackColor = SecondaryColor;
-            btnBatchBackupAll.MouseLeave += (s, e) => btnBatchBackupAll.BackColor = PrimaryColor;
 
             // 标签页样式
             tabControlFolders.DrawMode = TabDrawMode.OwnerDrawFixed;
@@ -117,27 +107,34 @@ namespace SCNET_Restart_Tool
                 return;
             }
 
-            // 添加各功能标签页
+            // 批量备份委托（统一逻辑）
+            Action batchBackupAction = () =>
+            {
+                if (_currentServer != null)
+                    FolderOperations.BatchBackupAllFolders(_currentServer);
+            };
+
+            // 添加各功能标签页（传递备份按钮事件）
             tabControlFolders.TabPages.Add(
-                BugsLogTabCreator.Create(this, _currentServer.BugsLogPath, _toolTip)
+                BugsLogTabCreator.Create(this, _currentServer.BugsLogPath, _toolTip, batchBackupAction)
             );
             tabControlFolders.TabPages.Add(
-                NormalFolderTabCreator.Create(this, "CharacterSkins（皮肤）", _currentServer.CharacterSkinsPath, _toolTip)
+                NormalFolderTabCreator.Create(this, "CharacterSkins", _currentServer.CharacterSkinsPath, _toolTip, batchBackupAction)
             );
             tabControlFolders.TabPages.Add(
-                NormalFolderTabCreator.Create(this, "Configs（配置）", _currentServer.ConfigsPath, _toolTip)
+                NormalFolderTabCreator.Create(this, "Configs", _currentServer.ConfigsPath, _toolTip, batchBackupAction)
             );
             tabControlFolders.TabPages.Add(
-                NormalFolderTabCreator.Create(this, "TexturePacks（材质）", _currentServer.TexturePacksPath, _toolTip)
+                NormalFolderTabCreator.Create(this, "TexturePacks", _currentServer.TexturePacksPath, _toolTip, batchBackupAction)
             );
             tabControlFolders.TabPages.Add(
-                NormalFolderTabCreator.Create(this, "NetMods（模组）", _currentServer.NetModsPath, _toolTip)
+                NormalFolderTabCreator.Create(this, "NetMods", _currentServer.NetModsPath, _toolTip, batchBackupAction)
             );
             tabControlFolders.TabPages.Add(
-                NormalFolderTabCreator.Create(this, "Plugins（插件）", _currentServer.PluginsPath, _toolTip)
+                NormalFolderTabCreator.Create(this, "Plugins", _currentServer.PluginsPath, _toolTip, batchBackupAction)
             );
             tabControlFolders.TabPages.Add(
-                NormalFolderTabCreator.Create(this, "Worlds（地图）", _currentServer.WorldsPath, _toolTip)
+                NormalFolderTabCreator.Create(this, "Worlds", _currentServer.WorldsPath, _toolTip, batchBackupAction)
             );
 
             tabControlFolders.SelectedIndexChanged += TabControlFolders_SelectedIndexChanged;
@@ -166,13 +163,6 @@ namespace SCNET_Restart_Tool
             {
                 _activeFolderPath = tabControlFolders.SelectedTab.Tag.ToString();
             }
-        }
-
-        // 批量备份按钮事件
-        private void btnBatchBackupAll_Click(object sender, EventArgs e)
-        {
-            if (_currentServer != null)
-                FolderOperations.BatchBackupAllFolders(_currentServer); // 修正：使用唯一类名
         }
     }
 }

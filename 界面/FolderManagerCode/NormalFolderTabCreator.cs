@@ -7,8 +7,8 @@ namespace SCNET_Restart_Tool
 {
     internal static class NormalFolderTabCreator
     {
-        // 创建普通文件夹标签页
-        public static TabPage Create(FolderManagerForm form, string tabName, string folderPath, ToolTip toolTip)
+        // 创建普通文件夹标签页（接收备份按钮事件）
+        public static TabPage Create(FolderManagerForm form, string tabName, string folderPath, ToolTip toolTip, Action onBatchBackup)
         {
             var tabPage = new TabPage(tabName);
             tabPage.Tag = folderPath;
@@ -28,8 +28,8 @@ namespace SCNET_Restart_Tool
             LoadFiles(fileGridView, folderPath);
             mainPanel.Controls.Add(fileGridView);
 
-            // 3. 按钮区域
-            var btnPanel = CreateButtonPanel(form, folderPath, tabName, fileGridView, toolTip);
+            // 3. 按钮区域（包含备份按钮）
+            var btnPanel = CreateButtonPanel(form, folderPath, tabName, fileGridView, toolTip, onBatchBackup);
             mainPanel.Controls.Add(btnPanel);
 
             // 布局调整
@@ -95,8 +95,8 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 创建按钮面板（支持完整操作）
-        private static Panel CreateButtonPanel(FolderManagerForm form, string folderPath, string tabName, DataGridView dgv, ToolTip toolTip)
+        // 创建按钮面板（包含备份按钮）
+        private static Panel CreateButtonPanel(FolderManagerForm form, string folderPath, string tabName, DataGridView dgv, ToolTip toolTip, Action onBatchBackup)
         {
             // 刷新按钮
             var btnRefresh = ControlFactory.CreateButton(form, "刷新", form.PrimaryColor, 80);
@@ -129,7 +129,13 @@ namespace SCNET_Restart_Tool
                 LoadFiles(dgv, folderPath);
             };
 
-            return ControlFactory.CreateButtonPanel(form, btnRefresh, btnOpen, btnAdd, btnDelete);
+            // 批量备份按钮（整合到按钮组）
+            var btnBatchBackup = ControlFactory.CreateButton(form, "批量备份所有目录", form.PrimaryColor, 150);
+            btnBatchBackup.Click += (s, e) => onBatchBackup();
+
+            // 所有按钮放入同一面板（自动换行）
+            return ControlFactory.CreateButtonPanel(form,
+                btnRefresh, btnOpen, btnAdd, btnDelete, btnBatchBackup);
         }
     }
 }

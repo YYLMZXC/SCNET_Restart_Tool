@@ -38,7 +38,7 @@ namespace SCNET_Restart_Tool
             var panel = new Panel
             {
                 Dock = DockStyle.Bottom,
-                Height = 70, // 增加高度容纳换行
+                Height = 70, // 足够高度容纳换行
                 BackColor = Color.White,
                 Padding = new Padding(10, 5, 10, 5)
             };
@@ -47,7 +47,7 @@ namespace SCNET_Restart_Tool
             {
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = true, // 启用自动换行
+                WrapContents = true, // 自动换行
                 Margin = new Padding(0),
                 Padding = new Padding(0)
             };

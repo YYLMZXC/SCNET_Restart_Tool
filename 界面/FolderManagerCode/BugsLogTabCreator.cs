@@ -14,10 +14,10 @@ namespace SCNET_Restart_Tool
         private static int _totalPages = 1;
         private static List<string> _logLinesCache = new List<string>();
 
-        // 创建Bugs日志标签页
-        public static TabPage Create(FolderManagerForm form, string folderPath, ToolTip toolTip)
+        // 创建Bugs日志标签页（接收备份按钮事件）
+        public static TabPage Create(FolderManagerForm form, string folderPath, ToolTip toolTip, Action onBatchBackup)
         {
-            var tabPage = new TabPage("Bugs日志");
+            var tabPage = new TabPage("Bugs");
             tabPage.Tag = folderPath;
             tabPage.Padding = new Padding(10);
             tabPage.BackColor = Color.White;
@@ -49,11 +49,11 @@ namespace SCNET_Restart_Tool
             LoadOtherFiles(fileGridView, folderPath);
             splitPanel.Panel2.Controls.Add(fileGridView);
 
-            // 3. 按钮区域
-            var btnPanel = CreateButtonPanel(form, folderPath, fileGridView, toolTip);
+            // 3. 按钮区域（包含备份按钮）
+            var btnPanel = CreateButtonPanel(form, folderPath, fileGridView, toolTip, onBatchBackup);
             panelContainer.Controls.Add(btnPanel);
 
-            // 布局调整（控制显示顺序）
+            // 布局调整
             pathPanel.Dock = DockStyle.Top;
             pathPanel.Height = 40;
             btnPanel.Dock = DockStyle.Bottom;
@@ -76,7 +76,7 @@ namespace SCNET_Restart_Tool
             {
                 txtPath.Text += "（目录不存在，点击创建）";
                 txtPath.Cursor = Cursors.Hand;
-                txtPath.Click += (s, e) => FolderOperations.CreateFolderIfNotExists(folderPath, "Bugs日志");
+                txtPath.Click += (s, e) => FolderOperations.CreateFolderIfNotExists(folderPath, "Bugs");
             }
             else if (File.Exists(Path.Combine(folderPath, GameLogFileName)))
             {
@@ -220,8 +220,8 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 创建按钮面板（只读适配）
-        private static Panel CreateButtonPanel(FolderManagerForm form, string folderPath, DataGridView dgv, ToolTip toolTip)
+        // 创建按钮面板（包含备份按钮）
+        private static Panel CreateButtonPanel(FolderManagerForm form, string folderPath, DataGridView dgv, ToolTip toolTip, Action onBatchBackup)
         {
             // 刷新按钮
             var btnRefresh = ControlFactory.CreateButton(form, "刷新", form.PrimaryColor, 80);
@@ -229,14 +229,14 @@ namespace SCNET_Restart_Tool
 
             // 打开目录
             var btnOpen = ControlFactory.CreateButton(form, "打开目录", form.SecondaryColor, 80);
-            btnOpen.Click += (s, e) => FolderOperations.OpenFolder(folderPath, "Bugs日志");
+            btnOpen.Click += (s, e) => FolderOperations.OpenFolder(folderPath, "Bugs");
 
             // 添加文件（禁用）
             var btnAdd = ControlFactory.CreateButton(form, "添加文件", form.SuccessColor, 80);
             btnAdd.Enabled = false;
-            toolTip.SetToolTip(btnAdd, "Bugs目录为系统日志目录，禁止手动添加"); // 修正：使用ToolTip替代ToolTipText
+            toolTip.SetToolTip(btnAdd, "Bugs目录为系统日志目录，禁止手动添加");
 
-            // 删除文件（仅允许删除非Game.log）
+            // 删除文件
             var btnDelete = ControlFactory.CreateButton(form, "删除选中", form.DangerColor, 80);
             btnDelete.Click += (s, e) =>
             {
@@ -247,7 +247,7 @@ namespace SCNET_Restart_Tool
                 }
 
                 var fileName = dgv.SelectedRows[0].Cells["FileName"].Value.ToString();
-                FolderOperations.DeleteFile(folderPath, fileName, "Bugs日志");
+                FolderOperations.DeleteFile(folderPath, fileName, "Bugs");
                 LoadOtherFiles(dgv, folderPath);
             };
 
@@ -259,7 +259,13 @@ namespace SCNET_Restart_Tool
                 LoadOtherFiles(dgv, folderPath);
             };
 
-            return ControlFactory.CreateButtonPanel(form, btnRefresh, btnOpen, btnAdd, btnDelete, btnClean);
+            // 批量备份按钮（整合到按钮组）
+            var btnBatchBackup = ControlFactory.CreateButton(form, "批量备份所有目录", form.PrimaryColor, 150);
+            btnBatchBackup.Click += (s, e) => onBatchBackup();
+
+            // 所有按钮放入同一面板（自动换行）
+            return ControlFactory.CreateButtonPanel(form,
+                btnRefresh, btnOpen, btnAdd, btnDelete, btnClean, btnBatchBackup);
         }
     }
 }
