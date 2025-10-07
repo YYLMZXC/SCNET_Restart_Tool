@@ -19,6 +19,7 @@ namespace SCNET_Restart_Tool
         private Label commandLabel;
         private TextBox passwordInput;
         private Label passwordLabel;
+        private Button monitorButton; // 新增：监控开关按钮
 
         protected override void Dispose(bool disposing)
         {
@@ -61,6 +62,7 @@ namespace SCNET_Restart_Tool
             this.mainTab = new System.Windows.Forms.TabPage();
             this.statusGroup = new System.Windows.Forms.GroupBox();
             this.processGroup = new System.Windows.Forms.GroupBox();
+            this.monitorButton = new System.Windows.Forms.Button();
             this.scheduleGroup = new System.Windows.Forms.GroupBox();
             this.settingsGroup = new System.Windows.Forms.GroupBox();
             this.connectionTab = new System.Windows.Forms.TabPage();
@@ -80,7 +82,7 @@ namespace SCNET_Restart_Tool
             this.statusLabel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.statusLabel.Font = new System.Drawing.Font("微软雅黑", 9F);
             this.statusLabel.ForeColor = System.Drawing.Color.Black;
-            this.statusLabel.Location = new System.Drawing.Point(17, 22);
+            this.statusLabel.Location = new System.Drawing.Point(18, 26);
             this.statusLabel.Name = "statusLabel";
             this.statusLabel.Size = new System.Drawing.Size(828, 53);
             this.statusLabel.TabIndex = 0;
@@ -322,7 +324,7 @@ namespace SCNET_Restart_Tool
             this.headerPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.headerPanel.Location = new System.Drawing.Point(0, 0);
             this.headerPanel.Name = "headerPanel";
-            this.headerPanel.Size = new System.Drawing.Size(1037, 53);
+            this.headerPanel.Size = new System.Drawing.Size(1077, 53);
             this.headerPanel.TabIndex = 21;
             // 
             // titleLabel
@@ -345,7 +347,7 @@ namespace SCNET_Restart_Tool
             this.tabControl1.Location = new System.Drawing.Point(0, 53);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(1037, 466);
+            this.tabControl1.Size = new System.Drawing.Size(1077, 580);
             this.tabControl1.TabIndex = 22;
             // 
             // mainTab
@@ -358,7 +360,7 @@ namespace SCNET_Restart_Tool
             this.mainTab.Location = new System.Drawing.Point(4, 29);
             this.mainTab.Name = "mainTab";
             this.mainTab.Padding = new System.Windows.Forms.Padding(11, 9, 11, 9);
-            this.mainTab.Size = new System.Drawing.Size(1029, 433);
+            this.mainTab.Size = new System.Drawing.Size(1069, 547);
             this.mainTab.TabIndex = 0;
             this.mainTab.Text = "主控制";
             this.mainTab.UseVisualStyleBackColor = true;
@@ -368,10 +370,10 @@ namespace SCNET_Restart_Tool
             this.statusGroup.Controls.Add(this.statusLabel);
             this.statusGroup.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.statusGroup.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.statusGroup.Location = new System.Drawing.Point(15, 301);
+            this.statusGroup.Location = new System.Drawing.Point(25, 366);
             this.statusGroup.Name = "statusGroup";
             this.statusGroup.Padding = new System.Windows.Forms.Padding(11, 9, 11, 9);
-            this.statusGroup.Size = new System.Drawing.Size(869, 88);
+            this.statusGroup.Size = new System.Drawing.Size(869, 112);
             this.statusGroup.TabIndex = 26;
             this.statusGroup.TabStop = false;
             this.statusGroup.Text = "状态信息";
@@ -380,15 +382,30 @@ namespace SCNET_Restart_Tool
             // 
             this.processGroup.Controls.Add(this.killButton);
             this.processGroup.Controls.Add(this.exitButton);
+            this.processGroup.Controls.Add(this.monitorButton);
             this.processGroup.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.processGroup.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.processGroup.Location = new System.Drawing.Point(15, 216);
+            this.processGroup.Location = new System.Drawing.Point(14, 231);
             this.processGroup.Name = "processGroup";
             this.processGroup.Padding = new System.Windows.Forms.Padding(11, 9, 11, 9);
-            this.processGroup.Size = new System.Drawing.Size(869, 79);
+            this.processGroup.Size = new System.Drawing.Size(869, 129);
             this.processGroup.TabIndex = 25;
             this.processGroup.TabStop = false;
             this.processGroup.Text = "进程控制";
+            // 
+            // monitorButton
+            // 
+            this.monitorButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
+            this.monitorButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.monitorButton.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
+            this.monitorButton.ForeColor = System.Drawing.Color.White;
+            this.monitorButton.Location = new System.Drawing.Point(23, 73);
+            this.monitorButton.Name = "monitorButton";
+            this.monitorButton.Size = new System.Drawing.Size(823, 41);
+            this.monitorButton.TabIndex = 3;
+            this.monitorButton.Text = "开启服务端监控";
+            this.monitorButton.UseVisualStyleBackColor = false;
+            this.monitorButton.Click += new System.EventHandler(this.MonitorButton_Click);
             // 
             // scheduleGroup
             // 
@@ -400,7 +417,7 @@ namespace SCNET_Restart_Tool
             this.scheduleGroup.Controls.Add(this.saveIntervalButton);
             this.scheduleGroup.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.scheduleGroup.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.scheduleGroup.Location = new System.Drawing.Point(15, 105);
+            this.scheduleGroup.Location = new System.Drawing.Point(15, 119);
             this.scheduleGroup.Name = "scheduleGroup";
             this.scheduleGroup.Padding = new System.Windows.Forms.Padding(17, 13, 17, 13);
             this.scheduleGroup.Size = new System.Drawing.Size(869, 106);
@@ -414,7 +431,7 @@ namespace SCNET_Restart_Tool
             this.settingsGroup.Controls.Add(this.defaultButton);
             this.settingsGroup.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold);
             this.settingsGroup.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(52)))), ((int)(((byte)(73)))), ((int)(((byte)(94)))));
-            this.settingsGroup.Location = new System.Drawing.Point(15, 11);
+            this.settingsGroup.Location = new System.Drawing.Point(15, 25);
             this.settingsGroup.Name = "settingsGroup";
             this.settingsGroup.Padding = new System.Windows.Forms.Padding(11, 9, 11, 9);
             this.settingsGroup.Size = new System.Drawing.Size(869, 88);
@@ -448,7 +465,7 @@ namespace SCNET_Restart_Tool
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
-            this.ClientSize = new System.Drawing.Size(1037, 519);
+            this.ClientSize = new System.Drawing.Size(1077, 633);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.headerPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;

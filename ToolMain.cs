@@ -30,12 +30,51 @@ namespace SCNET_Restart_Tool
         private string servicePassword = ""; // 默认密码
         private string serviceCommand = ""; // 默认命令
 
+        // 新增：监控状态变量
+        private bool isMonitoring = false;
+
         public ToolMain()
         {
             InitializeComponent();
             LoadDefaultProgram();
             InitializeTimers();
             FindTargetExecutable();
+            UpdateMonitorButtonState(); // 初始化按钮状态
+        }
+
+        // 新增：监控按钮状态更新
+        private void UpdateMonitorButtonState()
+        {
+            if (isMonitoring)
+            {
+                monitorButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(76)))), ((int)(((byte)(60)))));
+                monitorButton.Text = "关闭服务端监控";
+            }
+            else
+            {
+                monitorButton.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(46)))), ((int)(((byte)(204)))), ((int)(((byte)(113)))));
+                monitorButton.Text = "开启服务端监控";
+            }
+        }
+
+        // 新增：监控按钮点击事件
+        private void MonitorButton_Click(object sender, EventArgs e)
+        {
+            isMonitoring = !isMonitoring;
+            UpdateMonitorButtonState();
+
+            if (isMonitoring)
+            {
+                UpdateStatusLabel("服务端监控已开启");
+                timerContinuous.Start();
+                timerDaily.Start();
+            }
+            else
+            {
+                UpdateStatusLabel("服务端监控已关闭");
+                timerContinuous.Stop();
+                timerDaily.Stop();
+            }
         }
 
         private void LoadDefaultProgram()
@@ -210,12 +249,12 @@ namespace SCNET_Restart_Tool
             timerDaily = new System.Windows.Forms.Timer();
             timerDaily.Interval = 1000;
             timerDaily.Tick += TimerDaily_Tick;
-            timerDaily.Start();
+            timerDaily.Stop(); // 初始停止
 
             timerContinuous = new System.Windows.Forms.Timer();
             timerContinuous.Interval = 1000;
             timerContinuous.Tick += TimerContinuous_Tick;
-            timerContinuous.Start();
+            timerContinuous.Stop(); // 初始停止
         }
 
         private void TimerDaily_Tick(object sender, EventArgs e)
@@ -303,7 +342,7 @@ namespace SCNET_Restart_Tool
                 // 在关闭目标程序之前，发送命令到指定的服务
                 SendServiceCommand("close 9 例行维护");
                 UpdateStatusLabel($"延迟关闭程序：{targetExecutableName}");
-                System.Threading.Thread.Sleep(7000);
+                System.Threading.Thread.Sleep(1000);
 
                 // 关闭目标程序
                 Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(targetExecutableName));
@@ -603,7 +642,6 @@ namespace SCNET_Restart_Tool
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
         }
     }
 }
