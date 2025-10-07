@@ -1,12 +1,12 @@
 ﻿using System;
 
 namespace SCNET_Restart_Tool
-{  
+{
     /// 日志条目模型
     public class LogItem
-    {      
+    {
         /// 日志时间       
-        public DateTime Time { get; set; }    
+        public DateTime Time { get; set; }
         /// 关联的服务端名称
         public string ServerName { get; set; }
         /// 日志内容

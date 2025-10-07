@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
@@ -42,7 +41,11 @@ namespace SCNET_Restart_Tool
                 _timerDaily.Start();
                 _timerContinuous.Start();
                 UpdateStatus();
-                _logManager.AddLog(_config.Name, "监控已开启");
+                _logManager.AddLog(_config.Name, "监控已开启（定时器已启动）");
+            }
+            else
+            {
+                _logManager.AddLog(_config.Name, "监控已处于开启状态（无需重复启动）", "调试");
             }
         }
 
@@ -55,7 +58,11 @@ namespace SCNET_Restart_Tool
                 _timerDaily.Stop();
                 _timerContinuous.Stop();
                 UpdateStatus();
-                _logManager.AddLog(_config.Name, "监控已关闭");
+                _logManager.AddLog(_config.Name, "监控已关闭（定时器已停止）");
+            }
+            else
+            {
+                _logManager.AddLog(_config.Name, "监控已处于关闭状态（无需重复停止）", "调试");
             }
         }
 
@@ -69,8 +76,12 @@ namespace SCNET_Restart_Tool
                 if (now.Hour == scheduleTime.Hours && now.Minute == scheduleTime.Minutes && now.Second == 0)
                 {
                     _logManager.AddLog(_config.Name, $"触发每日定时关闭（设定时间：{_config.ScheduleTime}）");
-                    SendServiceCommand("close 9 例行维护");
-                    System.Threading.Thread.Sleep(7000);
+                    // 仅在指令功能启用时发送指令
+                    if (_config.EnableCommands)
+                    {
+                        SendServiceCommand("close 9 例行维护");
+                        System.Threading.Thread.Sleep(7000);
+                    }
                     KillProcess();
                 }
             }
@@ -82,25 +93,55 @@ namespace SCNET_Restart_Tool
                 if (DateTime.Now >= nextClose)
                 {
                     _logManager.AddLog(_config.Name, $"触发间隔关闭（间隔：{_config.IntervalHours}小时）");
-                    SendServiceCommand("close 9 间隔维护");
-                    System.Threading.Thread.Sleep(7000);
+                    // 仅在指令功能启用时发送指令
+                    if (_config.EnableCommands)
+                    {
+                        SendServiceCommand("close 9 间隔维护");
+                        System.Threading.Thread.Sleep(7000);
+                    }
                     KillProcess();
                     _config.LastIntervalClose = DateTime.Now;
                 }
             }
         }
 
-        /// 持续检查服务端状态，自动启动
+        /// 持续检查服务端状态，自动启动（修复版）
         private void TimerContinuous_Tick(object sender, EventArgs e)
         {
-            UpdateStatus();
-
-            if (_config.IsMonitoring && _config.Status == ServerStatus.Stopped)
+            try
             {
-                _logManager.AddLog(_config.Name, "检测到服务端未运行，尝试启动...");
-                StartProcess();
+                UpdateStatus();
+
+                // 监控中且服务端未运行时，触发自动启动
+                if (_config.IsMonitoring && _config.Status == ServerStatus.Stopped)
+                {
+                    _logManager.AddLog(_config.Name, "监控检测到服务端未运行，尝试自动启动...");
+
+                    // 增加重试机制（防止偶然失败）
+                    int retryCount = 0;
+                    while (retryCount < 3 && !IsProcessRunning())
+                    {
+                        StartProcess();
+                        System.Threading.Thread.Sleep(2000); // 等待2秒再检测
+                        retryCount++;
+                    }
+
+                    if (IsProcessRunning())
+                    {
+                        _logManager.AddLog(_config.Name, "监控自动启动成功");
+                    }
+                    else
+                    {
+                        _logManager.AddLog(_config.Name, "监控自动启动失败（已重试3次）", "错误");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logManager.AddLog(_config.Name, $"监控定时器错误：{ex.Message}", "错误");
             }
         }
+
         /// 更新服务端状态
         private void UpdateStatus()
         {
@@ -119,85 +160,71 @@ namespace SCNET_Restart_Tool
 
             _onStatusChanged.Invoke(_config);
         }
-        /// 检查进程是否运行（增强版：兼容权限问题，使用WMI获取路径）
+
+        /// 检查进程是否运行（修复版：更可靠的检测逻辑）
         public bool IsProcessRunning()
         {
             if (string.IsNullOrEmpty(_config.ExePath))
+            {
+                _logManager.AddLog(_config.Name, "状态检测失败：未配置程序路径", "警告");
                 return false;
+            }
 
-            string targetPath = _config.ExePath.ToLowerInvariant();
-            string targetFileName = Path.GetFileName(_config.ExePath).ToLowerInvariant();
-            string targetArgs = $"world={_config.Id}"; // 唯一标识参数
+            string targetFileName = Path.GetFileName(_config.ExePath);
+            string targetProcessName = Path.GetFileNameWithoutExtension(targetFileName);
+            bool isRunning = false;
 
             try
             {
-                // 直接通过WMI查询所有进程（避免Process.GetProcessesByName的局限性）
-                using (var searcher = new ManagementObjectSearcher(
-                    "SELECT ProcessId, ExecutablePath, CommandLine FROM Win32_Process"))
+                // 优先通过进程名+路径双重验证（解决WMI延迟问题）
+                foreach (var process in Process.GetProcessesByName(targetProcessName))
                 {
-                    foreach (var obj in searcher.Get())
+                    try
                     {
-                        try
+                        // 验证进程路径是否匹配（忽略大小写）
+                        if (process.MainModule?.FileName.Equals(_config.ExePath,
+                            StringComparison.OrdinalIgnoreCase) == true)
                         {
-                            // 获取进程关键信息（可能为null，需防御性处理）
-                            string processPath = obj["ExecutablePath"]?.ToString()?.ToLowerInvariant() ?? string.Empty;
-                            string commandLine = obj["CommandLine"]?.ToString()?.ToLowerInvariant() ?? string.Empty;
-                            int processId = Convert.ToInt32(obj["ProcessId"]);
+                            isRunning = true;
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // 捕获权限或位数问题，不中断检测
+                        _logManager.AddLog(_config.Name, $"进程路径验证警告：{ex.Message}", "警告");
+                    }
+                }
 
-                            // 匹配条件：路径完全一致 或 文件名+唯一参数匹配
-                            bool isPathMatch = processPath == targetPath;
-                            bool isNameAndArgsMatch = processPath.EndsWith(targetFileName) &&
-                                                     commandLine.Contains(targetArgs);
-
-                            if (isPathMatch || isNameAndArgsMatch)
+                // 如果上述方法未检测到，再用WMI兜底（兼容特殊情况）
+                if (!isRunning)
+                {
+                    using (var searcher = new ManagementObjectSearcher(
+                        $"SELECT ExecutablePath FROM Win32_Process WHERE Name = '{targetFileName}'"))
+                    {
+                        foreach (var obj in searcher.Get())
+                        {
+                            string processPath = obj["ExecutablePath"]?.ToString() ?? "";
+                            if (processPath.Equals(_config.ExePath, StringComparison.OrdinalIgnoreCase))
                             {
-                                // 二次确认进程是否真的存活（避免WMI缓存）
-                                if (Process.GetProcessById(processId) != null)
-                                {
-                                    return true;
-                                }
+                                isRunning = true;
+                                break;
                             }
-                        }
-                        catch (ArgumentException)
-                        {
-                            // 进程已退出，跳过
-                            continue;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logManager.AddLog(_config.Name, $"WMI检查进程失败：{ex.Message}", "警告");
                         }
                     }
                 }
             }
-            catch (ManagementException ex)
+            catch (Exception ex)
             {
-                _logManager.AddLog(_config.Name, $"WMI查询失败（可能权限不足）：{ex.Message}", "错误");
-                // 权限不足时降级为基于文件名+参数的检查（精度较低但避免崩溃）
-                return CheckProcessByFileNameAndArgs(targetFileName, targetArgs);
+                _logManager.AddLog(_config.Name, $"状态检测失败：{ex.Message}", "错误");
             }
 
-            return false;
-        }
-        private bool CheckProcessByFileNameAndArgs(string fileName, string targetArgs)
-        {
-            string processName = Path.GetFileNameWithoutExtension(fileName);
-            foreach (var process in Process.GetProcessesByName(processName))
-            {
-                try
-                {
-                    if (process.StartInfo.Arguments.Contains(targetArgs))
-                        return true;
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-            return false;
+            // 记录检测结果（便于调试）
+            _logManager.AddLog(_config.Name, $"监控状态检测：{(isRunning ? "运行中" : "已停止")}", "调试");
+            return isRunning;
         }
 
-        /// 启动服务端进程
+        /// 启动服务端进程（保持不变）
         public void StartProcess()
         {
             // 先检查是否已运行（使用改进后的IsProcessRunning）
@@ -237,7 +264,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        /// 关闭服务端进程（仅当前配置的服务端）
+        /// 关闭服务端进程（保持不变）
         public void KillProcess()
         {
             if (string.IsNullOrEmpty(_config.ExePath))
@@ -383,34 +410,11 @@ namespace SCNET_Restart_Tool
 
             if (!isKilled)
             {
-                _logManager.AddLog(_config.Name, "关闭失败：未找到进程或无操作权限", "错误");
+                _logManager.AddLog(_config.Name, "关闭失败：可能缺少管理员权限，请尝试以管理员身份运行程序", "错误");
             }
         }
 
-        /// 降级方案：使用Process.Kill()关闭（WMI失败时）
-        private bool DegradeKillProcess(string fileName, string targetArgs)
-        {
-            string processName = Path.GetFileNameWithoutExtension(fileName);
-            foreach (var process in Process.GetProcessesByName(processName))
-            {
-                try
-                {
-                    if (process.StartInfo.Arguments.Contains(targetArgs))
-                    {
-                        process.Kill();
-                        process.WaitForExit(2000);
-                        return !process.HasExited;
-                    }
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-            return false;
-        }
-
-        /// 发送指令到服务端
+        /// 发送指令到服务端（保持不变）
         public string SendServiceCommand(string command)
         {
             try

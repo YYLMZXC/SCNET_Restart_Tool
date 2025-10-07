@@ -1,5 +1,3 @@
-using System.Windows.Forms;
-
 namespace SCNET_Restart_Tool
 {
     partial class ToolMain
@@ -39,7 +37,7 @@ namespace SCNET_Restart_Tool
         private System.Windows.Forms.DataGridView dgvLogs;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Button btnClearLogs;
-        private Button btnToggleCommands;
+        private System.Windows.Forms.Button btnToggleCommands;
 
         protected override void Dispose(bool disposing)
         {
@@ -88,6 +86,7 @@ namespace SCNET_Restart_Tool
             this.dgvLogs = new System.Windows.Forms.DataGridView();
             this.label9 = new System.Windows.Forms.Label();
             this.btnClearLogs = new System.Windows.Forms.Button();
+            this.btnToggleCommands = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvServers)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -99,17 +98,6 @@ namespace SCNET_Restart_Tool
             this.splitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvLogs)).BeginInit();
             this.SuspendLayout();
-
-            // 指令切换按钮
-            this.btnToggleCommands = new System.Windows.Forms.Button();
-            this.btnToggleCommands.Location = new System.Drawing.Point(430, 260);
-            this.btnToggleCommands.Name = "btnToggleCommands";
-            this.btnToggleCommands.Size = new System.Drawing.Size(100, 23);
-            this.btnToggleCommands.TabIndex = 33;
-            this.btnToggleCommands.Text = "启用指令";
-            this.btnToggleCommands.UseVisualStyleBackColor = true;
-            this.btnToggleCommands.Click += new System.EventHandler(this.BtnToggleCommands_Click);
-
 
             // dgvServers
             this.dgvServers.AllowUserToAddRows = false;
@@ -372,6 +360,7 @@ namespace SCNET_Restart_Tool
             this.splitContainer2.Name = "splitContainer2";
             this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // splitContainer2.Panel1
+            this.splitContainer2.Panel1.Controls.Add(this.btnToggleCommands);
             this.splitContainer2.Panel1.Controls.Add(this.lblCommandStatus);
             this.splitContainer2.Panel1.Controls.Add(this.txtCommand);
             this.splitContainer2.Panel1.Controls.Add(this.btnSendCommand);
@@ -434,6 +423,15 @@ namespace SCNET_Restart_Tool
             this.btnClearLogs.Text = "清空日志";
             this.btnClearLogs.UseVisualStyleBackColor = true;
             this.btnClearLogs.Click += new System.EventHandler(this.BtnClearLogs_Click);
+
+            // btnToggleCommands
+            this.btnToggleCommands.Location = new System.Drawing.Point(430, 260);
+            this.btnToggleCommands.Name = "btnToggleCommands";
+            this.btnToggleCommands.Size = new System.Drawing.Size(100, 23);
+            this.btnToggleCommands.TabIndex = 33;
+            this.btnToggleCommands.Text = "启用指令";
+            this.btnToggleCommands.UseVisualStyleBackColor = true;
+            this.btnToggleCommands.Click += new System.EventHandler(this.BtnToggleCommands_Click);
 
             // ToolMain
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
