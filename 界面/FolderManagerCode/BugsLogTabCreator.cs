@@ -22,53 +22,64 @@ namespace SCNET_Restart_Tool
             tabPage.Padding = new Padding(10);
             tabPage.BackColor = Color.White;
 
-            // 主容器
-            var mainPanel = new Panel { Dock = DockStyle.Fill };
-            var panelContainer = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
+            // 主容器（使用TableLayoutPanel确保垂直布局）
+            var mainTable = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1,
+                RowCount = 3,
+                RowStyles =
+                {
+                    new RowStyle(SizeType.Absolute, 35F),   // 路径行（固定高度）
+                    new RowStyle(SizeType.Percent, 100F),  // 内容区（占剩余空间）
+                    new RowStyle(SizeType.Absolute, 70F)   // 按钮行（固定高度）
+                },
+                Padding = new Padding(5)
+            };
 
-            // 1. 路径显示区域
+            // 1. 路径显示区域（第1行）
             var pathPanel = CreatePathPanel(form, folderPath);
-            panelContainer.Controls.Add(pathPanel);
+            mainTable.Controls.Add(pathPanel, 0, 0);
 
-            // 2. 日志预览+文件列表区域
+            // 2. 日志预览+文件列表区域（第2行）
             var splitPanel = new SplitContainer
             {
                 Dock = DockStyle.Fill,
                 Orientation = Orientation.Vertical,
-                SplitterDistance = 600,
-                BorderStyle = BorderStyle.FixedSingle
+                SplitterDistance = 700, // 增大左侧日志区宽度
+                BorderStyle = BorderStyle.FixedSingle,
+                Margin = new Padding(0, 5, 0, 5) // 与上下区域拉开距离
             };
-            panelContainer.Controls.Add(splitPanel);
+            mainTable.Controls.Add(splitPanel, 0, 1);
 
             // 左侧：Game.log预览区
             splitPanel.Panel1.Controls.Add(CreateLogPreviewArea(form, folderPath));
+            splitPanel.Panel1.Padding = new Padding(5); // 内部留白
 
             // 右侧：其他文件列表
             var fileGridView = ControlFactory.CreateFileGridView(form);
             InitFileGridViewColumns(fileGridView);
             LoadOtherFiles(fileGridView, folderPath);
             splitPanel.Panel2.Controls.Add(fileGridView);
+            splitPanel.Panel2.Padding = new Padding(5); // 内部留白
 
-            // 3. 按钮区域（包含备份按钮）
+            // 3. 按钮区域（第3行）
             var btnPanel = CreateButtonPanel(form, folderPath, fileGridView, toolTip, onBatchBackup);
-            panelContainer.Controls.Add(btnPanel);
+            mainTable.Controls.Add(btnPanel, 0, 2);
 
-            // 布局调整
-            pathPanel.Dock = DockStyle.Top;
-            pathPanel.Height = 40;
-            btnPanel.Dock = DockStyle.Bottom;
-            splitPanel.Dock = DockStyle.Fill;
-
-            mainPanel.Controls.Add(panelContainer);
-            tabPage.Controls.Add(mainPanel);
-
+            tabPage.Controls.Add(mainTable);
             return tabPage;
         }
 
         // 创建路径显示面板
         private static Panel CreatePathPanel(FolderManagerForm form, string folderPath)
         {
-            var panel = new Panel { BackColor = form.LightGray };
+            var panel = new Panel
+            {
+                BackColor = form.LightGray,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0, 5, 0, 5) // 与上下区域间隔
+            };
             var exists = Directory.Exists(folderPath);
             var txtPath = ControlFactory.CreatePathTextBox(form, folderPath, exists);
 
@@ -83,6 +94,7 @@ namespace SCNET_Restart_Tool
                 txtPath.Text += "（Game.log为只读日志，支持分页预览）";
             }
 
+            txtPath.Dock = DockStyle.Fill;
             panel.Controls.Add(txtPath);
             return panel;
         }
@@ -90,8 +102,7 @@ namespace SCNET_Restart_Tool
         // 创建日志预览区域
         private static Panel CreateLogPreviewArea(FolderManagerForm form, string folderPath)
         {
-            var panel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
-            var logPath = Path.Combine(folderPath, GameLogFileName);
+            var panel = new Panel { Dock = DockStyle.Fill };
 
             // 日志显示框
             var rtbLog = new RichTextBox
@@ -101,27 +112,40 @@ namespace SCNET_Restart_Tool
                 Font = new Font("Consolas", 9F),
                 WordWrap = false,
                 ScrollBars = RichTextBoxScrollBars.Both,
-                BorderStyle = BorderStyle.FixedSingle
+                BorderStyle = BorderStyle.FixedSingle,
+                Margin = new Padding(0, 0, 0, 10) // 与分页栏间隔
             };
             panel.Controls.Add(rtbLog);
 
             // 分页控制栏
-            var pagePanel = new Panel { Dock = DockStyle.Bottom, Height = 30, BackColor = form.LightGray };
+            var pagePanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 30,
+                BackColor = form.LightGray,
+                Margin = new Padding(0, 10, 0, 0) // 与日志框间隔
+            };
+
             var btnPrev = ControlFactory.CreateSmallButton(form, "上一页", form.SecondaryColor, 70);
             var btnNext = ControlFactory.CreateSmallButton(form, "下一页", form.SecondaryColor, 70);
             var lblPage = new Label
             {
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
-                Text = "未加载日志"
+                Text = "未加载日志",
+                Margin = new Padding(5, 0, 5, 0)
             };
 
+            // 分页按钮布局
+            btnPrev.Dock = DockStyle.Left;
+            btnNext.Dock = DockStyle.Right;
             pagePanel.Controls.Add(btnPrev);
             pagePanel.Controls.Add(lblPage);
             pagePanel.Controls.Add(btnNext);
             panel.Controls.Add(pagePanel);
 
             // 加载日志
+            var logPath = Path.Combine(folderPath, GameLogFileName);
             if (File.Exists(logPath))
             {
                 LoadLogFileAsync(logPath, rtbLog, lblPage);
@@ -259,13 +283,38 @@ namespace SCNET_Restart_Tool
                 LoadOtherFiles(dgv, folderPath);
             };
 
-            // 批量备份按钮（整合到按钮组）
+            // 批量备份按钮
             var btnBatchBackup = ControlFactory.CreateButton(form, "批量备份所有目录", form.PrimaryColor, 150);
             btnBatchBackup.Click += (s, e) => onBatchBackup();
 
-            // 所有按钮放入同一面板（自动换行）
-            return ControlFactory.CreateButtonPanel(form,
-                btnRefresh, btnOpen, btnAdd, btnDelete, btnClean, btnBatchBackup);
+            // 按钮容器（自动换行+间距）
+            var flowPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Padding = new Padding(5),
+                Margin = new Padding(0)
+            };
+
+            // 添加按钮并设置间距
+            var buttons = new[] { btnRefresh, btnOpen, btnAdd, btnDelete, btnClean, btnBatchBackup };
+            foreach (var btn in buttons)
+            {
+                btn.Margin = new Padding(0, 5, 10, 5); // 水平间隔10，垂直居中
+                flowPanel.Controls.Add(btn);
+            }
+
+            // 外层面板（适配表格布局）
+            var outerPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(5)
+            };
+            outerPanel.Controls.Add(flowPanel);
+
+            return outerPanel;
         }
     }
 }
