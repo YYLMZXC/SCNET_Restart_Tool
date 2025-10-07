@@ -122,15 +122,12 @@ namespace SCNET_Restart_Tool
                 logTextBox.BackColor = _colorBg;
                 logTextBox.BorderStyle = BorderStyle.FixedSingle;
                 logTextBox.Font = new Font("Consolas", 9F);
+                // 节流日志：先缓冲，后定时刷新
                 _logManager.LogAdded += (log) =>
                 {
-                    if (logTextBox.InvokeRequired)
+                    lock (_logBuffer)
                     {
-                        logTextBox.Invoke(new Action(() => AddLogEntry(log)));
-                    }
-                    else
-                    {
-                        AddLogEntry(log);
+                        _logBuffer.Add($"[{DateTime.Now:HH:mm:ss}] {log}");
                     }
                 };
 
@@ -148,6 +145,8 @@ namespace SCNET_Restart_Tool
 
                 // 加载设置
                 _appSettings = SettingsManager.LoadSettings();
+
+                InitLogBuffer();   // 启动日志节流刷新
             }
             catch (Exception ex)
             {
@@ -981,6 +980,46 @@ namespace SCNET_Restart_Tool
             SaveServerConfigs();
         }
         #endregion
+
+        #region 日志节流缓冲
+        private readonly List<string> _logBuffer = new List<string>();
+        private System.Windows.Forms.Timer _logFlushTimer;
+        #endregion
+
+        /// <summary>
+        /// 初始化日志节流刷新：500 ms 批量追加一次，避免逐条刷屏
+        /// </summary>
+        private void InitLogBuffer()
+        {
+            _logFlushTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 500
+            };
+
+            _logFlushTimer.Tick += (_, __) =>
+            {
+                if (_logBuffer.Count == 0) return;
+
+                lock (_logBuffer)
+                {
+                    var batch = string.Join(Environment.NewLine, _logBuffer) + Environment.NewLine;
+                    if (logTextBox.InvokeRequired)
+                        logTextBox.Invoke(new Action(() =>
+                        {
+                            logTextBox.AppendText(batch);
+                            logTextBox.ScrollToCaret();
+                        }));
+                    else
+                    {
+                        logTextBox.AppendText(batch);
+                        logTextBox.ScrollToCaret();
+                    }
+                    _logBuffer.Clear();
+                }
+            };
+
+            _logFlushTimer.Start();
+        }
 
         private void folderManagerBtn_Click_1(object sender, EventArgs e)
         {

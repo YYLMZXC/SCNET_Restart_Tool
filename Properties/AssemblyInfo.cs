@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("SCNET_Restart_Tool")]
 [assembly: AssemblyDescription("SCNET服务端程序自动重启工具")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("yylmzxc")]
 [assembly: AssemblyProduct("SCNET_Restart_Tool")]
 [assembly: AssemblyCopyright("Copyright ©  2025")]
 [assembly: AssemblyTrademark("")]

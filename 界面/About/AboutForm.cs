@@ -1,7 +1,8 @@
 using System;
-using System.Windows.Forms;
 using System.Drawing;
+using System.Reflection;
 using System.Text;
+using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
 {
@@ -75,7 +76,19 @@ namespace SCNET_Restart_Tool
             // 版本信息内容
             StringBuilder versionInfo = new StringBuilder();
             versionInfo.AppendLine("SCNET_Restart_Tool 版本信息\n");
-            versionInfo.AppendLine("当前版本：v.0.0");
+
+            // 获取程序集版本信息
+            var assembly = Assembly.GetExecutingAssembly(); // 获取当前程序集
+            var ver = assembly.GetName().Version;
+            versionInfo.AppendLine($"当前版本：v{ver.Major}.{ver.Minor}.{ver.Build}");
+
+            // 读取程序集的组织（Company）信息
+            var companyAttr = assembly.GetCustomAttribute<AssemblyCompanyAttribute>();
+            string company = companyAttr?.Company ?? "未指定"; // 若未设置，使用默认值
+
+            // 拼接组织信息
+            versionInfo.AppendLine($"组织：{company}");
+
             versionInfo.AppendLine("更新日期：2025年10月\n");
             versionInfo.AppendLine("主要更新内容：");
             versionInfo.AppendLine("- 优化了进程检测逻辑，使用进程名+路径双重验证提高准确性");

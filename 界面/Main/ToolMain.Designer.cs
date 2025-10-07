@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
@@ -629,9 +630,33 @@ namespace SCNET_Restart_Tool
             this.infoLabel.Padding = new System.Windows.Forms.Padding(10);
             this.infoLabel.Size = new System.Drawing.Size(277, 332);
             this.infoLabel.TabIndex = 0;
-            this.infoLabel.Text = "服务端管理工具\r\n\r\n使用说明：\r\n1. 添加服务器，选择服务器文件，保存\r\n2. 启动监控\r\n3. 监控服务器状态并自动重启\r\n4. 可以发送指令到服务器\r\n5" +
-    ". 管理服务器相关文件夹\r\n\r\n版本：6.0.0\r\n作者：yylmzxc\r\n项目地址：https://gitee.com/yylmzxc/SCNET_Resta" +
-    "rt_Tool\r\n\r\n";
+            // 获取程序集信息
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var ver = assembly.GetName().Version;
+            string versionStr = ver.Revision > 0
+                ? $"v{ver.Major}.{ver.Minor}.{ver.Build}.{ver.Revision}"
+                : $"v{ver.Major}.{ver.Minor}.{ver.Build}";
+
+            // 读取程序集属性
+            var company = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCompanyAttribute), false)
+                .OfType<System.Reflection.AssemblyCompanyAttribute>()
+                .FirstOrDefault()?.Company ?? "个人开发者";
+            var copyright = assembly.GetCustomAttributes(typeof(System.Reflection.AssemblyCopyrightAttribute), false)
+                .OfType<System.Reflection.AssemblyCopyrightAttribute>()
+                .FirstOrDefault()?.Copyright ?? "Copyright © 2025";
+
+            // 设置标签文本
+            this.infoLabel.Text = $"服务端管理工具\r\n" +
+                                 $"{copyright}\r\n\r\n" +
+                                 $"使用说明：\r\n" +
+                                 $"1. 添加服务器，选择服务器文件，保存\r\n" +
+                                 $"2. 启动监控\r\n" +
+                                 $"3. 监控服务器状态并自动重启\r\n" +
+                                 $"4. 可以发送指令到服务器\r\n" +
+                                 $"5. 管理服务器相关文件夹\r\n\r\n" +
+                                 $"版本：{versionStr}\r\n" +                          
+                                 $"组织：{company}\r\n" +
+                                 $"项目地址：https://gitee.com/yylmzxc/SCNET_Restart_Tool\r\n";
             // 
             // ToolMain
             // 
