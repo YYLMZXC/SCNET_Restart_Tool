@@ -21,6 +21,14 @@ namespace SCNET_Restart_Tool
         private readonly LogManager _logManager = LogManager.GetInstance();
         private Dictionary<int, ServerMonitor> _serverMonitors = new Dictionary<int, ServerMonitor>();
 
+        // 主界面配色方案（美化用）
+        private readonly Color _colorStart = Color.FromArgb(46, 204, 113); // 绿色：启动/成功
+        private readonly Color _colorStop = Color.FromArgb(231, 76, 60);  // 红色：停止/删除
+        private readonly Color _colorRestart = Color.FromArgb(241, 196, 15); // 黄色：重启/警告
+        private readonly Color _colorManage = Color.FromArgb(52, 152, 219); // 蓝色：管理/编辑
+        private readonly Color _colorMonitor = Color.FromArgb(155, 89, 182); // 紫色：监控
+        private readonly Color _colorHover = Color.FromArgb(34, 49, 63); // 深色：hover效果
+
         public ToolMain()
         {
             InitializeComponent();
@@ -33,25 +41,52 @@ namespace SCNET_Restart_Tool
         // 初始化界面组件
         private void InitializeUI()
         {
-            // 配置服务器表格
-            ConfigureDataGridView();
-
-            // 初始化日志系统
-            logTextBox.ReadOnly = true;
-            _logManager.LogAdded += (log) =>
+            try
             {
-                if (logTextBox.InvokeRequired)
-                {
-                    logTextBox.Invoke(new Action(() => AddLogEntry(log)));
-                }
-                else
-                {
-                    AddLogEntry(log);
-                }
-            };
+                // 配置服务器表格
+                ConfigureDataGridView();
 
-            // 初始禁用编辑控件
-            SetEditControlsEnabled(false);
+                // 初始化日志系统
+                logTextBox.ReadOnly = true;
+                _logManager.LogAdded += (log) =>
+                {
+                    if (logTextBox.InvokeRequired)
+                    {
+                        logTextBox.Invoke(new Action(() => AddLogEntry(log)));
+                    }
+                    else
+                    {
+                        AddLogEntry(log);
+                    }
+                };
+
+                // 初始禁用编辑控件
+                SetEditControlsEnabled(false);
+
+                // 初始化按钮样式（美化）
+                InitButtonStyles();
+
+                // 面板与分割线美化
+                mainSplitContainer.BorderStyle = BorderStyle.FixedSingle;
+                serverListSplit.BorderStyle = BorderStyle.FixedSingle;
+                logSplit.BorderStyle = BorderStyle.FixedSingle;
+
+                // 分组框样式优化
+                foreach (var group in new GroupBox[] { monitorGroup, controlGroup, manageGroup, editGroup })
+                {
+                    group.ForeColor = _colorManage;
+                    group.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
+                    group.FlatStyle = FlatStyle.Flat;
+                }
+
+                // 日志区域样式优化
+                logTextBox.BackColor = Color.FromArgb(245, 245, 245);
+                logTextBox.Font = new Font("Consolas", 9F);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"初始化界面失败：{ex.Message}\n{ex.StackTrace}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         // 配置数据表格
@@ -64,6 +99,15 @@ namespace SCNET_Restart_Tool
             serversGridView.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 230, 242);
             serversGridView.DefaultCellStyle.SelectionForeColor = Color.Black;
 
+            // 增强表格样式（美化）
+            serversGridView.ColumnHeadersDefaultCellStyle.BackColor = _colorManage;
+            serversGridView.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            serversGridView.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
+            serversGridView.ColumnHeadersHeight = 30;
+            serversGridView.DefaultCellStyle.Font = new Font("微软雅黑", 9F);
+            serversGridView.RowTemplate.Height = 28;
+            serversGridView.GridColor = Color.LightGray;
+
             // 添加列定义
             serversGridView.Columns.AddRange(new DataGridViewColumn[]
             {
@@ -73,6 +117,63 @@ namespace SCNET_Restart_Tool
                 new DataGridViewTextBoxColumn { Name = "ExePath", DataPropertyName = "ExePath", HeaderText = "程序路径", Width = 400 },
                 new DataGridViewTextBoxColumn { Name = "Status", HeaderText = "状态", Width = 100 }
             });
+        }
+
+        // 按钮样式初始化（美化核心）
+        private void InitButtonStyles()
+        {
+            try
+            {
+                // 管理按钮（增删改查）
+                SetButtonStyle(addBtn, _colorManage, "新增服务器");
+                SetButtonStyle(editBtn, _colorManage, "编辑服务器");
+                SetButtonStyle(deleteBtn, _colorStop, "删除服务器");
+                SetButtonStyle(folderManagerBtn, _colorManage, "文件夹管理");
+
+                // 运行控制按钮
+                SetButtonStyle(startBtn, _colorStart, "启动服务器");
+                SetButtonStyle(stopBtn, _colorStop, "停止服务器");
+                SetButtonStyle(restartBtn, _colorRestart, "重启服务器");
+                SetButtonStyle(stopAllBtn, _colorStop, "停止所有服务器");
+
+                // 监控按钮
+                SetButtonStyle(startMonitorBtn, _colorMonitor, "开启监控");
+                SetButtonStyle(stopMonitorBtn, _colorMonitor, "关闭监控");
+
+                // 编辑按钮
+                SetButtonStyle(saveEditBtn, _colorStart, "保存配置");
+                SetButtonStyle(cancelEditBtn, _colorStop, "取消编辑");
+
+                // 其他功能按钮
+                SetButtonStyle(browseExeBtn, _colorManage, "浏览文件");
+                SetButtonStyle(sendCommandBtn, _colorManage, "发送指令");
+                SetButtonStyle(clearLogBtn, _colorStop, "清空日志");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"初始化按钮样式失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // 按钮样式设置工具方法（修复提示功能）
+        private void SetButtonStyle(Button btn, Color backColor, string toolTip)
+        {
+            btn.BackColor = backColor;
+            btn.ForeColor = Color.White;
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+
+            // 兼容旧框架：仅在支持的情况下设置悬停/点击颜色
+            if (btn.FlatAppearance != null)
+            {
+                btn.FlatAppearance.MouseOverBackColor = _colorHover;
+                btn.FlatAppearance.MouseDownBackColor = _colorHover;
+            }
+
+            btn.Cursor = Cursors.Hand;
+            btn.Font = new Font("微软雅黑", 9F, FontStyle.Regular);
+            btn.TextAlign = ContentAlignment.MiddleCenter;
+            buttonToolTip.SetToolTip(btn, toolTip); // 使用ToolTip组件设置提示
         }
 
         // 加载服务器数据
@@ -110,7 +211,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 绑定事件处理（修正事件名称与方法名一致）
+        // 绑定事件处理
         private void BindEvents()
         {
             // 管理按钮事件
@@ -159,19 +260,19 @@ namespace SCNET_Restart_Tool
                     switch (server.Status)
                     {
                         case ServerStatus.Running:
-                            row.Cells["Status"].Style.ForeColor = Color.Green;
+                            row.Cells["Status"].Style.ForeColor = _colorStart;
                             break;
                         case ServerStatus.Monitoring:
-                            row.Cells["Status"].Style.ForeColor = Color.Blue;
+                            row.Cells["Status"].Style.ForeColor = _colorMonitor;
                             break;
                         case ServerStatus.Stopped:
                             row.Cells["Status"].Style.ForeColor = Color.Gray;
                             break;
                         case ServerStatus.Starting:
-                            row.Cells["Status"].Style.ForeColor = Color.Orange;
+                            row.Cells["Status"].Style.ForeColor = _colorRestart;
                             break;
                         case ServerStatus.Stopping:
-                            row.Cells["Status"].Style.ForeColor = Color.OrangeRed;
+                            row.Cells["Status"].Style.ForeColor = _colorStop;
                             break;
                     }
                 }
@@ -186,23 +287,23 @@ namespace SCNET_Restart_Tool
                 s.Status == ServerStatus.Running || s.Status == ServerStatus.Monitoring);
 
             // 管理按钮状态
-            editBtn.Enabled = hasSelection && !_isEditing && !_selectedServer.IsMonitoring;
-            deleteBtn.Enabled = hasSelection && !_isEditing && !_selectedServer.IsMonitoring;
+            editBtn.Enabled = hasSelection && !_isEditing && !_selectedServer?.IsMonitoring == true;
+            deleteBtn.Enabled = hasSelection && !_isEditing && !_selectedServer?.IsMonitoring == true;
             folderManagerBtn.Enabled = hasSelection && !_isEditing;
 
             // 运行控制按钮状态
-            startBtn.Enabled = hasSelection && !_isEditing && _selectedServer.Status == ServerStatus.Stopped;
+            startBtn.Enabled = hasSelection && !_isEditing && _selectedServer?.Status == ServerStatus.Stopped;
             stopBtn.Enabled = hasSelection && !_isEditing &&
-                            (_selectedServer.Status == ServerStatus.Running ||
-                              _selectedServer.Status == ServerStatus.Monitoring);
+                            (_selectedServer?.Status == ServerStatus.Running ||
+                              _selectedServer?.Status == ServerStatus.Monitoring);
             restartBtn.Enabled = hasSelection && !_isEditing &&
-                               (_selectedServer.Status == ServerStatus.Running ||
-                                 _selectedServer.Status == ServerStatus.Monitoring);
+                               (_selectedServer?.Status == ServerStatus.Running ||
+                                 _selectedServer?.Status == ServerStatus.Monitoring);
             stopAllBtn.Enabled = hasRunningServers && !_isEditing;
 
             // 监控按钮状态
-            startMonitorBtn.Enabled = hasSelection && !_isEditing && !_selectedServer.IsMonitoring;
-            stopMonitorBtn.Enabled = hasSelection && !_isEditing && _selectedServer.IsMonitoring;
+            startMonitorBtn.Enabled = hasSelection && !_isEditing && !_selectedServer?.IsMonitoring == true;
+            stopMonitorBtn.Enabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring == true;
 
             // 编辑按钮状态
             saveEditBtn.Enabled = _isEditing;
@@ -210,9 +311,9 @@ namespace SCNET_Restart_Tool
 
             // 指令发送按钮状态
             sendCommandBtn.Enabled = hasSelection && !_isEditing &&
-                                   _selectedServer.EnableCommands &&
-                                   (_selectedServer.Status == ServerStatus.Running ||
-                                     _selectedServer.Status == ServerStatus.Monitoring);
+                                   _selectedServer?.EnableCommands == true &&
+                                   (_selectedServer?.Status == ServerStatus.Running ||
+                                     _selectedServer?.Status == ServerStatus.Monitoring);
         }
 
         // 设置编辑控件启用状态
@@ -291,7 +392,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 进入新增模式（修正方法名）
+        // 进入新增模式
         private void addBtn_Click(object sender, EventArgs e)
         {
             _isEditing = true;
@@ -305,7 +406,7 @@ namespace SCNET_Restart_Tool
             _logManager.AddLog("系统", "进入新增服务器模式");
         }
 
-        // 进入编辑模式（修正方法名）
+        // 进入编辑模式
         private void editBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -318,7 +419,7 @@ namespace SCNET_Restart_Tool
             _logManager.AddLog("系统", $"进入编辑服务器模式: {_selectedServer.Name}");
         }
 
-        // 保存编辑（修正方法名）
+        // 保存编辑
         private void saveEditBtn_Click(object sender, EventArgs e)
         {
             // 验证服务器名称
@@ -390,7 +491,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 取消编辑（修正方法名）
+        // 取消编辑
         private void cancelEditBtn_Click(object sender, EventArgs e)
         {
             ExitEditMode();
@@ -407,7 +508,7 @@ namespace SCNET_Restart_Tool
             UpdateButtonStates();
         }
 
-        // 删除服务器（修正方法名）
+        // 删除服务器
         private void deleteBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -437,7 +538,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 浏览程序路径（修正方法名）
+        // 浏览程序路径
         private void browseExeBtn_Click(object sender, EventArgs e)
         {
             using (var ofd = new OpenFileDialog
@@ -486,7 +587,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 启动服务器（修正方法名）
+        // 启动服务器
         private void startBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -515,7 +616,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 停止服务器（修正方法名）
+        // 停止服务器
         private void stopBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -528,7 +629,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 重启服务器（修正方法名）
+        // 重启服务器
         private void restartBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -546,7 +647,7 @@ namespace SCNET_Restart_Tool
             timer.Start();
         }
 
-        // 停止所有服务器（修正方法名）
+        // 停止所有服务器
         private void stopAllBtn_Click(object sender, EventArgs e)
         {
             var runningServers = _serverConfigs.Where(s =>
@@ -591,7 +692,7 @@ namespace SCNET_Restart_Tool
         #endregion
 
         #region 监控与指令功能
-        // 启动监控（修正方法名）
+        // 启动监控
         private void startMonitorBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -605,7 +706,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 停止监控（修正方法名）
+        // 停止监控
         private void stopMonitorBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -619,7 +720,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 发送指令（修正方法名）
+        // 发送指令
         private void sendCommandBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null) return;
@@ -644,7 +745,7 @@ namespace SCNET_Restart_Tool
         #endregion
 
         #region 其他功能
-        // 打开文件夹管理器（修正方法名）
+        // 打开文件夹管理器
         private void folderManagerBtn_Click(object sender, EventArgs e)
         {
             if (_selectedServer == null)
@@ -666,7 +767,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 清空日志（修正方法名）
+        // 清空日志
         private void clearLogBtn_Click(object sender, EventArgs e)
         {
             logTextBox.Clear();
@@ -691,17 +792,16 @@ namespace SCNET_Restart_Tool
                 MessageBox.Show($"保存配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-        #region 事件处理方法
-        
+
+        // 事件处理方法
         private void serversGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
         }
 
-        
         private void serverListPanel_Paint(object sender, PaintEventArgs e)
         {
         }
-        #endregion
+
         // 窗口关闭时
         private void ToolMain_FormClosing(object sender, FormClosingEventArgs e)
         {

@@ -3,7 +3,7 @@ namespace SCNET_Restart_Tool
     partial class ToolMain
     {
         private System.ComponentModel.IContainer components = null;
-
+        private System.Windows.Forms.ToolTip buttonToolTip;
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -17,6 +17,8 @@ namespace SCNET_Restart_Tool
 
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            this.buttonToolTip = new System.Windows.Forms.ToolTip(this.components);
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolMain));
             this.mainSplitContainer = new System.Windows.Forms.SplitContainer();
             this.leftPanel = new System.Windows.Forms.Panel();
@@ -377,7 +379,6 @@ namespace SCNET_Restart_Tool
             this.serverListPanel.Padding = new System.Windows.Forms.Padding(10);
             this.serverListPanel.Size = new System.Drawing.Size(1332, 343);
             this.serverListPanel.TabIndex = 0;
-            this.serverListPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.serverListPanel_Paint);
             // 
             // serversGridView
             // 
