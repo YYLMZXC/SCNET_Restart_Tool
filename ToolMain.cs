@@ -352,13 +352,28 @@ namespace SCNET_Restart_Tool
             if (MessageBox.Show($"确定要关闭所有{_servers.Count}个服务端吗？", "确认", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 _logManager.AddLog("系统", "开始关闭所有服务端");
+                int successCount = 0;
+
                 foreach (var server in _servers)
                 {
-                    _monitors[server.Id].KillProcess();
-                    System.Threading.Thread.Sleep(500);
+                    var monitor = _monitors[server.Id];
+                    // 先检查是否运行
+                    if (monitor.IsProcessRunning())
+                    {
+                        monitor.KillProcess();
+                        // 等待关闭
+                        System.Threading.Thread.Sleep(1000);
+                        if (!monitor.IsProcessRunning())
+                            successCount++;
+                    }
+                    else
+                    {
+                        _logManager.AddLog(server.Name, "服务端未在运行，跳过关闭");
+                    }
                 }
-                _logManager.AddLog("系统", "所有服务端关闭操作已执行");
-                MessageBox.Show("所有服务端关闭操作已执行");
+
+                _logManager.AddLog("系统", $"所有服务端关闭操作完成（成功关闭：{successCount}/{_servers.Count}）");
+                MessageBox.Show($"关闭完成，成功关闭 {successCount}/{_servers.Count} 个服务端");
             }
         }
 
