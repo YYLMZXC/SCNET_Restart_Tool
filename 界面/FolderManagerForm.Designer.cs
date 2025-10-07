@@ -25,10 +25,10 @@
             // tabControlFolders
             // 
             this.tabControlFolders.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControlFolders.Location = new System.Drawing.Point(0, 60);
+            this.tabControlFolders.Location = new System.Drawing.Point(0, 0);
             this.tabControlFolders.Name = "tabControlFolders";
             this.tabControlFolders.SelectedIndex = 0;
-            this.tabControlFolders.Size = new System.Drawing.Size(900, 540);
+            this.tabControlFolders.Size = new System.Drawing.Size(900, 600);
             this.tabControlFolders.TabIndex = 0;
             // 
             // btnBatchBackupAll
