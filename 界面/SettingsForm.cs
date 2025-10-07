@@ -73,7 +73,7 @@ namespace SCNET_Restart_Tool
 
     // 配置模型（存储所有隐藏设置）
     [Serializable]
-    public class SettingsModel
+    public class SettingsModel : ICloneable
     {
         // 日志保存路径（默认程序目录）
         public string LogSavePath { get; set; } = AppDomain.CurrentDomain.BaseDirectory;
@@ -84,6 +84,15 @@ namespace SCNET_Restart_Tool
         // 自定义程序图标路径
         public string CustomIconPath { get; set; } = "";
         // 可扩展其他设置：如监控定时器间隔、日志级别等
+
+        // 添加Clone方法实现深拷贝
+        public object Clone()
+        {
+            // 使用JSON序列化实现深拷贝，确保所有属性都被复制
+            return JsonConvert.DeserializeObject<SettingsModel>(
+                JsonConvert.SerializeObject(this)
+            );
+        }
     }
 
     // 配置管理类（负责加载/保存设置）

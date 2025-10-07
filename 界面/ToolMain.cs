@@ -18,12 +18,13 @@ namespace SCNET_Restart_Tool
         private bool _isEditing = false;
         private bool _isAdding = false;
         private FolderManagerForm _folderManagerForm;
-        private readonly  LogManager _logManager = LogManager.GetInstance();
+        private readonly LogManager _logManager = LogManager.GetInstance();
         private Dictionary<int, ServerMonitor> _serverMonitors = new Dictionary<int, ServerMonitor>();
+        private SettingsModel _appSettings;
 
-        // 优化配色方案（减轻视觉负担）
+        // 配色方案
         private readonly Color _colorStart = Color.FromArgb(46, 204, 113);    // 绿色：启动/成功
-        private readonly  Color _colorStop = Color.FromArgb(231, 76, 60);     // 红色：停止/删除
+        private readonly Color _colorStop = Color.FromArgb(231, 76, 60);     // 红色：停止/删除
         private readonly Color _colorRestart = Color.FromArgb(241, 196, 15);  // 黄色：重启/警告
         private readonly Color _colorManage = Color.FromArgb(52, 152, 219);  // 蓝色：管理/编辑
         private readonly Color _colorMonitor = Color.FromArgb(155, 89, 182); // 紫色：监控
@@ -33,36 +34,54 @@ namespace SCNET_Restart_Tool
         public ToolMain()
         {
             InitializeComponent();
-            // 窗口基础优化：启用自由拖拽+合理最小尺寸
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.MinimumSize = new Size(1000, 550);
-            this.StartPosition = FormStartPosition.CenterScreen;
+
+            // 窗口基础设置
+            FormBorderStyle = FormBorderStyle.Sizable;
+            MinimumSize = new Size(1000, 550);
+            StartPosition = FormStartPosition.CenterScreen;
+            BackColor = _colorBg;
+
+            // 初始化右上角设置按钮
+            InitializeSettingsButton();
 
             InitializeUI();
             LoadServerData();
             BindEvents();
         }
 
-        #region 初始化与基础设置（UI优化核心）
+        #region 初始化与基础设置
+        // 初始化右上角设置按钮
+        private void InitializeSettingsButton()
+        {
+            settingsBtn = new Button();
+            settingsBtn.Text = "设置";
+            settingsBtn.Size = new Size(80, 30);
+            settingsBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            settingsBtn.Location = new Point(this.ClientSize.Width - 90, 10);
+            settingsBtn.Click += settingsBtn_Click;
+
+            // 应用样式
+            SetButtonStyle(settingsBtn, _colorManage, "软件设置");
+
+            // 添加到主窗体
+            this.Controls.Add(settingsBtn);
+            settingsBtn.BringToFront();
+
+            // 窗口大小改变时调整位置
+            this.Resize += (s, e) =>
+            {
+                settingsBtn.Location = new Point(this.ClientSize.Width - 90, 10);
+            };
+        }
+
         private void InitializeUI()
         {
             try
             {
-                // 1. 全局背景统一（消除多层遮挡）
-                this.BackColor = _colorBg;
-                leftPanel.BackColor = _colorBg;
-                rightPanel.BackColor = _colorBg;
-                serverEditPanel.BackColor = _colorBg;
-                serverListPanel.BackColor = _colorBg;
-                operationPanel.BackColor = _colorBg;
-                logPanel.BackColor = _colorBg;
-                infoPanel.BackColor = _colorBg;
-                commandPanel.BackColor = _colorBg;
-
-                // 2. 表格配置（增强伸缩性）
+                // 表格配置
                 ConfigureDataGridView();
 
-                // 3. 日志区域简化
+                // 日志区域设置
                 logTextBox.ReadOnly = true;
                 logTextBox.BackColor = _colorBg;
                 logTextBox.BorderStyle = BorderStyle.FixedSingle;
@@ -79,20 +98,20 @@ namespace SCNET_Restart_Tool
                     }
                 };
 
-                // 4. 初始禁用编辑控件
+                // 初始禁用编辑控件
                 SetEditControlsEnabled(false);
 
-                // 5. 按钮样式优化
+                // 按钮样式优化
                 InitButtonStyles();
 
-                // 6. 分割容器优化（提升拖拽体验）
+                // 分割容器优化
                 OptimizeSplitContainers();
 
-                // 7. 分组框简化
+                // 分组框简化
                 OptimizeGroupBoxes();
 
-                // 8. 编辑面板布局优化
-                OptimizeEditPanelLayout();
+                // 加载设置
+                _appSettings = SettingsManager.LoadSettings();
             }
             catch (Exception ex)
             {
@@ -100,32 +119,71 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 分割容器优化（解决拖拽困难问题）
+        private void settingsBtn_Click(object sender, EventArgs e)
+        {
+            // 保存当前设置作为备份
+            var backupSettings = _appSettings.Clone() as SettingsModel;
+
+            using (var settingsForm = new SettingsForm(_appSettings))
+            {
+                if (settingsForm.ShowDialog() == DialogResult.OK)
+                {
+                    // 更新设置并应用
+                    _appSettings = settingsForm.AppSettings;
+                    ApplySettings();
+                    _logManager.AddLog("系统", "软件设置已更新并应用");
+                }
+                else
+                {
+                    // 恢复备份设置
+                    _appSettings = backupSettings;
+                }
+            }
+        }
+
+        // 应用新设置
+        private void ApplySettings()
+        {
+            // 保存设置到文件
+            SettingsManager.SaveSettings(_appSettings);
+
+            // 根据需要更新程序行为
+            if (!string.IsNullOrEmpty(_appSettings.LogSavePath) && Directory.Exists(_appSettings.LogSavePath))
+            {
+                _logManager.UpdateLogPath(_appSettings.LogSavePath);
+                _logManager.AddLog("系统", $"日志路径已更新为：{_appSettings.LogSavePath}");
+            }
+            else if (!string.IsNullOrEmpty(_appSettings.LogSavePath))
+            {
+                _logManager.AddLog("系统", $"日志路径无效：{_appSettings.LogSavePath}", "错误");
+            }
+
+            // 可以添加其他需要应用的设置项
+        }
+
+        // 分割容器优化
         private void OptimizeSplitContainers()
         {
             // 主分割容器（左右布局）
             mainSplitContainer.BorderStyle = BorderStyle.None;
-            mainSplitContainer.SplitterWidth = 4; // 加宽分割线，便于拖拽
-           
+            mainSplitContainer.SplitterWidth = 4;
             mainSplitContainer.Panel1MinSize = 600;
             mainSplitContainer.Panel2MinSize = 300;
 
             // 服务器列表分割容器（上下布局）
             serverListSplit.BorderStyle = BorderStyle.None;
             serverListSplit.SplitterWidth = 4;
-           
             serverListSplit.Panel1MinSize = 100;
             serverListSplit.Panel2MinSize = 80;
 
             // 日志分割容器（上下布局）
             logSplit.BorderStyle = BorderStyle.None;
             logSplit.SplitterWidth = 4;
-            
             logSplit.Panel1MinSize = 200;
             logSplit.Panel2MinSize = 30;
         }
 
-        // 分组框优化（减少遮挡）
+        // 分组框优化
         private void OptimizeGroupBoxes()
         {
             foreach (var group in new GroupBox[] { monitorGroup, controlGroup, manageGroup, editGroup })
@@ -133,75 +191,13 @@ namespace SCNET_Restart_Tool
                 group.ForeColor = _colorManage;
                 group.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
                 group.FlatStyle = FlatStyle.Flat;
-                group.BackColor = Color.Transparent; // 透明背景
-                group.Padding = new Padding(8, 12, 8, 8); // 精简内边距
+                group.BackColor = Color.Transparent;
+                group.Padding = new Padding(8, 12, 8, 8);
                 group.Margin = new Padding(5, 5, 5, 5);
             }
         }
 
-        // 编辑面板布局优化（自适应窗口）
-        private void OptimizeEditPanelLayout()
-        {
-            // 服务器名称
-            serverNameLabel.AutoSize = true;
-            serverNameLabel.Location = new Point(15, 15);
-            serverNameInput.Location = new Point(90, 12);
-            serverNameInput.Width = 220;
-
-            // 程序路径（随窗口拉伸）
-            exePathLabel.AutoSize = true;
-            exePathLabel.Location = new Point(15, 55);
-            exePathInput.Location = new Point(90, 52);
-            exePathInput.Width = 600;
-            exePathInput.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
-            browseExeBtn.Location = new Point(exePathInput.Right + 10, 52);
-            browseExeBtn.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-
-            // IP与端口
-            ipLabel.AutoSize = true;
-            ipLabel.Location = new Point(15, 95);
-            ipInput.Location = new Point(90, 92);
-            ipInput.Width = 120;
-
-            portLabel.AutoSize = true;
-            portLabel.Location = new Point(ipInput.Right + 20, 95);
-            portNum.Location = new Point(portLabel.Right + 10, 92);
-            portNum.Width = 80;
-
-            // 密码
-            passwordLabel.AutoSize = true;
-            passwordLabel.Location = new Point(15, 135);
-            passwordInput.Location = new Point(90, 132);
-            passwordInput.Width = 220;
-
-            // 定时与间隔
-            scheduleLabel.AutoSize = true;
-            scheduleLabel.Location = new Point(15, 175);
-            scheduleTimeInput.Location = new Point(90, 172);
-            scheduleTimeInput.Width = 80;
-
-            intervalLabel.AutoSize = true;
-            intervalLabel.Location = new Point(scheduleTimeInput.Right + 20, 175);
-            intervalHoursNum.Location = new Point(intervalLabel.Right + 10, 172);
-            intervalHoursNum.Width = 60;
-
-            // 高级选项
-            advancedOptionsLabel.AutoSize = true;
-            advancedOptionsLabel.Location = new Point(15, 215);
-            enableCommandsChk.Location = new Point(90, 212);
-
-            // 指令面板
-            commandPanel.Padding = new Padding(15, 5, 15, 5);
-            commandLabel.AutoSize = true;
-            commandLabel.Location = new Point(0, 8);
-            commandInput.Location = new Point(90, 5);
-            commandInput.Width = 550;
-            commandInput.Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right;
-            sendCommandBtn.Location = new Point(commandInput.Right + 10, 5);
-            sendCommandBtn.Anchor = AnchorStyles.Left | AnchorStyles.Top;
-        }
-
-        // 表格配置优化（支持伸缩）
+        // 表格配置优化
         private void ConfigureDataGridView()
         {
             serversGridView.AutoGenerateColumns = false;
@@ -211,9 +207,9 @@ namespace SCNET_Restart_Tool
             serversGridView.AlternatingRowsDefaultCellStyle.BackColor = Color.FromArgb(248, 249, 250);
             serversGridView.DefaultCellStyle.SelectionBackColor = Color.FromArgb(220, 230, 242);
             serversGridView.DefaultCellStyle.SelectionForeColor = Color.Black;
-            serversGridView.Dock = DockStyle.Fill; // 随面板伸缩
+            serversGridView.Dock = DockStyle.Fill;
 
-            // 表头样式简化
+            // 表头样式
             serversGridView.ColumnHeadersDefaultCellStyle.BackColor = _colorManage;
             serversGridView.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
             serversGridView.ColumnHeadersDefaultCellStyle.Font = new Font("微软雅黑", 9F, FontStyle.Bold);
@@ -222,7 +218,7 @@ namespace SCNET_Restart_Tool
             serversGridView.RowTemplate.Height = 26;
             serversGridView.GridColor = _colorBorder;
 
-            // 列定义（自适应宽度）
+            // 列定义
             serversGridView.Columns.AddRange(new DataGridViewColumn[]
             {
                 new DataGridViewTextBoxColumn {
@@ -261,7 +257,7 @@ namespace SCNET_Restart_Tool
             });
         }
 
-        // 按钮样式优化（简化视觉效果）
+        // 按钮样式优化
         private void InitButtonStyles()
         {
             try
@@ -297,7 +293,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 按钮样式工具（简化hover效果）
+        // 按钮样式工具
         private void SetButtonStyle(Button btn, Color backColor, string toolTip)
         {
             btn.BackColor = backColor;
@@ -310,7 +306,7 @@ namespace SCNET_Restart_Tool
             btn.Padding = new Padding(5, 2, 5, 2);
             buttonToolTip.SetToolTip(btn, toolTip);
 
-            // 简化hover效果
+            // Hover效果
             btn.MouseEnter += (s, e) => btn.BackColor = Color.FromArgb(
                 Math.Max(backColor.R - 10, 0),
                 Math.Max(backColor.G - 10, 0),
@@ -353,10 +349,10 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 绑定事件处理（新增窗口大小改变事件）
+        // 绑定事件处理
         private void BindEvents()
         {
-            // 原有事件
+            // 按钮事件
             addBtn.Click += addBtn_Click;
             editBtn.Click += editBtn_Click;
             deleteBtn.Click += deleteBtn_Click;
@@ -373,15 +369,15 @@ namespace SCNET_Restart_Tool
             sendCommandBtn.Click += sendCommandBtn_Click;
             clearLogBtn.Click += clearLogBtn_Click;
 
-            // 新增：窗口大小改变时更新布局
+            // 窗口大小改变事件
             this.Resize += (s, e) =>
             {
-                // 调整浏览按钮位置（随程序路径输入框变化）
-                browseExeBtn.Location = new Point(exePathInput.Right + 10, 52);
-                sendCommandBtn.Location = new Point(commandInput.Right + 10, 5);
+                // 调整按钮位置
+                browseExeBtn.Location = new Point(exePathInput.Right + 10, exePathInput.Top);
+                sendCommandBtn.Location = new Point(commandInput.Right + 10, commandInput.Top);
             };
+
             serversGridView.SelectionChanged += serversGridView_SelectionChanged;
-            
             this.FormClosing += ToolMain_FormClosing;
         }
         #endregion
@@ -938,8 +934,6 @@ namespace SCNET_Restart_Tool
             }
         }
 
-      
-
         // 窗口关闭时
         private void ToolMain_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -951,7 +945,5 @@ namespace SCNET_Restart_Tool
             SaveServerConfigs();
         }
         #endregion
-
-       
     }
 }
