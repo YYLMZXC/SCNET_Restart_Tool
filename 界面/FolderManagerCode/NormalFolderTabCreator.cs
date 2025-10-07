@@ -1,54 +1,52 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
 {
     internal static class NormalFolderTabCreator
     {
-        // 创建普通文件夹标签页（接收备份按钮事件）
+        // 创建普通文件夹标签页（支持文件+文件夹显示）
         public static TabPage Create(FolderManagerForm form, string tabName, string folderPath, ToolTip toolTip, Action onBatchBackup)
         {
             var tabPage = new TabPage(tabName);
-            tabPage.Tag = folderPath;
-            tabPage.Padding = new Padding(10); // 标签页内边距，与边缘拉开距离
+            tabPage.Tag = folderPath; // 存储根目录路径
+            tabPage.Padding = new Padding(10);
             tabPage.BackColor = Color.White;
 
-            // 用TableLayoutPanel按行划分区域：行1（路径）、行2（文件列表）、行3（按钮）
+            // 主布局表格（3行：路径、文件列表、按钮）
             var tablePanel = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 3,
-                // 增加表格内边距，避免控件贴边
                 Padding = new Padding(5),
-                // 行样式：增加路径行高度，确保路径不被压缩；按钮行高度适当增加
                 RowStyles =
                 {
-                    new RowStyle(SizeType.Absolute, 35F), // 路径行高度35（比之前略高，避免文字截断）
-                    new RowStyle(SizeType.Percent, 100F), // 文件列表占剩余高度
-                    new RowStyle(SizeType.Absolute, 70F)  // 按钮行高度70（容纳按钮及间距）
+                    new RowStyle(SizeType.Absolute, 35F),
+                    new RowStyle(SizeType.Percent, 100F),
+                    new RowStyle(SizeType.Absolute, 70F)
                 }
             };
 
-            // 1. 路径显示区域（第1行）
+            // 1. 路径显示面板（支持动态更新当前目录）
             var pathPanel = CreatePathPanel(form, folderPath, tabName);
-            // 路径面板与表格顶部/底部保持间距，避免与上下区域贴紧
             pathPanel.Margin = new Padding(0, 5, 0, 5);
             tablePanel.Controls.Add(pathPanel, 0, 0);
 
-            // 2. 文件列表（第2行）
+            // 2. 文件列表（支持显示文件和文件夹）
             var fileGridView = ControlFactory.CreateFileGridView(form);
-            // 文件列表与路径面板、按钮面板保持间距
             fileGridView.Margin = new Padding(0, 5, 0, 5);
             InitFileGridViewColumns(fileGridView);
-            LoadFiles(fileGridView, folderPath);
+            LoadFiles(fileGridView, folderPath, pathPanel); // 加载文件+文件夹
+            fileGridView.CellContentClick += (s, e) =>
+                OnFolderRowClick(s, e, fileGridView, pathPanel); // 文件夹点击事件
             tablePanel.Controls.Add(fileGridView, 0, 1);
 
-            // 3. 按钮区域（第3行）
-            var btnPanel = CreateButtonPanel(form, folderPath, tabName, fileGridView, toolTip, onBatchBackup);
-            // 按钮面板与文件列表保持间距
+            // 3. 按钮面板（支持删除文件/文件夹、返回上级等）
+            var btnPanel = CreateButtonPanel(form, folderPath, tabName, fileGridView, toolTip, onBatchBackup, pathPanel);
             btnPanel.Margin = new Padding(0, 5, 0, 0);
             tablePanel.Controls.Add(btnPanel, 0, 2);
 
@@ -57,135 +55,233 @@ namespace SCNET_Restart_Tool
         }
 
         // 创建路径显示面板
-        private static Panel CreatePathPanel(FolderManagerForm form, string folderPath, string tabName)
+        private static Panel CreatePathPanel(FolderManagerForm form, string initialFolderPath, string tabName)
         {
             var panel = new Panel
             {
                 BackColor = form.LightGray,
                 Dock = DockStyle.Fill,
-                // 路径面板内部留白，避免文字贴边
-                Padding = new Padding(5)
+                Padding = new Padding(5),
+                Tag = initialFolderPath // 存储当前浏览路径
             };
-            var exists = Directory.Exists(folderPath);
-            var txtPath = ControlFactory.CreatePathTextBox(form, folderPath, exists);
+
+            var exists = Directory.Exists(initialFolderPath);
+            var txtPath = ControlFactory.CreatePathTextBox(form, initialFolderPath, exists);
 
             if (!exists)
             {
                 txtPath.Text += "（目录不存在，点击创建）";
                 txtPath.Cursor = Cursors.Hand;
-                txtPath.Click += (s, e) => FolderOperations.CreateFolderIfNotExists(folderPath, tabName);
+                txtPath.Click += (s, e) =>
+                    FolderOperations.CreateFolderIfNotExists(initialFolderPath, tabName);
             }
 
             txtPath.Dock = DockStyle.Fill;
-            // 路径文本框增加内边距，避免文字紧贴边缘
             txtPath.Padding = new Padding(3);
             panel.Controls.Add(txtPath);
             return panel;
         }
 
-        // 初始化文件列表列
+        // 初始化表格列（新增“类型”列）
         private static void InitFileGridViewColumns(DataGridView dgv)
         {
+            dgv.Columns.Add("Type", "类型");
+            dgv.Columns["Type"].Width = 80;
+            dgv.Columns["Type"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
             dgv.Columns.Add("FileName", "文件名");
+            dgv.Columns["FileName"].Width = 300;
+
             dgv.Columns.Add("FileSize", "大小(KB)");
-            dgv.Columns.Add("LastWriteTime", "修改时间");
-            dgv.Columns["FileName"].Width = 350;
             dgv.Columns["FileSize"].Width = 100;
-            dgv.Columns["LastWriteTime"].Width = 160;
             dgv.Columns["FileSize"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
+            dgv.Columns.Add("LastWriteTime", "修改时间");
+            dgv.Columns["LastWriteTime"].Width = 160;
         }
 
-        // 加载文件列表
-        private static void LoadFiles(DataGridView dgv, string folderPath)
+        // 加载文件和文件夹
+        private static void LoadFiles(DataGridView dgv, string targetFolderPath, Panel pathPanel)
         {
             dgv.Rows.Clear();
-            if (!Directory.Exists(folderPath)) return;
+            UpdatePathTextBox(pathPanel, targetFolderPath); // 更新路径显示
 
-            foreach (var filePath in Directory.GetFiles(folderPath))
+            if (!Directory.Exists(targetFolderPath))
             {
-                var fileInfo = new FileInfo(filePath);
-                var rowIndex = dgv.Rows.Add(
-                    fileInfo.Name,
-                    (fileInfo.Length / 1024.0).ToString("F2"),
-                    fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm")
-                );
+                dgv.Rows.Add("", "当前目录不存在", "-", "-");
+                return;
+            }
 
-                // 高亮今天修改的文件
-                if (fileInfo.LastWriteTime.Date == DateTime.Today)
+            try
+            {
+                // 加载子文件夹（蓝色粗体标识）
+                foreach (var dirPath in Directory.GetDirectories(targetFolderPath))
                 {
+                    var dirInfo = new DirectoryInfo(dirPath);
+                    var rowIndex = dgv.Rows.Add(
+                        "文件夹",
+                        dirInfo.Name,
+                        "-",
+                        dirInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm")
+                    );
+                    dgv.Rows[rowIndex].DefaultCellStyle.ForeColor = Color.FromArgb(52, 152, 219);
                     dgv.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgv.Font, FontStyle.Bold);
+                    dgv.Rows[rowIndex].Tag = dirInfo.FullName; // 存储完整路径
+                }
+
+                // 加载文件（高亮今日修改项）
+                foreach (var filePath in Directory.GetFiles(targetFolderPath))
+                {
+                    var fileInfo = new FileInfo(filePath);
+                    var rowIndex = dgv.Rows.Add(
+                        "文件",
+                        fileInfo.Name,
+                        (fileInfo.Length / 1024.0).ToString("F2"),
+                        fileInfo.LastWriteTime.ToString("yyyy-MM-dd HH:mm")
+                    );
+                    dgv.Rows[rowIndex].Tag = fileInfo.FullName;
+                    if (fileInfo.LastWriteTime.Date == DateTime.Today)
+                    {
+                        dgv.Rows[rowIndex].DefaultCellStyle.Font = new Font(dgv.Font, FontStyle.Bold);
+                    }
+                }
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                dgv.Rows.Add("", $"权限不足：{ex.Message}", "-", "-");
+                MessageBox.Show("无权限访问目录", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                dgv.Rows.Add("", $"加载失败：{ex.Message}", "-", "-");
+            }
+        }
+
+        // 点击文件夹行进入子目录
+        private static void OnFolderRowClick(object sender, DataGridViewCellEventArgs e, DataGridView dgv, Panel pathPanel)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != dgv.Columns["FileName"].Index)
+                return;
+
+            var row = dgv.Rows[e.RowIndex];
+            if (row.Cells["Type"].Value?.ToString() == "文件夹")
+            {
+                var subPath = row.Tag?.ToString();
+                if (!string.IsNullOrEmpty(subPath))
+                {
+                    LoadFiles(dgv, subPath, pathPanel);
                 }
             }
         }
 
-        // 创建按钮面板（包含备份按钮）
-        private static Panel CreateButtonPanel(FolderManagerForm form, string folderPath, string tabName, DataGridView dgv, ToolTip toolTip, Action onBatchBackup)
+        // 创建按钮面板（含删除文件夹、返回上级等功能）
+        private static Panel CreateButtonPanel(FolderManagerForm form, string rootFolderPath, string tabName,
+                                              DataGridView dgv, ToolTip toolTip, Action onBatchBackup, Panel pathPanel)
         {
             // 刷新按钮
             var btnRefresh = ControlFactory.CreateButton(form, "刷新", form.PrimaryColor, 80);
-            btnRefresh.Click += (s, e) => LoadFiles(dgv, folderPath);
+            btnRefresh.Click += (s, e) =>
+            {
+                var currentPath = pathPanel.Tag?.ToString() ?? rootFolderPath;
+                LoadFiles(dgv, currentPath, pathPanel);
+            };
 
-            // 打开目录
+            // 返回上级按钮
+            var btnBack = ControlFactory.CreateButton(form, "返回上级", form.SecondaryColor, 80);
+            btnBack.Click += (s, e) =>
+            {
+                var currentPath = pathPanel.Tag?.ToString() ?? rootFolderPath;
+                var parent = Directory.GetParent(currentPath);
+                if (parent != null)
+                {
+                    LoadFiles(dgv, parent.FullName, pathPanel);
+                }
+                else
+                {
+                    MessageBox.Show("已到根目录", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            };
+
+            // 打开目录按钮
             var btnOpen = ControlFactory.CreateButton(form, "打开目录", form.SecondaryColor, 80);
-            btnOpen.Click += (s, e) => FolderOperations.OpenFolder(folderPath, tabName);
+            btnOpen.Click += (s, e) =>
+            {
+                var currentPath = pathPanel.Tag?.ToString() ?? rootFolderPath;
+                FolderOperations.OpenFolder(currentPath, tabName);
+            };
 
-            // 添加文件
+            // 添加文件按钮
             var btnAdd = ControlFactory.CreateButton(form, "添加文件", form.SuccessColor, 80);
             btnAdd.Click += (s, e) =>
             {
-                FolderOperations.AddFileToFolder(folderPath, tabName);
-                LoadFiles(dgv, folderPath);
+                var currentPath = pathPanel.Tag?.ToString() ?? rootFolderPath;
+                FolderOperations.AddFileToFolder(currentPath, tabName);
+                LoadFiles(dgv, currentPath, pathPanel);
             };
 
-            // 删除文件
+            // 删除选中按钮（支持文件和文件夹）
             var btnDelete = ControlFactory.CreateButton(form, "删除选中", form.DangerColor, 80);
             btnDelete.Click += (s, e) =>
             {
                 if (dgv.SelectedRows.Count == 0)
                 {
-                    MessageBox.Show("请先选中要删除的文件！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("请选中文件或文件夹", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                var fileName = dgv.SelectedRows[0].Cells["FileName"].Value.ToString();
-                FolderOperations.DeleteFile(folderPath, fileName, tabName);
-                LoadFiles(dgv, folderPath);
+                var row = dgv.SelectedRows[0];
+                var type = row.Cells["Type"].Value?.ToString();
+                var name = row.Cells["FileName"].Value?.ToString();
+                var currentPath = pathPanel.Tag?.ToString() ?? rootFolderPath;
+
+                if (type == "文件")
+                {
+                    FolderOperations.DeleteFile(currentPath, name, tabName);
+                }
+                else if (type == "文件夹")
+                {
+                    FolderOperations.DeleteFolder(currentPath, name, tabName);
+                }
+
+                LoadFiles(dgv, currentPath, pathPanel);
             };
 
             // 批量备份按钮
             var btnBatchBackup = ControlFactory.CreateButton(form, "批量备份所有目录", form.PrimaryColor, 150);
             btnBatchBackup.Click += (s, e) => onBatchBackup();
 
-            // 按钮容器（自动排列+间距）
+            // 按钮容器布局
             var flowPanel = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = true,
-                Padding = new Padding(5), // 容器内边距
-                Margin = new Padding(0),
+                Padding = new Padding(5),
                 BackColor = Color.White
             };
 
-            // 添加按钮并设置间距（确保按钮之间不重叠）
-            var buttons = new[] { btnRefresh, btnOpen, btnAdd, btnDelete, btnBatchBackup };
+            var buttons = new[] { btnRefresh, btnBack, btnOpen, btnAdd, btnDelete, btnBatchBackup };
             foreach (var btn in buttons)
             {
-                btn.Margin = new Padding(0, 8, 12, 8); // 上下8像素，右12像素，避免按钮挤在一起
-                btn.FlatAppearance.BorderSize = 0; // 去除按钮边框，避免视觉重叠
+                btn.Margin = new Padding(0, 8, 12, 8);
+                btn.FlatAppearance.BorderSize = 0;
                 flowPanel.Controls.Add(btn);
             }
 
-            // 外层面板（适配表格布局）
-            var outerPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.White,
-                Padding = new Padding(5) // 与表格边缘拉开距离
-            };
+            var outerPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(5) };
             outerPanel.Controls.Add(flowPanel);
-
             return outerPanel;
+        }
+
+        // 更新路径文本框显示
+        private static void UpdatePathTextBox(Panel pathPanel, string currentPath)
+        {
+            var txtPath = pathPanel.Controls.OfType<TextBox>().FirstOrDefault();
+            if (txtPath != null)
+            {
+                txtPath.Text = currentPath;
+                pathPanel.Tag = currentPath;
+            }
         }
     }
 }

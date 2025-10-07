@@ -151,7 +151,46 @@ namespace SCNET_Restart_Tool
                 MessageBox.Show($"清理失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        // 删除文件夹（递归删除，含子文件/子文件夹）
+        public static void DeleteFolder(string parentFolderPath, string folderName, string folderGroupName)
+        {
+            var fullPath = Path.Combine(parentFolderPath, folderName);
+            if (!Directory.Exists(fullPath))
+            {
+                MessageBox.Show($"文件夹「{folderName}」不存在", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
+            var result = MessageBox.Show(
+                $"确定删除「{folderName}」？会删除所有子文件和文件夹！",
+                "确认删除",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning);
+
+            if (result != DialogResult.Yes) return;
+
+            try
+            {
+                Directory.Delete(fullPath, recursive: true);
+                LogManager.GetInstance().AddLog(folderGroupName, $"删除文件夹：{fullPath}");
+                MessageBox.Show("删除成功", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                LogManager.GetInstance().AddLog(folderGroupName, $"删除失败：无权限 {ex.Message}", "错误");
+                MessageBox.Show("无权限删除", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (IOException ex)
+            {
+                LogManager.GetInstance().AddLog(folderGroupName, $"删除失败：文件被占用 {ex.Message}", "错误");
+                MessageBox.Show("文件被占用，无法删除", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                LogManager.GetInstance().AddLog(folderGroupName, $"删除失败：{ex.Message}", "错误");
+                MessageBox.Show($"删除失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
         // 批量备份所有目录
         public static void BatchBackupAllFolders(ServerConfig server)
         {

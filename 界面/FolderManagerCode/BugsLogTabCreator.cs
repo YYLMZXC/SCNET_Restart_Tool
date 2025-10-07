@@ -215,14 +215,23 @@ namespace SCNET_Restart_Tool
         }
 
         // 初始化文件列表列
+        // 初始化文件列表列（新增“类型”列）
         private static void InitFileGridViewColumns(DataGridView dgv)
         {
+            // 1. 类型列（区分文件/文件夹）
+            dgv.Columns.Add("Type", "类型");
+            dgv.Columns["Type"].Width = 80; // 固定宽度，避免挤压其他列
+            dgv.Columns["Type"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            // 2. 原有列（保持不变，调整顺序）
             dgv.Columns.Add("FileName", "文件名");
             dgv.Columns.Add("FileSize", "大小(KB)");
             dgv.Columns.Add("LastWriteTime", "修改时间");
-            dgv.Columns["FileName"].Width = 180;
-            dgv.Columns["FileSize"].Width = 80;
-            dgv.Columns["LastWriteTime"].Width = 140;
+
+            // 调整列宽（根据需求微调）
+            dgv.Columns["FileName"].Width = 300;
+            dgv.Columns["FileSize"].Width = 100;
+            dgv.Columns["LastWriteTime"].Width = 160;
             dgv.Columns["FileSize"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
         }
 
