@@ -173,6 +173,7 @@ namespace SCNET_Restart_Tool
         }
 
         // 异步加载大日志文件
+        // 异步加载大日志文件（修改后，支持共享读取）
         private static async void LoadLogFileAsync(string path, RichTextBox rtb, Label lblPage)
         {
             try
@@ -180,7 +181,9 @@ namespace SCNET_Restart_Tool
                 rtb.Text = "正在加载日志...";
                 _logLinesCache.Clear();
 
-                using (var reader = new StreamReader(path))
+                // 以只读、共享读的方式打开文件
+                using (var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var reader = new StreamReader(fileStream))
                 {
                     string line;
                     while ((line = await reader.ReadLineAsync()) != null)
@@ -195,7 +198,7 @@ namespace SCNET_Restart_Tool
             }
             catch (Exception ex)
             {
-                rtb.Text = $"加载失败：{ex.Message}（文件可能被占用）";
+                rtb.Text = $"加载失败：{ex.Message}（文件可能被占用或无权限）";
             }
         }
 
