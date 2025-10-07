@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Windows.Forms;
+using System.Drawing;
 using System.IO;
 using System.Security.Principal;
+using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
 {
@@ -12,14 +13,44 @@ namespace SCNET_Restart_Tool
         private Dictionary<int, ServerMonitor> _monitors = new Dictionary<int, ServerMonitor>();
         private ServerConfig _selectedServer;
         private LogManager _logManager;
-
+        // 主窗口加载时加载应用设置
+        private SettingsModel _appSettings;
         public ToolMain()
         {
             InitializeComponent();
             _logManager = LogManager.GetInstance();
             _logManager.OnLogAdded += LogManager_OnLogAdded;
+            // 加载应用设置
+            _appSettings = SettingsManager.LoadSettings();
+            // 应用默认图标（如果有自定义图标则加载）
+            if (!string.IsNullOrEmpty(_appSettings.CustomIconPath))
+            {
+                try
+                {
+                    this.Icon = new Icon(_appSettings.CustomIconPath);
+                }
+                catch
+                {
+                    _logManager.AddLog("系统", "自定义图标加载失败，使用默认图标", "警告");
+                }
+            }
             InitializeUI();
             LoadServerConfigs();
+        }
+
+        // 设置按钮点击事件
+        private void btnSettings_Click(object sender, EventArgs e)
+        {
+            using (var settingsForm = new SettingsForm(_appSettings))
+            {
+                if (settingsForm.ShowDialog() == DialogResult.OK)
+                {
+                    // 更新主窗口的设置引用
+                    _appSettings = settingsForm.AppSettings;
+                    // 记录设置变更日志
+                    _logManager.AddLog("系统", "应用设置已更新", "信息");
+                }
+            }
         }
 
         /// 初始化UI控件

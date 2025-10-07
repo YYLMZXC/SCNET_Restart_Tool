@@ -40,6 +40,7 @@ namespace SCNET_Restart_Tool
                 _config.IsMonitoring = true;
                 _timerDaily.Start();
                 _timerContinuous.Start();
+                // 补充：启动监控时立即刷新状态，避免延迟
                 UpdateStatus();
                 _logManager.AddLog(_config.Name, "监控已开启（定时器已启动）");
             }
@@ -145,12 +146,20 @@ namespace SCNET_Restart_Tool
         /// 更新服务端状态
         private void UpdateStatus()
         {
-            var isRunning = IsProcessRunning();
+            var isProcessRunning = IsProcessRunning(); // 先获取真实进程状态
             var oldStatus = _config.Status;
 
-            _config.Status = isRunning ? ServerStatus.Running : ServerStatus.Stopped;
+            // 修复：监控中时，状态应体现“监控+运行状态”，而非直接覆盖为Monitoring
             if (_config.IsMonitoring)
-                _config.Status = ServerStatus.Monitoring;
+            {
+                // 监控中：如果进程运行则为Monitoring，否则为Stopped（触发自动启动）
+                _config.Status = isProcessRunning ? ServerStatus.Monitoring : ServerStatus.Stopped;
+            }
+            else
+            {
+                // 未监控：直接显示进程真实状态
+                _config.Status = isProcessRunning ? ServerStatus.Running : ServerStatus.Stopped;
+            }
 
             // 状态变化时记录日志
             if (oldStatus != _config.Status)
