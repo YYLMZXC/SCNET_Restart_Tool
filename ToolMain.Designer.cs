@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
 {
-    partial class Form1
+    partial class ToolMain
     {
         /// <summary>
         /// 必需的设计器变量。
@@ -47,7 +47,7 @@ namespace SCNET_Restart_Tool
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolMain));
             this.statusLabel = new System.Windows.Forms.Label();
             this.killButton = new System.Windows.Forms.Button();
             this.exitButton = new System.Windows.Forms.Button();

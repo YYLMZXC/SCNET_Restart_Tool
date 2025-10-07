@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace SCNET_Restart_Tool
 {
-    public partial class Form1 : Form
+    public partial class ToolMain : Form
     {
         private System.Windows.Forms.Timer timerDaily;
         private System.Windows.Forms.Timer timerContinuous;
@@ -41,7 +41,7 @@ namespace SCNET_Restart_Tool
         private string servicePassword = ""; // 默认密码
         private string serviceCommand = ""; // 默认命令
 
-        public Form1()
+        public ToolMain()
         {
             InitializeComponent();
             LoadDefaultProgram();
