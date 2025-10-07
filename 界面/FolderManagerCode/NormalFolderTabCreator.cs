@@ -15,37 +15,42 @@ namespace SCNET_Restart_Tool
             tabPage.Padding = new Padding(10);
             tabPage.BackColor = Color.White;
 
-            // 主容器
-            var mainPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
+            // 用TableLayoutPanel按行划分区域：行1（路径）、行2（文件列表）、行3（按钮）
+            var tablePanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 1, // 仅1列，垂直排列
+                RowCount = 3,
+                RowStyles =
+        {
+            new RowStyle(SizeType.Absolute, 30F), // 路径行高度30
+            new RowStyle(SizeType.Percent, 100F), // 文件列表占剩余高度
+            new RowStyle(SizeType.Absolute, 60F)  // 按钮行高度60
+        }
+            };
 
-            // 1. 路径显示区域
+            // 1. 路径显示区域（第1行）
             var pathPanel = CreatePathPanel(form, folderPath, tabName);
-            mainPanel.Controls.Add(pathPanel);
+            tablePanel.Controls.Add(pathPanel, 0, 0);
 
-            // 2. 文件列表
+            // 2. 文件列表（第2行）
             var fileGridView = ControlFactory.CreateFileGridView(form);
             InitFileGridViewColumns(fileGridView);
             LoadFiles(fileGridView, folderPath);
-            mainPanel.Controls.Add(fileGridView);
+            tablePanel.Controls.Add(fileGridView, 0, 1);
 
-            // 3. 按钮区域（包含备份按钮）
+            // 3. 按钮区域（第3行）
             var btnPanel = CreateButtonPanel(form, folderPath, tabName, fileGridView, toolTip, onBatchBackup);
-            mainPanel.Controls.Add(btnPanel);
+            tablePanel.Controls.Add(btnPanel, 0, 2);
 
-            // 布局调整
-            pathPanel.Dock = DockStyle.Top;
-            pathPanel.Height = 40;
-            btnPanel.Dock = DockStyle.Bottom;
-            fileGridView.Dock = DockStyle.Fill;
-
-            tabPage.Controls.Add(mainPanel);
+            tabPage.Controls.Add(tablePanel);
             return tabPage;
         }
 
         // 创建路径显示面板
         private static Panel CreatePathPanel(FolderManagerForm form, string folderPath, string tabName)
         {
-            var panel = new Panel { BackColor = form.LightGray };
+            var panel = new Panel { BackColor = form.LightGray, Dock = DockStyle.Fill }; // 填充所在行
             var exists = Directory.Exists(folderPath);
             var txtPath = ControlFactory.CreatePathTextBox(form, folderPath, exists);
 
@@ -56,6 +61,7 @@ namespace SCNET_Restart_Tool
                 txtPath.Click += (s, e) => FolderOperations.CreateFolderIfNotExists(folderPath, tabName);
             }
 
+            txtPath.Dock = DockStyle.Fill; // 路径文本框填充路径面板
             panel.Controls.Add(txtPath);
             return panel;
         }
@@ -96,6 +102,7 @@ namespace SCNET_Restart_Tool
         }
 
         // 创建按钮面板（包含备份按钮）
+        // 创建按钮面板（包含备份按钮）
         private static Panel CreateButtonPanel(FolderManagerForm form, string folderPath, string tabName, DataGridView dgv, ToolTip toolTip, Action onBatchBackup)
         {
             // 刷新按钮
@@ -133,9 +140,34 @@ namespace SCNET_Restart_Tool
             var btnBatchBackup = ControlFactory.CreateButton(form, "批量备份所有目录", form.PrimaryColor, 150);
             btnBatchBackup.Click += (s, e) => onBatchBackup();
 
-            // 所有按钮放入同一面板（自动换行）
-            return ControlFactory.CreateButtonPanel(form,
-                btnRefresh, btnOpen, btnAdd, btnDelete, btnBatchBackup);
+            // 创建按钮面板容器（使用FlowLayoutPanel自动排列按钮）
+            var flowPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = true,
+                Padding = new Padding(5),
+                Margin = new Padding(0),
+                BackColor = Color.White
+            };
+
+            // 添加所有按钮到FlowLayoutPanel
+            foreach (var btn in new[] { btnRefresh, btnOpen, btnAdd, btnDelete, btnBatchBackup })
+            {
+                btn.Margin = new Padding(0, 5, 10, 5); // 按钮间距（上5，右10，下5）
+                flowPanel.Controls.Add(btn);
+            }
+
+            // 外层面板（用于适配TableLayoutPanel的行）
+            var outerPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.White,
+                Padding = new Padding(5)
+            };
+            outerPanel.Controls.Add(flowPanel);
+
+            return outerPanel;
         }
     }
-}
+   }
