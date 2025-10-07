@@ -25,17 +25,18 @@
             // tabControlFolders
             // 
             this.tabControlFolders.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tabControlFolders.Location = new System.Drawing.Point(0, 0);
+            this.tabControlFolders.Location = new System.Drawing.Point(0, 30);
             this.tabControlFolders.Name = "tabControlFolders";
             this.tabControlFolders.SelectedIndex = 0;
-            this.tabControlFolders.Size = new System.Drawing.Size(900, 600);
+            this.tabControlFolders.Size = new System.Drawing.Size(900, 570);
             this.tabControlFolders.TabIndex = 0;
             // 
             // btnBatchBackupAll
             // 
-            this.btnBatchBackupAll.Location = new System.Drawing.Point(20, 15);
+            this.btnBatchBackupAll.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnBatchBackupAll.Location = new System.Drawing.Point(0, 0);
             this.btnBatchBackupAll.Name = "btnBatchBackupAll";
-            this.btnBatchBackupAll.Size = new System.Drawing.Size(150, 30);
+            this.btnBatchBackupAll.Size = new System.Drawing.Size(900, 30);
             this.btnBatchBackupAll.TabIndex = 1;
             this.btnBatchBackupAll.Text = "批量备份所有目录";
             this.btnBatchBackupAll.UseVisualStyleBackColor = true;

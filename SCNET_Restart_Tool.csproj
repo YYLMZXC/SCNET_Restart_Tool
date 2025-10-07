@@ -118,28 +118,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FolderManager.cs" />
-    <Compile Include="界面\FolderManagerForm.cs">
+    <Compile Include="界面\FolderManagerCode\BugsLogTabCreator.cs" />
+    <Compile Include="界面\FolderManagerCode\ControlFactory.cs" />
+    <Compile Include="界面\FolderManagerCode\FolderManager.cs" />
+    <Compile Include="界面\FolderManagerCode\NormalFolderTabCreator.cs" />
+    <Compile Include="界面\FolderManagerCode\FolderManagerForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="界面\FolderManagerForm.Designer.cs">
+    <Compile Include="界面\FolderManagerCode\FolderManagerForm.Designer.cs">
       <DependentUpon>FolderManagerForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="界面\AboutForm.cs">
+    <Compile Include="界面\About\AboutForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="界面\AboutForm.Designer.cs">
+    <Compile Include="界面\About\AboutForm.Designer.cs">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="界面\ServerEditForm.cs">
+    <Compile Include="界面\Settings\SettingsForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="界面\ServerEditForm.Designer.cs">
-      <DependentUpon>ServerEditForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="界面\SettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="界面\SettingsForm.Designer.cs">
+    <Compile Include="界面\Settings\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
     <Compile Include="LogItem.cs" />
@@ -149,27 +147,24 @@
     <Compile Include="ServerConfigManager.cs" />
     <Compile Include="ServerMonitor.cs" />
     <Compile Include="ServerStatus.cs" />
-    <Compile Include="界面\ToolMain.cs">
+    <Compile Include="界面\Main\ToolMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="界面\ToolMain.Designer.cs">
+    <Compile Include="界面\Main\ToolMain.Designer.cs">
       <DependentUpon>ToolMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="界面\FolderManagerForm.resx">
+    <EmbeddedResource Include="界面\FolderManagerCode\FolderManagerForm.resx">
       <DependentUpon>FolderManagerForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="界面\AboutForm.resx">
+    <EmbeddedResource Include="界面\About\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="界面\ServerEditForm.resx">
-      <DependentUpon>ServerEditForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="界面\SettingsForm.resx">
+    <EmbeddedResource Include="界面\Settings\SettingsForm.resx">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="界面\ToolMain.resx">
+    <EmbeddedResource Include="界面\Main\ToolMain.resx">
       <DependentUpon>ToolMain.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
