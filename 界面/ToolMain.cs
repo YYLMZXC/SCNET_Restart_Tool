@@ -691,7 +691,41 @@ namespace SCNET_Restart_Tool
                 MessageBox.Show($"保存配置失败: {ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+        #region 补充缺失的事件处理方法
+        /// <summary>
+        /// 服务器表格单元格点击事件（Designer绑定，空实现避免报错，可根据需求扩展）
+        /// </summary>
+        private void serversGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            // 若需要实现“点击单元格触发操作”（如按钮列），可在此添加逻辑
+            // 示例：如果点击第3列（索引2）的单元格，执行某操作
+            // if (e.ColumnIndex == 2 && e.RowIndex >= 0)
+            // {
+            //     var selectedServer = serversGridView.Rows[e.RowIndex].DataBoundItem as ServerConfig;
+            //     if (selectedServer != null)
+            //     {
+            //         // 执行自定义逻辑（如打开详情）
+            //     }
+            // }
+        }
 
+        /// <summary>
+        /// 服务器列表面板绘制事件（Designer绑定，空实现避免报错，可根据需求扩展）
+        /// </summary>
+        private void serverListPanel_Paint(object sender, PaintEventArgs e)
+        {
+            // 若需要自定义面板绘制（如绘制边框、背景色渐变），可在此添加逻辑
+            // 示例：给面板绘制灰色边框
+            // var panel = sender as Panel;
+            // if (panel != null)
+            // {
+            //     using (var pen = new Pen(Color.LightGray, 1))
+            //     {
+            //         e.Graphics.DrawRectangle(pen, new Rectangle(0, 0, panel.Width - 1, panel.Height - 1));
+            //     }
+            // }
+        }
+        #endregion
         // 窗口关闭时
         private void ToolMain_FormClosing(object sender, FormClosingEventArgs e)
         {

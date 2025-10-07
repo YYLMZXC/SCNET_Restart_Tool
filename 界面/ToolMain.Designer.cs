@@ -70,7 +70,6 @@ namespace SCNET_Restart_Tool
             this.clearLogBtn = new System.Windows.Forms.Button();
             this.infoPanel = new System.Windows.Forms.Panel();
             this.infoLabel = new System.Windows.Forms.Label();
-
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
             this.mainSplitContainer.Panel1.SuspendLayout();
             this.mainSplitContainer.Panel2.SuspendLayout();
@@ -100,31 +99,36 @@ namespace SCNET_Restart_Tool
             this.logControlPanel.SuspendLayout();
             this.infoPanel.SuspendLayout();
             this.SuspendLayout();
-
-            // mainSplitContainer - 主分割器（左右布局）
+            // 
+            // mainSplitContainer
+            // 
             this.mainSplitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.mainSplitContainer.Location = new System.Drawing.Point(0, 0);
             this.mainSplitContainer.Name = "mainSplitContainer";
-            this.mainSplitContainer.Size = new System.Drawing.Size(1280, 720);
-            this.mainSplitContainer.SplitterDistance = 900;
-            this.mainSplitContainer.TabIndex = 0;
-
-            // mainSplitContainer.Panel1 - 左侧功能区
+            // 
+            // mainSplitContainer.Panel1
+            // 
             this.mainSplitContainer.Panel1.Controls.Add(this.leftPanel);
-
-            // mainSplitContainer.Panel2 - 右侧日志区
+            // 
+            // mainSplitContainer.Panel2
+            // 
             this.mainSplitContainer.Panel2.Controls.Add(this.rightPanel);
-
-            // leftPanel - 左侧面板容器
+            this.mainSplitContainer.Size = new System.Drawing.Size(1280, 816);
+            this.mainSplitContainer.SplitterDistance = 989;
+            this.mainSplitContainer.TabIndex = 0;
+            // 
+            // leftPanel
+            // 
             this.leftPanel.Controls.Add(this.serverEditPanel);
             this.leftPanel.Controls.Add(this.serverListSplit);
             this.leftPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.leftPanel.Location = new System.Drawing.Point(0, 0);
             this.leftPanel.Name = "leftPanel";
-            this.leftPanel.Size = new System.Drawing.Size(900, 720);
+            this.leftPanel.Size = new System.Drawing.Size(989, 816);
             this.leftPanel.TabIndex = 0;
-
-            // serverEditPanel - 服务器编辑面板
+            // 
+            // serverEditPanel
+            // 
             this.serverEditPanel.Controls.Add(this.commandPanel);
             this.serverEditPanel.Controls.Add(this.advancedOptionsLabel);
             this.serverEditPanel.Controls.Add(this.enableCommandsChk);
@@ -144,38 +148,25 @@ namespace SCNET_Restart_Tool
             this.serverEditPanel.Controls.Add(this.serverNameLabel);
             this.serverEditPanel.Controls.Add(this.serverNameInput);
             this.serverEditPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.serverEditPanel.Location = new System.Drawing.Point(0, 250);
+            this.serverEditPanel.Location = new System.Drawing.Point(0, 477);
             this.serverEditPanel.Name = "serverEditPanel";
             this.serverEditPanel.Padding = new System.Windows.Forms.Padding(15);
-            this.serverEditPanel.Size = new System.Drawing.Size(900, 470);
+            this.serverEditPanel.Size = new System.Drawing.Size(989, 339);
             this.serverEditPanel.TabIndex = 1;
-
-            // commandPanel - 指令发送区域
+            // 
+            // commandPanel
+            // 
             this.commandPanel.Controls.Add(this.sendCommandBtn);
             this.commandPanel.Controls.Add(this.commandInput);
             this.commandPanel.Controls.Add(this.commandLabel);
             this.commandPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.commandPanel.Location = new System.Drawing.Point(15, 395);
+            this.commandPanel.Location = new System.Drawing.Point(15, 264);
             this.commandPanel.Name = "commandPanel";
-            this.commandPanel.Size = new System.Drawing.Size(870, 60);
+            this.commandPanel.Size = new System.Drawing.Size(959, 60);
             this.commandPanel.TabIndex = 18;
-
-            // commandLabel
-            this.commandLabel.AutoSize = true;
-            this.commandLabel.Location = new System.Drawing.Point(0, 15);
-            this.commandLabel.Name = "commandLabel";
-            this.commandLabel.Size = new System.Drawing.Size(67, 15);
-            this.commandLabel.TabIndex = 0;
-            this.commandLabel.Text = "发送指令：";
-
-            // commandInput
-            this.commandInput.Location = new System.Drawing.Point(75, 12);
-            this.commandInput.Name = "commandInput";
-            this.commandInput.Size = new System.Drawing.Size(650, 25);
-            this.commandInput.TabIndex = 1;
-            this.commandInput.Text = "say 服务器即将重启";
-
+            // 
             // sendCommandBtn
+            // 
             this.sendCommandBtn.Location = new System.Drawing.Point(735, 10);
             this.sendCommandBtn.Name = "sendCommandBtn";
             this.sendCommandBtn.Size = new System.Drawing.Size(75, 30);
@@ -183,81 +174,103 @@ namespace SCNET_Restart_Tool
             this.sendCommandBtn.Text = "发送";
             this.sendCommandBtn.UseVisualStyleBackColor = true;
             this.sendCommandBtn.Click += new System.EventHandler(this.sendCommandBtn_Click);
-
+            // 
+            // commandInput
+            // 
+            this.commandInput.Location = new System.Drawing.Point(75, 12);
+            this.commandInput.Name = "commandInput";
+            this.commandInput.Size = new System.Drawing.Size(650, 25);
+            this.commandInput.TabIndex = 1;
+            this.commandInput.Text = "say 服务器即将重启";
+            // 
+            // commandLabel
+            // 
+            this.commandLabel.AutoSize = true;
+            this.commandLabel.Location = new System.Drawing.Point(0, 15);
+            this.commandLabel.Name = "commandLabel";
+            this.commandLabel.Size = new System.Drawing.Size(82, 15);
+            this.commandLabel.TabIndex = 0;
+            this.commandLabel.Text = "发送指令：";
+            // 
             // advancedOptionsLabel
+            // 
             this.advancedOptionsLabel.AutoSize = true;
             this.advancedOptionsLabel.Location = new System.Drawing.Point(0, 220);
             this.advancedOptionsLabel.Name = "advancedOptionsLabel";
-            this.advancedOptionsLabel.Size = new System.Drawing.Size(67, 15);
+            this.advancedOptionsLabel.Size = new System.Drawing.Size(82, 15);
             this.advancedOptionsLabel.TabIndex = 17;
             this.advancedOptionsLabel.Text = "高级选项：";
-
+            // 
             // enableCommandsChk
+            // 
             this.enableCommandsChk.AutoSize = true;
             this.enableCommandsChk.Location = new System.Drawing.Point(75, 220);
             this.enableCommandsChk.Name = "enableCommandsChk";
-            this.enableCommandsChk.Size = new System.Drawing.Size(126, 19);
+            this.enableCommandsChk.Size = new System.Drawing.Size(119, 19);
             this.enableCommandsChk.TabIndex = 16;
             this.enableCommandsChk.Text = "启用指令功能";
             this.enableCommandsChk.UseVisualStyleBackColor = true;
-
+            // 
             // intervalLabel
+            // 
             this.intervalLabel.AutoSize = true;
             this.intervalLabel.Location = new System.Drawing.Point(230, 180);
             this.intervalLabel.Name = "intervalLabel";
             this.intervalLabel.Size = new System.Drawing.Size(82, 15);
             this.intervalLabel.TabIndex = 15;
             this.intervalLabel.Text = "间隔小时：";
-
+            // 
             // intervalHoursNum
+            // 
             this.intervalHoursNum.Location = new System.Drawing.Point(315, 177);
             this.intervalHoursNum.Name = "intervalHoursNum";
             this.intervalHoursNum.Size = new System.Drawing.Size(100, 25);
             this.intervalHoursNum.TabIndex = 14;
-            this.intervalHoursNum.Value = new decimal(new int[] {
-            0,
-            0,
-            0,
-            0});
-
+            // 
             // scheduleLabel
+            // 
             this.scheduleLabel.AutoSize = true;
             this.scheduleLabel.Location = new System.Drawing.Point(0, 180);
             this.scheduleLabel.Name = "scheduleLabel";
             this.scheduleLabel.Size = new System.Drawing.Size(82, 15);
             this.scheduleLabel.TabIndex = 13;
             this.scheduleLabel.Text = "定时重启：";
-
+            // 
             // scheduleTimeInput
+            // 
             this.scheduleTimeInput.Location = new System.Drawing.Point(75, 177);
             this.scheduleTimeInput.Name = "scheduleTimeInput";
             this.scheduleTimeInput.Size = new System.Drawing.Size(100, 25);
             this.scheduleTimeInput.TabIndex = 12;
             this.scheduleTimeInput.Text = "01:00";
-
+            // 
             // passwordLabel
+            // 
             this.passwordLabel.AutoSize = true;
             this.passwordLabel.Location = new System.Drawing.Point(0, 140);
             this.passwordLabel.Name = "passwordLabel";
-            this.passwordLabel.Size = new System.Drawing.Size(67, 15);
+            this.passwordLabel.Size = new System.Drawing.Size(52, 15);
             this.passwordLabel.TabIndex = 11;
             this.passwordLabel.Text = "密码：";
-
+            // 
             // passwordInput
+            // 
             this.passwordInput.Location = new System.Drawing.Point(75, 137);
             this.passwordInput.Name = "passwordInput";
             this.passwordInput.Size = new System.Drawing.Size(250, 25);
             this.passwordInput.TabIndex = 10;
-
+            // 
             // portLabel
+            // 
             this.portLabel.AutoSize = true;
             this.portLabel.Location = new System.Drawing.Point(280, 100);
             this.portLabel.Name = "portLabel";
-            this.portLabel.Size = new System.Drawing.Size(49, 15);
+            this.portLabel.Size = new System.Drawing.Size(52, 15);
             this.portLabel.TabIndex = 9;
             this.portLabel.Text = "端口：";
-
+            // 
             // portNum
+            // 
             this.portNum.Location = new System.Drawing.Point(335, 97);
             this.portNum.Maximum = new decimal(new int[] {
             65535,
@@ -277,23 +290,26 @@ namespace SCNET_Restart_Tool
             0,
             0,
             0});
-
+            // 
             // ipLabel
+            // 
             this.ipLabel.AutoSize = true;
             this.ipLabel.Location = new System.Drawing.Point(0, 100);
             this.ipLabel.Name = "ipLabel";
-            this.ipLabel.Size = new System.Drawing.Size(37, 15);
+            this.ipLabel.Size = new System.Drawing.Size(38, 15);
             this.ipLabel.TabIndex = 7;
             this.ipLabel.Text = "IP：";
-
+            // 
             // ipInput
+            // 
             this.ipInput.Location = new System.Drawing.Point(75, 97);
             this.ipInput.Name = "ipInput";
             this.ipInput.Size = new System.Drawing.Size(150, 25);
             this.ipInput.TabIndex = 6;
             this.ipInput.Text = "127.0.0.1";
-
+            // 
             // browseExeBtn
+            // 
             this.browseExeBtn.Location = new System.Drawing.Point(780, 57);
             this.browseExeBtn.Name = "browseExeBtn";
             this.browseExeBtn.Size = new System.Drawing.Size(75, 25);
@@ -301,60 +317,70 @@ namespace SCNET_Restart_Tool
             this.browseExeBtn.Text = "浏览";
             this.browseExeBtn.UseVisualStyleBackColor = true;
             this.browseExeBtn.Click += new System.EventHandler(this.browseExeBtn_Click);
-
+            // 
             // exePathLabel
+            // 
             this.exePathLabel.AutoSize = true;
             this.exePathLabel.Location = new System.Drawing.Point(0, 60);
             this.exePathLabel.Name = "exePathLabel";
-            this.exePathLabel.Size = new System.Drawing.Size(67, 15);
+            this.exePathLabel.Size = new System.Drawing.Size(82, 15);
             this.exePathLabel.TabIndex = 4;
             this.exePathLabel.Text = "程序路径：";
-
+            // 
             // exePathInput
+            // 
             this.exePathInput.Location = new System.Drawing.Point(75, 57);
             this.exePathInput.Name = "exePathInput";
             this.exePathInput.Size = new System.Drawing.Size(690, 25);
             this.exePathInput.TabIndex = 3;
-
+            // 
             // serverNameLabel
+            // 
             this.serverNameLabel.AutoSize = true;
             this.serverNameLabel.Location = new System.Drawing.Point(0, 20);
             this.serverNameLabel.Name = "serverNameLabel";
-            this.serverNameLabel.Size = new System.Drawing.Size(67, 15);
+            this.serverNameLabel.Size = new System.Drawing.Size(82, 15);
             this.serverNameLabel.TabIndex = 2;
             this.serverNameLabel.Text = "服务器名：";
-
+            // 
             // serverNameInput
+            // 
             this.serverNameInput.Location = new System.Drawing.Point(75, 17);
             this.serverNameInput.Name = "serverNameInput";
             this.serverNameInput.Size = new System.Drawing.Size(250, 25);
             this.serverNameInput.TabIndex = 1;
-
-            // serverListSplit - 服务器列表分割器（上下布局）
+            // 
+            // serverListSplit
+            // 
             this.serverListSplit.Dock = System.Windows.Forms.DockStyle.Top;
             this.serverListSplit.Location = new System.Drawing.Point(0, 0);
             this.serverListSplit.Name = "serverListSplit";
             this.serverListSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.serverListSplit.Size = new System.Drawing.Size(900, 250);
-            this.serverListSplit.SplitterDistance = 180;
-            this.serverListSplit.TabIndex = 0;
-
-            // serverListSplit.Panel1 - 服务器列表
+            // 
+            // serverListSplit.Panel1
+            // 
             this.serverListSplit.Panel1.Controls.Add(this.serverListPanel);
-
-            // serverListSplit.Panel2 - 操作按钮区
+            // 
+            // serverListSplit.Panel2
+            // 
             this.serverListSplit.Panel2.Controls.Add(this.operationPanel);
-
-            // serverListPanel - 列表容器
+            this.serverListSplit.Size = new System.Drawing.Size(989, 477);
+            this.serverListSplit.SplitterDistance = 343;
+            this.serverListSplit.TabIndex = 0;
+            // 
+            // serverListPanel
+            // 
             this.serverListPanel.Controls.Add(this.serversGridView);
             this.serverListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.serverListPanel.Location = new System.Drawing.Point(0, 0);
             this.serverListPanel.Name = "serverListPanel";
             this.serverListPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.serverListPanel.Size = new System.Drawing.Size(900, 180);
+            this.serverListPanel.Size = new System.Drawing.Size(989, 343);
             this.serverListPanel.TabIndex = 0;
-
-            // serversGridView - 服务器列表表格
+            this.serverListPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.serverListPanel_Paint);
+            // 
+            // serversGridView
+            // 
             this.serversGridView.AllowUserToResizeRows = false;
             this.serversGridView.BackgroundColor = System.Drawing.Color.White;
             this.serversGridView.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
@@ -365,11 +391,13 @@ namespace SCNET_Restart_Tool
             this.serversGridView.RowHeadersVisible = false;
             this.serversGridView.RowTemplate.Height = 25;
             this.serversGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.serversGridView.Size = new System.Drawing.Size(880, 160);
+            this.serversGridView.Size = new System.Drawing.Size(969, 323);
             this.serversGridView.TabIndex = 0;
+            this.serversGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.serversGridView_CellContentClick);
             this.serversGridView.SelectionChanged += new System.EventHandler(this.serversGridView_SelectionChanged);
-
-            // operationPanel - 操作按钮容器
+            // 
+            // operationPanel
+            // 
             this.operationPanel.Controls.Add(this.monitorGroup);
             this.operationPanel.Controls.Add(this.controlGroup);
             this.operationPanel.Controls.Add(this.manageGroup);
@@ -377,21 +405,23 @@ namespace SCNET_Restart_Tool
             this.operationPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.operationPanel.Location = new System.Drawing.Point(0, 0);
             this.operationPanel.Name = "operationPanel";
-            this.operationPanel.Size = new System.Drawing.Size(900, 66);
+            this.operationPanel.Size = new System.Drawing.Size(989, 130);
             this.operationPanel.TabIndex = 0;
-
-            // monitorGroup - 监控按钮组
+            // 
+            // monitorGroup
+            // 
             this.monitorGroup.Controls.Add(this.stopMonitorBtn);
             this.monitorGroup.Controls.Add(this.startMonitorBtn);
             this.monitorGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.monitorGroup.Location = new System.Drawing.Point(700, 0);
+            this.monitorGroup.Location = new System.Drawing.Point(765, 0);
             this.monitorGroup.Name = "monitorGroup";
-            this.monitorGroup.Size = new System.Drawing.Size(200, 66);
+            this.monitorGroup.Size = new System.Drawing.Size(220, 130);
             this.monitorGroup.TabIndex = 3;
             this.monitorGroup.TabStop = false;
             this.monitorGroup.Text = "监控控制";
-
+            // 
             // stopMonitorBtn
+            // 
             this.stopMonitorBtn.Enabled = false;
             this.stopMonitorBtn.Location = new System.Drawing.Point(105, 25);
             this.stopMonitorBtn.Name = "stopMonitorBtn";
@@ -400,8 +430,9 @@ namespace SCNET_Restart_Tool
             this.stopMonitorBtn.Text = "关闭监控";
             this.stopMonitorBtn.UseVisualStyleBackColor = true;
             this.stopMonitorBtn.Click += new System.EventHandler(this.stopMonitorBtn_Click);
-
+            // 
             // startMonitorBtn
+            // 
             this.startMonitorBtn.Enabled = false;
             this.startMonitorBtn.Location = new System.Drawing.Point(15, 25);
             this.startMonitorBtn.Name = "startMonitorBtn";
@@ -410,21 +441,23 @@ namespace SCNET_Restart_Tool
             this.startMonitorBtn.Text = "开启监控";
             this.startMonitorBtn.UseVisualStyleBackColor = true;
             this.startMonitorBtn.Click += new System.EventHandler(this.startMonitorBtn_Click);
-
-            // controlGroup - 运行控制按钮组
+            // 
+            // controlGroup
+            // 
             this.controlGroup.Controls.Add(this.stopAllBtn);
             this.controlGroup.Controls.Add(this.restartBtn);
             this.controlGroup.Controls.Add(this.stopBtn);
             this.controlGroup.Controls.Add(this.startBtn);
             this.controlGroup.Dock = System.Windows.Forms.DockStyle.Left;
-            this.controlGroup.Location = new System.Drawing.Point(400, 0);
+            this.controlGroup.Location = new System.Drawing.Point(450, 0);
             this.controlGroup.Name = "controlGroup";
-            this.controlGroup.Size = new System.Drawing.Size(300, 66);
+            this.controlGroup.Size = new System.Drawing.Size(315, 130);
             this.controlGroup.TabIndex = 2;
             this.controlGroup.TabStop = false;
             this.controlGroup.Text = "运行控制";
-
+            // 
             // stopAllBtn
+            // 
             this.stopAllBtn.Enabled = false;
             this.stopAllBtn.Location = new System.Drawing.Point(210, 25);
             this.stopAllBtn.Name = "stopAllBtn";
@@ -433,8 +466,9 @@ namespace SCNET_Restart_Tool
             this.stopAllBtn.Text = "停止全部";
             this.stopAllBtn.UseVisualStyleBackColor = true;
             this.stopAllBtn.Click += new System.EventHandler(this.stopAllBtn_Click);
-
+            // 
             // restartBtn
+            // 
             this.restartBtn.Enabled = false;
             this.restartBtn.Location = new System.Drawing.Point(130, 25);
             this.restartBtn.Name = "restartBtn";
@@ -443,8 +477,9 @@ namespace SCNET_Restart_Tool
             this.restartBtn.Text = "重启";
             this.restartBtn.UseVisualStyleBackColor = true;
             this.restartBtn.Click += new System.EventHandler(this.restartBtn_Click);
-
+            // 
             // stopBtn
+            // 
             this.stopBtn.Enabled = false;
             this.stopBtn.Location = new System.Drawing.Point(60, 25);
             this.stopBtn.Name = "stopBtn";
@@ -453,8 +488,9 @@ namespace SCNET_Restart_Tool
             this.stopBtn.Text = "停止";
             this.stopBtn.UseVisualStyleBackColor = true;
             this.stopBtn.Click += new System.EventHandler(this.stopBtn_Click);
-
+            // 
             // startBtn
+            // 
             this.startBtn.Enabled = false;
             this.startBtn.Location = new System.Drawing.Point(10, 25);
             this.startBtn.Name = "startBtn";
@@ -463,8 +499,9 @@ namespace SCNET_Restart_Tool
             this.startBtn.Text = "启动";
             this.startBtn.UseVisualStyleBackColor = true;
             this.startBtn.Click += new System.EventHandler(this.startBtn_Click);
-
-            // manageGroup - 管理按钮组
+            // 
+            // manageGroup
+            // 
             this.manageGroup.Controls.Add(this.folderManagerBtn);
             this.manageGroup.Controls.Add(this.deleteBtn);
             this.manageGroup.Controls.Add(this.editBtn);
@@ -472,12 +509,13 @@ namespace SCNET_Restart_Tool
             this.manageGroup.Dock = System.Windows.Forms.DockStyle.Left;
             this.manageGroup.Location = new System.Drawing.Point(200, 0);
             this.manageGroup.Name = "manageGroup";
-            this.manageGroup.Size = new System.Drawing.Size(200, 66);
+            this.manageGroup.Size = new System.Drawing.Size(250, 130);
             this.manageGroup.TabIndex = 1;
             this.manageGroup.TabStop = false;
             this.manageGroup.Text = "服务器管理";
-
+            // 
             // folderManagerBtn
+            // 
             this.folderManagerBtn.Enabled = false;
             this.folderManagerBtn.Location = new System.Drawing.Point(110, 25);
             this.folderManagerBtn.Name = "folderManagerBtn";
@@ -486,8 +524,9 @@ namespace SCNET_Restart_Tool
             this.folderManagerBtn.Text = "文件夹";
             this.folderManagerBtn.UseVisualStyleBackColor = true;
             this.folderManagerBtn.Click += new System.EventHandler(this.folderManagerBtn_Click);
-
+            // 
             // deleteBtn
+            // 
             this.deleteBtn.Enabled = false;
             this.deleteBtn.Location = new System.Drawing.Point(70, 25);
             this.deleteBtn.Name = "deleteBtn";
@@ -496,8 +535,9 @@ namespace SCNET_Restart_Tool
             this.deleteBtn.Text = "删";
             this.deleteBtn.UseVisualStyleBackColor = true;
             this.deleteBtn.Click += new System.EventHandler(this.deleteBtn_Click);
-
+            // 
             // editBtn
+            // 
             this.editBtn.Enabled = false;
             this.editBtn.Location = new System.Drawing.Point(35, 25);
             this.editBtn.Name = "editBtn";
@@ -506,8 +546,9 @@ namespace SCNET_Restart_Tool
             this.editBtn.Text = "改";
             this.editBtn.UseVisualStyleBackColor = true;
             this.editBtn.Click += new System.EventHandler(this.editBtn_Click);
-
+            // 
             // addBtn
+            // 
             this.addBtn.Location = new System.Drawing.Point(0, 25);
             this.addBtn.Name = "addBtn";
             this.addBtn.Size = new System.Drawing.Size(35, 30);
@@ -515,19 +556,21 @@ namespace SCNET_Restart_Tool
             this.addBtn.Text = "增";
             this.addBtn.UseVisualStyleBackColor = true;
             this.addBtn.Click += new System.EventHandler(this.addBtn_Click);
-
-            // editGroup - 编辑按钮组
+            // 
+            // editGroup
+            // 
             this.editGroup.Controls.Add(this.cancelEditBtn);
             this.editGroup.Controls.Add(this.saveEditBtn);
             this.editGroup.Dock = System.Windows.Forms.DockStyle.Left;
             this.editGroup.Location = new System.Drawing.Point(0, 0);
             this.editGroup.Name = "editGroup";
-            this.editGroup.Size = new System.Drawing.Size(200, 66);
+            this.editGroup.Size = new System.Drawing.Size(200, 130);
             this.editGroup.TabIndex = 0;
             this.editGroup.TabStop = false;
             this.editGroup.Text = "编辑操作";
-
+            // 
             // cancelEditBtn
+            // 
             this.cancelEditBtn.Enabled = false;
             this.cancelEditBtn.Location = new System.Drawing.Point(105, 25);
             this.cancelEditBtn.Name = "cancelEditBtn";
@@ -536,8 +579,9 @@ namespace SCNET_Restart_Tool
             this.cancelEditBtn.Text = "取消";
             this.cancelEditBtn.UseVisualStyleBackColor = true;
             this.cancelEditBtn.Click += new System.EventHandler(this.cancelEditBtn_Click);
-
+            // 
             // saveEditBtn
+            // 
             this.saveEditBtn.Enabled = false;
             this.saveEditBtn.Location = new System.Drawing.Point(15, 25);
             this.saveEditBtn.Name = "saveEditBtn";
@@ -546,60 +590,67 @@ namespace SCNET_Restart_Tool
             this.saveEditBtn.Text = "保存";
             this.saveEditBtn.UseVisualStyleBackColor = true;
             this.saveEditBtn.Click += new System.EventHandler(this.saveEditBtn_Click);
-
-            // rightPanel - 右侧面板容器
+            // 
+            // rightPanel
+            // 
             this.rightPanel.Controls.Add(this.logSplit);
             this.rightPanel.Controls.Add(this.infoPanel);
             this.rightPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rightPanel.Location = new System.Drawing.Point(0, 0);
             this.rightPanel.Name = "rightPanel";
-            this.rightPanel.Size = new System.Drawing.Size(376, 720);
+            this.rightPanel.Size = new System.Drawing.Size(287, 816);
             this.rightPanel.TabIndex = 0;
-
-            // logSplit - 日志分割器（上下布局）
+            // 
+            // logSplit
+            // 
             this.logSplit.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.logSplit.Location = new System.Drawing.Point(0, 150);
+            this.logSplit.Location = new System.Drawing.Point(0, 332);
             this.logSplit.Name = "logSplit";
             this.logSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            this.logSplit.Size = new System.Drawing.Size(376, 570);
-            this.logSplit.SplitterDistance = 520;
-            this.logSplit.TabIndex = 1;
-
-            // logSplit.Panel1 - 日志显示区
+            // 
+            // logSplit.Panel1
+            // 
             this.logSplit.Panel1.Controls.Add(this.logPanel);
-
-            // logSplit.Panel2 - 日志控制区
+            // 
+            // logSplit.Panel2
+            // 
             this.logSplit.Panel2.Controls.Add(this.logControlPanel);
-
-            // logPanel - 日志容器
+            this.logSplit.Size = new System.Drawing.Size(287, 484);
+            this.logSplit.SplitterDistance = 441;
+            this.logSplit.TabIndex = 1;
+            // 
+            // logPanel
+            // 
             this.logPanel.Controls.Add(this.logTextBox);
             this.logPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logPanel.Location = new System.Drawing.Point(0, 0);
             this.logPanel.Name = "logPanel";
             this.logPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.logPanel.Size = new System.Drawing.Size(376, 520);
+            this.logPanel.Size = new System.Drawing.Size(287, 441);
             this.logPanel.TabIndex = 0;
-
-            // logTextBox - 日志文本框
-            this.logTextBox.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
-            this.logTextBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            // 
+            // logTextBox
+            // 
+            this.logTextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(245)))), ((int)(((byte)(245)))), ((int)(((byte)(245)))));
             this.logTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logTextBox.Location = new System.Drawing.Point(10, 10);
             this.logTextBox.Name = "logTextBox";
             this.logTextBox.ReadOnly = true;
-            this.logTextBox.Size = new System.Drawing.Size(356, 500);
+            this.logTextBox.Size = new System.Drawing.Size(267, 421);
             this.logTextBox.TabIndex = 0;
             this.logTextBox.Text = "";
-
-            // logControlPanel - 日志控制容器
+            // 
+            // logControlPanel
+            // 
             this.logControlPanel.Controls.Add(this.clearLogBtn);
             this.logControlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.logControlPanel.Location = new System.Drawing.Point(0, 0);
             this.logControlPanel.Name = "logControlPanel";
-            this.logControlPanel.Size = new System.Drawing.Size(376, 46);
+            this.logControlPanel.Size = new System.Drawing.Size(287, 39);
             this.logControlPanel.TabIndex = 0;
-
-            // clearLogBtn - 清空日志按钮
+            // 
+            // clearLogBtn
+            // 
             this.clearLogBtn.Location = new System.Drawing.Point(280, 8);
             this.clearLogBtn.Name = "clearLogBtn";
             this.clearLogBtn.Size = new System.Drawing.Size(80, 30);
@@ -607,30 +658,33 @@ namespace SCNET_Restart_Tool
             this.clearLogBtn.Text = "清空日志";
             this.clearLogBtn.UseVisualStyleBackColor = true;
             this.clearLogBtn.Click += new System.EventHandler(this.clearLogBtn_Click);
-
-            // infoPanel - 信息面板
+            // 
+            // infoPanel
+            // 
             this.infoPanel.Controls.Add(this.infoLabel);
             this.infoPanel.Dock = System.Windows.Forms.DockStyle.Top;
             this.infoPanel.Location = new System.Drawing.Point(0, 0);
             this.infoPanel.Name = "infoPanel";
             this.infoPanel.Padding = new System.Windows.Forms.Padding(10);
-            this.infoPanel.Size = new System.Drawing.Size(376, 150);
+            this.infoPanel.Size = new System.Drawing.Size(287, 332);
             this.infoPanel.TabIndex = 0;
-
-            // infoLabel - 功能说明
+            // 
+            // infoLabel
+            // 
             this.infoLabel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.infoLabel.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.infoLabel.Location = new System.Drawing.Point(10, 10);
             this.infoLabel.Name = "infoLabel";
-            this.infoLabel.Size = new System.Drawing.Size(356, 130);
+            this.infoLabel.Size = new System.Drawing.Size(267, 312);
             this.infoLabel.TabIndex = 0;
-            this.infoLabel.Text = "服务端管理工具\r\n\r\n功能说明：\r\n1. 增删改查服务器配置\r\n2. 启动/停止/重启服务器\r\n3. 监控服务器状态并自动重启\r\n4. 发送指令控制服务器\r\n5. 管理服务器相关文件夹";
-            this.infoLabel.TextAlign = System.Drawing.ContentAlignment.TopLeft;
-
-            // ToolMain - 主窗口
+            this.infoLabel.Text = "服务端管理工具\r\n\r\n功能说明：\r\n1. 增删改查服务器配置\r\n2. 启动/停止/重启服务器\r\n3. 监控服务器状态并自动重启\r\n4. 发送指令控制服务器\r\n5." +
+    " 管理服务器相关文件夹";
+            // 
+            // ToolMain
+            // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1280, 720);
+            this.ClientSize = new System.Drawing.Size(1280, 816);
             this.Controls.Add(this.mainSplitContainer);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ToolMain";
@@ -667,6 +721,7 @@ namespace SCNET_Restart_Tool
             this.logControlPanel.ResumeLayout(false);
             this.infoPanel.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion

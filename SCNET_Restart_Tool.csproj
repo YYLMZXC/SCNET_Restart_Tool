@@ -40,7 +40,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -168,6 +168,7 @@
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
     <None Include="Properties\app.manifest" />
@@ -186,6 +187,21 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="ico.ico" />
+    <None Include="Res\png\world_icon.png" />
+    <None Include="Res\png\texture_icon.png" />
+    <None Include="Res\png\skin_icon.png" />
+    <None Include="Res\png\plugin_icon.png" />
+    <None Include="Res\png\mod_icon.png" />
+    <None Include="Res\png\log_icon.png" />
+    <None Include="Res\png\config_icon.png" />
+    <None Include="Res\world_icon.ico" />
+    <None Include="Res\texture_icon.ico" />
+    <None Include="Res\skin_icon.ico" />
+    <None Include="Res\plugin_icon.ico" />
+    <None Include="Res\mod_icon.ico" />
+    <None Include="Res\log_icon.ico" />
+    <None Include="Res\config_icon.ico" />
+    <Content Include="Res\ico.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
