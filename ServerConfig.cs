@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace SCNET_Restart_Tool
 {
@@ -19,5 +20,33 @@ namespace SCNET_Restart_Tool
         [NonSerialized]
         public ServerStatus Status = ServerStatus.Stopped;
         public bool EnableCommands { get; set; } = false;
+
+        // 服务端关联文件夹路径
+        [NonSerialized]
+        private string _serverRootPath;
+
+        public string ServerRootPath
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(ExePath) || !File.Exists(ExePath))
+                    return "";
+                _serverRootPath = Path.GetDirectoryName(ExePath);
+                return _serverRootPath;
+            }
+        }
+
+        public string BugsLogPath => Path.Combine(ServerRootPath, "Bugs日志");
+        public string CharacterSkinsPath => Path.Combine(ServerRootPath, "CharacterSkins");
+        public string ConfigsPath => Path.Combine(ServerRootPath, "Configs");
+        public string TexturePacksPath => Path.Combine(ServerRootPath, "TexturePacks");
+        public string NetModsPath => Path.Combine(ServerRootPath, "NetMods");
+        public string PluginsPath => Path.Combine(ServerRootPath, "Plugins");
+        public string WorldsPath => Path.Combine(ServerRootPath, "Worlds");
+
+        public bool IsFolderExists(string folderPath)
+        {
+            return !string.IsNullOrEmpty(folderPath) && Directory.Exists(folderPath);
+        }
     }
 }

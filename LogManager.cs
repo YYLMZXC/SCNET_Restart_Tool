@@ -1,38 +1,32 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace SCNET_Restart_Tool
 {
-    /// 日志管理类（单例模式）
+    public delegate void LogAddedEventHandler(string log);
+
     public class LogManager
     {
-        private static LogManager _instance;
-        private readonly List<LogItem> _logs = new List<LogItem>();
-        /// 日志添加事件（用于UI实时刷新）
-        public event Action<LogItem> OnLogAdded;
+        // 单例实例
+        private static readonly Lazy<LogManager> _instance = new Lazy<LogManager>(() => new LogManager());
+        public static LogManager GetInstance() => _instance.Value;
+
+        // 日志添加事件（供UI订阅）
+        public event LogAddedEventHandler LogAdded;
 
         private LogManager() { }
-        /// 获取单例实例
-        public static LogManager GetInstance()
+
+        /// 添加普通日志
+        public void AddLog(string source, string message)
         {
-            return _instance ?? (_instance = new LogManager());
+            var log = $"[{source}] {message}";
+            LogAdded?.Invoke(log);
         }
-        /// 添加日志
-        public void AddLog(string serverName, string content, string level = "信息")
+
+        /// 添加带类型的日志（警告/错误）
+        public void AddLog(string source, string message, string type)
         {
-            var log = new LogItem(serverName, content, level);
-            _logs.Add(log);
-            OnLogAdded?.Invoke(log); // 触发日志更新事件
-        }
-        /// 获取所有日志
-        public List<LogItem> GetAllLogs()
-        {
-            return _logs;
-        }
-        /// 清空日志
-        public void ClearLogs()
-        {
-            _logs.Clear();
+            var log = $"[{source}] [{type}] {message}";
+            LogAdded?.Invoke(log);
         }
     }
 }

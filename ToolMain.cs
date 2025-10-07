@@ -1,505 +1,421 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.IO;
-using System.Security.Principal;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 
 namespace SCNET_Restart_Tool
 {
     public partial class ToolMain : Form
     {
-        private List<ServerConfig> _servers = new List<ServerConfig>();
-        private Dictionary<int, ServerMonitor> _monitors = new Dictionary<int, ServerMonitor>();
+        // 服务端配置列表
+        private List<ServerConfig> _serverConfigs = new List<ServerConfig>();
+        // 当前选中的服务端
         private ServerConfig _selectedServer;
-        private LogManager _logManager;
-        // 主窗口加载时加载应用设置
-        private SettingsModel _appSettings;
+        // 文件夹管理窗口实例
+        private FolderManagerForm _folderManagerForm;
+        // 日志管理器
+        private readonly LogManager _logManager = LogManager.GetInstance();
+
         public ToolMain()
         {
             InitializeComponent();
-            _logManager = LogManager.GetInstance();
-            _logManager.OnLogAdded += LogManager_OnLogAdded;
-            // 加载应用设置
-            _appSettings = SettingsManager.LoadSettings();
-            // 应用默认图标（如果有自定义图标则加载）
-            if (!string.IsNullOrEmpty(_appSettings.CustomIconPath))
-            {
-                try
-                {
-                    this.Icon = new Icon(_appSettings.CustomIconPath);
-                }
-                catch
-                {
-                    _logManager.AddLog("系统", "自定义图标加载失败，使用默认图标", "警告");
-                }
-            }
-            InitializeUI();
+            InitServerDataGridView();
             LoadServerConfigs();
+            InitLogView();
         }
 
-        // 设置按钮点击事件
-        private void btnSettings_Click(object sender, EventArgs e)
+        #region 初始化与数据加载
+        // 初始化服务端列表DataGridView
+        private void InitServerDataGridView()
         {
-            using (var settingsForm = new SettingsForm(_appSettings))
-            {
-                if (settingsForm.ShowDialog() == DialogResult.OK)
-                {
-                    // 更新主窗口的设置引用
-                    _appSettings = settingsForm.AppSettings;
-                    // 记录设置变更日志
-                    _logManager.AddLog("系统", "应用设置已更新", "信息");
-                }
-            }
-        }
-
-        /// 初始化UI控件
-        private void InitializeUI()
-        {
-            // 服务端列表配置
             dgvServers.AutoGenerateColumns = false;
-            dgvServers.Columns.AddRange(new DataGridViewColumn[]
+            dgvServers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            dgvServers.MultiSelect = false;
+
+            // 添加列
+            dgvServers.Columns.Add(new DataGridViewTextBoxColumn
             {
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "Name",
-                    HeaderText = "服务端名称",
-                    DataPropertyName = "Name",
-                    Width = 120
-                },
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "Status",
-                    HeaderText = "状态",
-                    DataPropertyName = "Status",
-                    Width = 80
-                },
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "IpPort",
-                    HeaderText = "IP:端口",
-                    Width = 100
-                }
+                Name = "Id",
+                DataPropertyName = "Id",
+                HeaderText = "ID",
+                Width = 50
             });
-
-            // 日志表格配置
-            dgvLogs.AutoGenerateColumns = false;
-            dgvLogs.Columns.AddRange(new DataGridViewColumn[]
+            dgvServers.Columns.Add(new DataGridViewTextBoxColumn
             {
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "Time",
-                    HeaderText = "时间",
-                    DataPropertyName = "Time",
-                    Width = 150
-                },
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "ServerName",
-                    HeaderText = "服务端",
-                    DataPropertyName = "ServerName",
-                    Width = 100
-                },
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "Content",
-                    HeaderText = "内容",
-                    DataPropertyName = "Content",
-                    Width = 350
-                },
-                new DataGridViewTextBoxColumn
-                {
-                    Name = "Level",
-                    HeaderText = "级别",
-                    DataPropertyName = "Level",
-                    Width = 80
-                }
+                Name = "Name",
+                DataPropertyName = "Name",
+                HeaderText = "服务端名称",
+                Width = 150
             });
-
-            dgvLogs.DataSource = new BindingSource(_logManager.GetAllLogs(), null);
-
-            // 初始化指令控件状态
-            UpdateCommandControlsState();
+            dgvServers.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "IpPort",
+                HeaderText = "IP:端口",
+                Width = 120
+            });
+            dgvServers.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "ExePath",
+                DataPropertyName = "ExePath",
+                HeaderText = "程序路径",
+                Width = 300
+            });
+            dgvServers.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                Name = "Status",
+                HeaderText = "状态",
+                Width = 80
+            });
         }
 
-        /// 日志更新事件（实时刷新UI）
-        private void LogManager_OnLogAdded(LogItem log)
+        // 初始化日志显示
+        private void InitLogView()
         {
-            if (dgvLogs.InvokeRequired)
+            rtbLog.ReadOnly = true;
+            _logManager.LogAdded += (log) =>
             {
-                dgvLogs.Invoke(new Action<LogItem>(LogManager_OnLogAdded), log);
-                return;
-            }
-
-            ((BindingSource)dgvLogs.DataSource).ResetBindings(false);
-            if (dgvLogs.Rows.Count > 0)
-            {
-                dgvLogs.FirstDisplayedScrollingRowIndex = dgvLogs.Rows.Count - 1;
-            }
-        }
-
-        /// 加载服务端配置
-        private void LoadServerConfigs()
-        {
-            _servers = ServerConfigManager.LoadAll();
-            dgvServers.DataSource = new BindingSource(_servers, null);
-            InitializeMonitors();
-            _logManager.AddLog("系统", "程序启动，加载服务端配置完成");
-        }
-
-        /// 初始化所有服务端监控器
-        private void InitializeMonitors()
-        {
-            _monitors.Clear();
-            foreach (var server in _servers)
-            {
-                var monitor = new ServerMonitor(server, OnServerStatusChanged);
-                _monitors.Add(server.Id, monitor);
-                if (server.IsMonitoring)
+                if (rtbLog.InvokeRequired)
                 {
-                    monitor.Start();
-                }
-            }
-        }
-
-        /// 服务端状态变更回调
-        private void OnServerStatusChanged(ServerConfig server)
-        {
-            if (dgvServers.InvokeRequired)
-            {
-                dgvServers.Invoke(new Action<ServerConfig>(OnServerStatusChanged), server);
-                return;
-            }
-
-            dgvServers.Refresh();
-            if (_selectedServer != null && _selectedServer.Id == server.Id)
-            {
-                LoadServerToDetails(server);
-            }
-        }
-
-        /// 服务端列表选择变更
-        private void DgvServers_SelectionChanged(object sender, EventArgs e)
-        {
-            if (dgvServers.SelectedRows.Count == 0)
-            {
-                _selectedServer = null;
-                UpdateCommandControlsState(); // 未选中时更新状态
-                return;
-            }
-
-            _selectedServer = dgvServers.SelectedRows[0].DataBoundItem as ServerConfig;
-            if (_selectedServer != null)
-            {
-                LoadServerToDetails(_selectedServer);
-            }
-        }
-
-        /// 加载服务端详情到表单
-        private void LoadServerToDetails(ServerConfig server)
-        {
-            txtServerName.Text = server.Name;
-            txtExePath.Text = server.ExePath;
-            txtIp.Text = server.Ip;
-            txtPort.Text = server.Port.ToString();
-            txtPassword.Text = server.Password;
-            txtScheduleTime.Text = server.ScheduleTime;
-            txtIntervalHours.Text = server.IntervalHours.ToString();
-            btnStartMonitor.Text = server.IsMonitoring ? "关闭监控" : "开启监控";
-            btnStartMonitor.BackColor = server.IsMonitoring ? System.Drawing.Color.Red : System.Drawing.Color.LimeGreen;
-
-            // 更新指令控件状态
-            UpdateCommandControlsState();
-        }
-
-        /// 添加服务端按钮
-        private void BtnAddServer_Click(object sender, EventArgs e)
-        {
-            var newServer = new ServerConfig
-            {
-                Id = ServerConfigManager.GenerateNewId(_servers),
-                Name = $"服务端{_servers.Count + 1}",
-                Ip = "127.0.0.1",
-                Port = 25565
-            };
-
-            _servers.Add(newServer);
-            _monitors.Add(newServer.Id, new ServerMonitor(newServer, OnServerStatusChanged));
-            ServerConfigManager.SaveAll(_servers);
-            dgvServers.DataSource = new BindingSource(_servers, null);
-            _logManager.AddLog("系统", $"新增服务端：{newServer.Name}");
-        }
-
-        /// 删除服务端按钮
-        private void BtnDeleteServer_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null)
-            {
-                MessageBox.Show("请先选中要删除的服务端");
-                return;
-            }
-
-            var serverName = _selectedServer.Name;
-            _monitors[_selectedServer.Id].Stop();
-            _monitors.Remove(_selectedServer.Id);
-            _servers.Remove(_selectedServer);
-            ServerConfigManager.SaveAll(_servers);
-            dgvServers.DataSource = new BindingSource(_servers, null);
-            _selectedServer = null;
-            _logManager.AddLog("系统", $"删除服务端：{serverName}");
-        }
-
-        /// 批量重启按钮
-        private void BtnBatchRestart_Click(object sender, EventArgs e)
-        {
-            _logManager.AddLog("系统", "开始批量重启所有服务端");
-            foreach (var server in _servers)
-            {
-                _monitors[server.Id].KillProcess();
-                System.Threading.Thread.Sleep(1000);
-                _monitors[server.Id].StartProcess();
-            }
-            _logManager.AddLog("系统", "批量重启完成");
-            MessageBox.Show("批量重启完成");
-        }
-
-        /// 选择程序路径按钮
-        private void BtnSelectExe_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null) return;
-
-            using (var ofd = new OpenFileDialog { Filter = "可执行文件|*.exe" })
-            {
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    _selectedServer.ExePath = ofd.FileName;
-                    txtExePath.Text = ofd.FileName;
-                    _logManager.AddLog(_selectedServer.Name, $"已选择程序路径：{ofd.FileName}");
-                }
-            }
-        }
-
-        /// 保存设置按钮
-        private void BtnSaveSettings_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null) return;
-
-            _selectedServer.Name = txtServerName.Text;
-            _selectedServer.Ip = txtIp.Text;
-            _selectedServer.Password = txtPassword.Text;
-            _selectedServer.ScheduleTime = txtScheduleTime.Text;
-
-            if (int.TryParse(txtPort.Text, out int port))
-                _selectedServer.Port = port;
-
-            if (double.TryParse(txtIntervalHours.Text, out double interval))
-                _selectedServer.IntervalHours = interval;
-
-            ServerConfigManager.SaveAll(_servers);
-            _logManager.AddLog(_selectedServer.Name, "服务端设置已保存");
-            MessageBox.Show("设置已保存");
-        }
-
-        /// 开启/关闭监控按钮
-        private void BtnStartMonitor_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null) return;
-
-            if (_selectedServer.IsMonitoring)
-            {
-                _monitors[_selectedServer.Id].Stop();
-                // 强制同步状态（防止状态不一致）
-                _selectedServer.IsMonitoring = false;
-            }
-            else
-            {
-                _monitors[_selectedServer.Id].Start();
-                // 强制同步状态
-                _selectedServer.IsMonitoring = true;
-            }
-
-            // 更新按钮显示
-            btnStartMonitor.Text = _selectedServer.IsMonitoring ? "关闭监控" : "开启监控";
-            btnStartMonitor.BackColor = _selectedServer.IsMonitoring ? System.Drawing.Color.Red : System.Drawing.Color.LimeGreen;
-            ServerConfigManager.SaveAll(_servers);
-        }
-
-        /// 手动关闭当前服务端按钮
-        private void BtnStopServer_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null)
-            {
-                MessageBox.Show("请先选中要关闭的服务端");
-                return;
-            }
-
-            _monitors[_selectedServer.Id].KillProcess();
-            _logManager.AddLog("系统", $"执行关闭当前服务端：{_selectedServer.Name}");
-        }
-
-        /// 手动启动当前服务端按钮
-        private void BtnStartServer_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null)
-            {
-                MessageBox.Show("请先选中服务端");
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_selectedServer.ExePath))
-            {
-                MessageBox.Show("请先选择服务端程序路径");
-                return;
-            }
-
-            _monitors[_selectedServer.Id].StartProcess();
-        }
-
-        /// 关闭所有服务端按钮
-        private void BtnStopAllServers_Click(object sender, EventArgs e)
-        {
-            if (_servers.Count == 0)
-            {
-                MessageBox.Show("没有可关闭的服务端");
-                return;
-            }
-
-            if (MessageBox.Show($"确定要关闭所有{_servers.Count}个服务端吗？", "确认", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            {
-                _logManager.AddLog("系统", "开始关闭所有服务端");
-                int successCount = 0;
-
-                foreach (var server in _servers)
-                {
-                    var monitor = _monitors[server.Id];
-                    // 先检查是否运行
-                    if (monitor.IsProcessRunning())
-                    {
-                        monitor.KillProcess();
-                        // 等待关闭
-                        System.Threading.Thread.Sleep(1000);
-                        if (!monitor.IsProcessRunning())
-                            successCount++;
-                    }
-                    else
-                    {
-                        _logManager.AddLog(server.Name, "服务端未在运行，跳过关闭");
-                    }
-                }
-
-                _logManager.AddLog("系统", $"所有服务端关闭操作完成（成功关闭：{successCount}/{_servers.Count}）");
-                MessageBox.Show($"关闭完成，成功关闭 {successCount}/{_servers.Count} 个服务端");
-            }
-        }
-
-        /// 发送指令按钮
-        private void BtnSendCommand_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null) return;
-
-            var command = txtCommand.Text.Trim();
-            if (string.IsNullOrEmpty(command))
-            {
-                lblCommandStatus.Text = "指令不能为空";
-                return;
-            }
-
-            var result = _monitors[_selectedServer.Id].SendServiceCommand(command);
-            lblCommandStatus.Text = $"响应：{result}";
-        }
-
-        /// 清空日志按钮
-        private void BtnClearLogs_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("确定要清空所有日志吗？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            {
-                _logManager.ClearLogs();
-                ((BindingSource)dgvLogs.DataSource).ResetBindings(false);
-                _logManager.AddLog("系统", "日志已清空");
-            }
-        }
-
-        /// 服务端列表单元格格式化（显示IP:端口）
-        private void dgvServers_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
-        {
-            if (e.ColumnIndex == 2 && e.RowIndex >= 0)
-            {
-                var server = dgvServers.Rows[e.RowIndex].DataBoundItem as ServerConfig;
-                if (server != null)
-                {
-                    e.Value = $"{server.Ip}:{server.Port}";
-                }
-            }
-        }
-
-        /// 指令启用/禁用切换按钮
-        private void BtnToggleCommands_Click(object sender, EventArgs e)
-        {
-            if (_selectedServer == null)
-            {
-                MessageBox.Show("请先选中服务端");
-                return;
-            }
-
-            // 切换状态
-            _selectedServer.EnableCommands = !_selectedServer.EnableCommands;
-            // 更新按钮显示
-            UpdateCommandControlsState();
-            // 保存配置
-            ServerConfigManager.SaveAll(_servers);
-            // 记录日志
-            _logManager.AddLog(_selectedServer.Name,
-                _selectedServer.EnableCommands ? "已启用指令功能" : "已禁用指令功能");
-        }
-
-        /// 更新指令相关控件状态（启用/禁用）
-        private void UpdateCommandControlsState()
-        {
-            if (_selectedServer == null)
-            {
-                // 未选中服务端时禁用所有控件
-                txtCommand.Enabled = false;
-                btnSendCommand.Enabled = false;
-                btnToggleCommands.Enabled = false;
-                btnToggleCommands.Text = "启用指令";
-                btnToggleCommands.BackColor = System.Drawing.Color.Gray;
-            }
-            else
-            {
-                // 根据配置启用/禁用控件
-                txtCommand.Enabled = _selectedServer.EnableCommands;
-                btnSendCommand.Enabled = _selectedServer.EnableCommands;
-                btnToggleCommands.Enabled = true;
-
-                // 更新按钮文本和颜色
-                if (_selectedServer.EnableCommands)
-                {
-                    btnToggleCommands.Text = "禁用指令";
-                    btnToggleCommands.BackColor = System.Drawing.Color.Orange;
+                    rtbLog.Invoke(new Action(() => AddLogToView(log)));
                 }
                 else
                 {
-                    btnToggleCommands.Text = "启用指令";
-                    btnToggleCommands.BackColor = System.Drawing.Color.Gray;
+                    AddLogToView(log);
+                }
+            };
+        }
+
+        // 添加日志到界面
+        private void AddLogToView(string log)
+        {
+            rtbLog.AppendText($"[{DateTime.Now:HH:mm:ss}] {log}\n");
+            rtbLog.ScrollToCaret();
+        }
+
+        // 加载服务端配置
+        private void LoadServerConfigs()
+        {
+            try
+            {
+                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ServerConfigs.xml");
+                if (File.Exists(configPath))
+                {
+                    using (var fs = new FileStream(configPath, FileMode.Open))
+                    {
+                        var serializer = new XmlSerializer(typeof(List<ServerConfig>));
+                        _serverConfigs = (List<ServerConfig>)serializer.Deserialize(fs);
+                        RefreshServerList();
+                        _logManager.AddLog("系统", "服务端配置加载完成");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logManager.AddLog("系统", $"加载配置失败：{ex.Message}", "错误");
+                MessageBox.Show($"加载配置失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // 刷新服务端列表
+        private void RefreshServerList()
+        {
+            dgvServers.DataSource = null;
+            dgvServers.DataSource = _serverConfigs;
+
+            // 处理自定义列显示
+            foreach (DataGridViewRow row in dgvServers.Rows)
+            {
+                if (row.DataBoundItem is ServerConfig server)
+                {
+                    row.Cells["IpPort"].Value = $"{server.Ip}:{server.Port}";
+                    row.Cells["Status"].Value = server.Status.ToString();
+
+                    // 状态颜色区分（补充Monitoring的样式）
+                    switch (server.Status)
+                    {
+                        case ServerStatus.Running:
+                            row.Cells["Status"].Style.ForeColor = Color.Green;
+                            break;
+                        case ServerStatus.Monitoring:
+                            row.Cells["Status"].Style.ForeColor = Color.Blue; // 监控中用蓝色区分
+                            break;
+                        case ServerStatus.Stopped:
+                            row.Cells["Status"].Style.ForeColor = Color.Gray;
+                            break;
+                        case ServerStatus.Starting:
+                            row.Cells["Status"].Style.ForeColor = Color.Orange;
+                            break;
+                        case ServerStatus.Stopping:
+                            row.Cells["Status"].Style.ForeColor = Color.OrangeRed;
+                            break;
+                    }
+                }
+            
+        }
+        }
+        #endregion
+
+        #region 服务端操作
+        // 选中服务端变更
+        private void dgvServers_SelectionChanged(object sender, EventArgs e)
+        {
+            if (dgvServers.SelectedRows.Count > 0 && dgvServers.SelectedRows[0].DataBoundItem is ServerConfig server)
+            {
+                _selectedServer = server;
+                UpdateServerControlStatus();
+            }
+            else
+            {
+                _selectedServer = null;
+                UpdateServerControlStatus();
+            }
+
+            // 同步文件夹管理窗口
+            if (_folderManagerForm != null && !_folderManagerForm.IsDisposed)
+            {
+                _folderManagerForm.RefreshForm(_selectedServer);
+            }
+        }
+
+        // 更新服务端控制按钮状态
+        private void UpdateServerControlStatus()
+        {
+            bool hasSelected = _selectedServer != null;
+            btnStartServer.Enabled = hasSelected && _selectedServer.Status == ServerStatus.Stopped;
+            btnStopServer.Enabled = hasSelected && _selectedServer.Status == ServerStatus.Running;
+            btnRestartServer.Enabled = hasSelected && _selectedServer.Status == ServerStatus.Running;
+            btnEditServer.Enabled = hasSelected;
+            btnDeleteServer.Enabled = hasSelected;
+            btnOpenFolderManager.Enabled = hasSelected;
+        }
+
+        // 启动服务端
+        private void btnStartServer_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null) return;
+
+            try
+            {
+                if (string.IsNullOrEmpty(_selectedServer.ExePath) || !File.Exists(_selectedServer.ExePath))
+                {
+                    _logManager.AddLog(_selectedServer.Name, "服务端程序路径无效，无法启动", "错误");
+                    MessageBox.Show("请先配置有效的服务端程序路径！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                _selectedServer.Status = ServerStatus.Starting;
+                RefreshServerList();
+
+                // 实际启动逻辑（这里仅做示例）
+                Task.Run(() =>
+                {
+                    System.Threading.Thread.Sleep(1000); // 模拟启动延迟
+                    _selectedServer.Status = ServerStatus.Running;
+                    _logManager.AddLog(_selectedServer.Name, "服务端已启动");
+                    RefreshServerList();
+                });
+            }
+            catch (Exception ex)
+            {
+                _selectedServer.Status = ServerStatus.Stopped;
+                _logManager.AddLog(_selectedServer.Name, $"启动失败：{ex.Message}", "错误");
+                RefreshServerList();
+            }
+        }
+
+        // 停止服务端
+        private void btnStopServer_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null || _selectedServer.Status != ServerStatus.Running) return;
+
+            _selectedServer.Status = ServerStatus.Stopping;
+            RefreshServerList();
+
+            // 实际停止逻辑（这里仅做示例）
+            Task.Run(() =>
+            {
+                System.Threading.Thread.Sleep(1000); // 模拟停止延迟
+                _selectedServer.Status = ServerStatus.Stopped;
+                _logManager.AddLog(_selectedServer.Name, "服务端已停止");
+                RefreshServerList();
+            });
+        }
+
+        // 重启服务端
+        private void btnRestartServer_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null || _selectedServer.Status != ServerStatus.Running) return;
+
+            _logManager.AddLog(_selectedServer.Name, "开始重启服务端");
+            btnStopServer.PerformClick();
+
+            // 延迟启动（等待停止完成）
+            var timer = new Timer { Interval = 1500 };
+            timer.Tick += (s, args) =>
+            {
+                timer.Dispose();
+                btnStartServer.PerformClick();
+            };
+            timer.Start();
+        }
+
+        // 添加新服务端
+        private void btnAddServer_Click(object sender, EventArgs e)
+        {
+            var newId = _serverConfigs.Any() ? _serverConfigs.Max(s => s.Id) + 1 : 1;
+            var newServer = new ServerConfig { Id = newId };
+
+            using (var editForm = new ServerEditForm(newServer))
+            {
+                if (editForm.ShowDialog() == DialogResult.OK)
+                {
+                    _serverConfigs.Add(newServer);
+                    SaveServerConfigs();
+                    RefreshServerList();
+                    _logManager.AddLog("系统", $"已添加新服务端：{newServer.Name}");
                 }
             }
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        // 编辑服务端
+        private void btnEditServer_Click(object sender, EventArgs e)
         {
-            // 检查是否以管理员权限运行
-            if (!IsRunningAsAdmin())
+            if (_selectedServer == null) return;
+
+            using (var editForm = new ServerEditForm(_selectedServer))
             {
-                _logManager.AddLog("系统", "警告：程序未以管理员权限运行，可能导致部分功能（如进程管理）失效", "警告");
+                if (editForm.ShowDialog() == DialogResult.OK)
+                {
+                    SaveServerConfigs();
+                    RefreshServerList();
+                    _logManager.AddLog("系统", $"已更新服务端：{_selectedServer.Name}");
+                }
             }
         }
 
-        /// 检查是否以管理员权限运行
-        private bool IsRunningAsAdmin()
+        // 删除服务端
+        private void btnDeleteServer_Click(object sender, EventArgs e)
         {
-            var identity = WindowsIdentity.GetCurrent();
-            var principal = new WindowsPrincipal(identity);
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            if (_selectedServer == null) return;
+
+            if (MessageBox.Show(
+                $"确定要删除服务端「{_selectedServer.Name}」吗？",
+                "确认删除",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                _serverConfigs.Remove(_selectedServer);
+                SaveServerConfigs();
+                RefreshServerList();
+                _logManager.AddLog("系统", $"已删除服务端：{_selectedServer.Name}");
+                _selectedServer = null;
+                UpdateServerControlStatus();
+            }
         }
+
+        // 保存服务端配置
+        private void SaveServerConfigs()
+        {
+            try
+            {
+                var configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ServerConfigs.xml");
+                using (var fs = new FileStream(configPath, FileMode.Create))
+                {
+                    var serializer = new XmlSerializer(typeof(List<ServerConfig>));
+                    serializer.Serialize(fs, _serverConfigs);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logManager.AddLog("系统", $"保存配置失败：{ex.Message}", "错误");
+                MessageBox.Show($"保存配置失败：{ex.Message}", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        #endregion
+
+        #region 文件夹管理窗口
+        // 打开文件夹管理窗口
+        private void btnOpenFolderManager_Click(object sender, EventArgs e)
+        {
+            if (_selectedServer == null)
+            {
+                MessageBox.Show("请先选中服务端！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (_folderManagerForm == null || _folderManagerForm.IsDisposed)
+            {
+                _folderManagerForm = new FolderManagerForm(_selectedServer);
+                // 使用args避免与外部e冲突
+                _folderManagerForm.FormClosed += (s, args) => _folderManagerForm = null;
+                _folderManagerForm.Show(this);
+            }
+            else
+            {
+                _folderManagerForm.RefreshForm(_selectedServer);
+                _folderManagerForm.Activate();
+            }
+        }
+        #endregion
+
+        #region 其他事件
+        // 窗口关闭时保存配置
+        private void ToolMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            SaveServerConfigs();
+        }
+
+        // 清除日志
+        private void btnClearLog_Click(object sender, EventArgs e)
+        {
+            rtbLog.Clear();
+        }
+
+        // 停止所有服务端
+        private void btnStopAllServers_Click(object sender, EventArgs e)
+        {
+            var runningServers = _serverConfigs.Where(s => s.Status == ServerStatus.Running).ToList();
+            if (runningServers.Count == 0)
+            {
+                MessageBox.Show("没有正在运行的服务端", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            if (MessageBox.Show(
+                $"确定要停止所有{runningServers.Count}个服务端吗？",
+                "确认停止全部",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning) == DialogResult.Yes)
+            {
+                foreach (var server in runningServers)
+                {
+                    server.Status = ServerStatus.Stopping;
+                }
+                RefreshServerList();
+
+                // 模拟批量停止
+                Task.Run(() =>
+                {
+                    System.Threading.Thread.Sleep(1500);
+                    foreach (var server in runningServers)
+                    {
+                        server.Status = ServerStatus.Stopped;
+                        _logManager.AddLog(server.Name, "服务端已停止（批量操作）");
+                    }
+                    RefreshServerList();
+                });
+            }
+        }
+        #endregion
     }
+
+    // 服务端状态枚举
+    
 }
