@@ -169,32 +169,24 @@ namespace SCNET_Restart_Tool
             return bmp;
         }
         
-        // 显示帮助窗口
+        // 显示帮助信息
         private void ShowAboutForm(int tabIndex)
         {
             switch (tabIndex)
             {
                 case 0: // 功能说明
-                    using (var form = new Form.Help.FunctionDescriptionForm())
-                    {
-                        form.ShowDialog(this);
-                        _logManager.AddLog("系统", "已打开功能说明");
-                    }
+                    Form.Help.HelpManager.ShowFunctionDescription();
+                    _logManager.AddLog("系统", "已打开功能说明");
                     break;
                 case 1: // 项目信息
-                    using (var form = new Form.Help.ProjectInfoForm())
-                    {
-                        form.ShowDialog(this);
-                        _logManager.AddLog("系统", "已打开项目信息");
-                    }
+                    Form.Help.HelpManager.ShowProjectInfo();
+                    _logManager.AddLog("系统", "已打开项目信息");
                     break;
                 case 2: // 版本信息
-                    using (var form = new Form.Help.VersionInfoForm())
-                    {
-                        form.ShowDialog(this);
-                        _logManager.AddLog("系统", "已打开版本信息");
-                    }
+                    Form.Help.HelpManager.ShowVersionInfo();
+                    _logManager.AddLog("系统", "已打开版本信息");
                     break;
+               
             }
         }
         
