@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Diagnostics;
 using System.Security.Principal;
 using System.Windows.Forms;
@@ -10,33 +10,33 @@ namespace SCNET_Restart_Tool
         [STAThread]
         static void Main()
         {
-            // ¼ì²éÊÇ·ñÒÔ¹ÜÀíÔ±È¨ÏŞÔËĞĞ
+            // æ£€æŸ¥æ˜¯å¦ä»¥ç®¡ç†å‘˜æƒé™è¿è¡Œ
             if (!IsRunningAsAdmin())
             {
-                // ÌáÊ¾ÓÃ»§ĞèÒª¹ÜÀíÔ±È¨ÏŞ
+                // æç¤ºç”¨æˆ·éœ€è¦ç®¡ç†å‘˜æƒé™
                 var result = MessageBox.Show(
-                    "±¾³ÌĞòĞèÒª¹ÜÀíÔ±È¨ÏŞ²ÅÄÜÕı³£¹¤×÷£¨Èç½ø³Ì¹ÜÀí¡¢WMI²Ù×÷µÈ£©£¬ÊÇ·ñÒÔ¹ÜÀíÔ±Éí·İÖØÆô£¿",
-                    "È¨ÏŞ²»×ã",
+                    "æœ¬ç¨‹åºéœ€è¦ç®¡ç†å‘˜æƒé™æ‰èƒ½æ­£å¸¸å·¥ä½œï¼ˆå¦‚è¿›ç¨‹ç®¡ç†ã€WMIæ“ä½œç­‰ï¼‰ï¼Œæ˜¯å¦ä»¥ç®¡ç†å‘˜èº«ä»½é‡å¯ï¼Ÿ",
+                    "æƒé™ä¸è¶³",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Warning);
 
                 if (result == DialogResult.Yes)
                 {
-                    // ÒÔ¹ÜÀíÔ±Éí·İÖØÆô³ÌĞò
+                    // ä»¥ç®¡ç†å‘˜èº«ä»½é‡å¯ç¨‹åº
                     RestartAsAdmin();
-                    return; // ÍË³öµ±Ç°·Ç¹ÜÀíÔ±½ø³Ì
+                    return; // é€€å‡ºå½“å‰éç®¡ç†å‘˜è¿›ç¨‹
                 }
-                // Èç¹ûÓÃ»§Ñ¡Ôñ"·ñ"£¬¼ÌĞøÔËĞĞ£¨µ«¿ÉÄÜ²¿·Ö¹¦ÄÜÊ§Ğ§£©
+                // å¦‚æœç”¨æˆ·é€‰æ‹©"å¦"ï¼Œç»§ç»­è¿è¡Œï¼ˆä½†å¯èƒ½éƒ¨åˆ†åŠŸèƒ½å¤±æ•ˆï¼‰
             }
 
-            // Õı³£Æô¶¯³ÌĞò
+            // æ­£å¸¸å¯åŠ¨ç¨‹åº
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new ToolMain());
         }
 
         /// <summary>
-        /// ¼ì²éÊÇ·ñÒÔ¹ÜÀíÔ±È¨ÏŞÔËĞĞ
+        /// æ£€æŸ¥æ˜¯å¦ä»¥ç®¡ç†å‘˜æƒé™è¿è¡Œ
         /// </summary>
         private static bool IsRunningAsAdmin()
         {
@@ -46,7 +46,7 @@ namespace SCNET_Restart_Tool
         }
 
         /// <summary>
-        /// ÒÔ¹ÜÀíÔ±Éí·İÖØÆô³ÌĞò
+        /// ä»¥ç®¡ç†å‘˜èº«ä»½é‡å¯ç¨‹åº
         /// </summary>
         private static void RestartAsAdmin()
         {
@@ -54,15 +54,15 @@ namespace SCNET_Restart_Tool
             {
                 var startInfo = new ProcessStartInfo
                 {
-                    FileName = Application.ExecutablePath, // µ±Ç°³ÌĞòÂ·¾¶
+                    FileName = Application.ExecutablePath, // å½“å‰ç¨‹åºè·¯å¾„
                     UseShellExecute = true,
-                    Verb = "runas" // ÇëÇó¹ÜÀíÔ±È¨ÏŞ
+                    Verb = "runas" // è¯·æ±‚ç®¡ç†å‘˜æƒé™
                 };
                 Process.Start(startInfo);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"ÖØÆôÊ§°Ü£º{ex.Message}\n²¿·Ö¹¦ÄÜ¿ÉÄÜÎŞ·¨Õı³£Ê¹ÓÃ¡£", "´íÎó", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"é‡å¯å¤±è´¥ï¼š{ex.Message}\néƒ¨åˆ†åŠŸèƒ½å¯èƒ½æ— æ³•æ­£å¸¸ä½¿ç”¨ã€‚", "é”™è¯¯", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
