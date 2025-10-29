@@ -51,8 +51,7 @@ namespace SCNET_Restart_Tool
           
             helpContent.AppendLine("8. 日志系统");
             helpContent.AppendLine("   - 实时记录所有操作和状态变更");
-            helpContent.AppendLine("   - 支持日志文件保存，便于后期查阅");
-            helpContent.AppendLine("   - 可自定义日志保存路径\n");
+            helpContent.AppendLine("   - 支持日志文件保存，便于后期查阅\n");
             helpContent.AppendLine("9. 程序自检与权限管理");
             helpContent.AppendLine("   - 自动检测管理员权限，确保程序正常运行");
             helpContent.AppendLine("   - 提供权限提升选项，避免因权限不足导致功能受限");

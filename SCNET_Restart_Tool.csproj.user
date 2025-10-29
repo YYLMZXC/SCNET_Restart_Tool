@@ -21,8 +21,5 @@
     <Compile Update="Form\Main\ToolMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="Form\Settings\SettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
   </ItemGroup>
 </Project>

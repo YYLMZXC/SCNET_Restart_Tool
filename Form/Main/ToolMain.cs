@@ -20,7 +20,7 @@ namespace SCNET_Restart_Tool
         private FolderManagerForm _folderManagerForm;
         private readonly LogManager _logManager = LogManager.GetInstance();
         private Dictionary<int, ServerMonitor> _serverMonitors = new Dictionary<int, ServerMonitor>();
-        private SettingsModel _appSettings;
+        // 设置功能已移除
 
         // 配色方案
         private readonly Color _colorStart = Color.FromArgb(46, 204, 113);    // 绿色：启动/成功
@@ -41,8 +41,8 @@ namespace SCNET_Restart_Tool
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = _colorBg;
 
-            // 初始化右上角设置按钮
-            InitializeSettingsButton();
+            // 初始化右上角帮助按钮
+        InitializeHelpButton();
 
             InitializeUI();
             LoadServerData();
@@ -50,53 +50,30 @@ namespace SCNET_Restart_Tool
         }
 
         #region 初始化与基础设置
-        // 初始化右上角设置按钮
-        // 初始化右上角设置按钮（原有代码，无需修改）
-        private void InitializeSettingsButton()
-        {
-            settingsBtn = new Button();
-            settingsBtn.Text = "设置";
-            settingsBtn.Size = new Size(80, 30);
-            settingsBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            settingsBtn.Location = new Point(this.ClientSize.Width - 90, 10);
-            settingsBtn.Click += settingsBtn_Click;
 
-            // 应用样式
-            SetButtonStyle(settingsBtn, _colorManage, "软件设置");
-
-            // 添加到主窗体
-            this.Controls.Add(settingsBtn);
-            settingsBtn.BringToFront();
-
-            // 窗口大小改变时调整位置
-            this.Resize += (s, e) =>
-            {
-                settingsBtn.Location = new Point(this.ClientSize.Width - 90, 10);
-                // 同步调整关于按钮位置（新增）
-                if (aboutBtn != null)
-                    aboutBtn.Location = new Point(this.ClientSize.Width - 180, 10);
-            };
-
-            // 初始化关于按钮（新增：在设置按钮初始化后补充）
-            InitializeAboutButton();
-        }
-
-        // 新增：初始化关于按钮的方法
-        private void InitializeAboutButton()
+        // 初始化帮助按钮的方法
+        private void InitializeHelpButton()
         {
             aboutBtn = new Button();
-            aboutBtn.Text = "关于";
+            aboutBtn.Text = "帮助";
             aboutBtn.Size = new Size(80, 30);
             aboutBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            aboutBtn.Location = new Point(this.ClientSize.Width - 180, 10);
+            aboutBtn.Location = new Point(this.ClientSize.Width - 90, 10);
             aboutBtn.Click += aboutBtn_Click; // 绑定点击事件
 
-            // 应用样式（复用现有 SetButtonStyle 方法，保持一致性）
-            SetButtonStyle(aboutBtn, _colorManage, "查看软件版本与功能说明");
+            // 应用样式
+            SetButtonStyle(aboutBtn, _colorManage, "查看软件帮助与功能说明");
 
             // 添加到主窗体并置于顶层
             this.Controls.Add(aboutBtn);
             aboutBtn.BringToFront();
+
+            // 窗口大小改变时调整位置
+            this.Resize += (s, e) =>
+            {
+                if (aboutBtn != null)
+                    aboutBtn.Location = new Point(this.ClientSize.Width - 90, 10);
+            };
         }
         // 新增：关于按钮点击事件
         private void aboutBtn_Click(object sender, EventArgs e)
@@ -143,8 +120,7 @@ namespace SCNET_Restart_Tool
                 // 分组框简化
                 OptimizeGroupBoxes();
 
-                // 加载设置
-                _appSettings = SettingsManager.LoadSettings();
+                // 设置功能已移除
 
                 InitLogBuffer();   // 启动日志节流刷新
             }
@@ -154,47 +130,7 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        private void settingsBtn_Click(object sender, EventArgs e)
-        {
-            // 保存当前设置作为备份
-            var backupSettings = _appSettings.Clone() as SettingsModel;
 
-            using (var settingsForm = new SettingsForm(_appSettings))
-            {
-                if (settingsForm.ShowDialog() == DialogResult.OK)
-                {
-                    // 更新设置并应用
-                    _appSettings = settingsForm.AppSettings;
-                    ApplySettings();
-                    _logManager.AddLog("系统", "软件设置已更新并应用");
-                }
-                else
-                {
-                    // 恢复备份设置
-                    _appSettings = backupSettings;
-                }
-            }
-        }
-
-        // 应用新设置
-        private void ApplySettings()
-        {
-            // 保存设置到文件
-            SettingsManager.SaveSettings(_appSettings);
-
-            // 根据需要更新程序行为
-            if (!string.IsNullOrEmpty(_appSettings.LogSavePath) && Directory.Exists(_appSettings.LogSavePath))
-            {
-                _logManager.UpdateLogPath(_appSettings.LogSavePath);
-                _logManager.AddLog("系统", $"日志路径已更新为：{_appSettings.LogSavePath}");
-            }
-            else if (!string.IsNullOrEmpty(_appSettings.LogSavePath))
-            {
-                _logManager.AddLog("系统", $"日志路径无效：{_appSettings.LogSavePath}", "错误");
-            }
-
-            // 可以添加其他需要应用的设置项
-        }
 
         // 分割容器优化
         private void OptimizeSplitContainers()

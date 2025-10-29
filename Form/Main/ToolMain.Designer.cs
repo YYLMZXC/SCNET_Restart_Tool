@@ -8,7 +8,6 @@ namespace SCNET_Restart_Tool
     {
         private System.ComponentModel.IContainer components = null;
         private System.Windows.Forms.ToolTip buttonToolTip;
-        private System.Windows.Forms.Button settingsBtn;
         private System.Windows.Forms.Button aboutBtn;
         protected override void Dispose(bool disposing)
         {
@@ -110,8 +109,8 @@ namespace SCNET_Restart_Tool
             this.aboutBtn.Padding = new System.Windows.Forms.Padding(5, 2, 5, 2);
             this.aboutBtn.Size = new System.Drawing.Size(80, 30);
             this.aboutBtn.TabIndex = 0;
-            this.aboutBtn.Text = "关于";
-            this.buttonToolTip.SetToolTip(this.aboutBtn, "查看软件版本与功能说明");
+            this.aboutBtn.Text = "帮助";
+            this.buttonToolTip.SetToolTip(this.aboutBtn, "帮助 - SCNET_Restart_Tool");
             // 
             // mainSplitContainer
             // 

@@ -64,4 +64,7 @@
     <None Include="Res\config_icon.ico" />
     <Content Include="Res\ico.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Form\Settings\" />
+  </ItemGroup>
 </Project>
