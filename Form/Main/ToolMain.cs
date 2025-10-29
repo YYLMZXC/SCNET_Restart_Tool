@@ -172,13 +172,13 @@ namespace SCNET_Restart_Tool
         // 显示帮助窗口
         private void ShowAboutForm(int tabIndex)
         {
-            using (var aboutForm = new Form.Help.HelpForm())
+            using (var aboutForm = new Form.Help.FunctionDescriptionForm())
             {
                 aboutForm.ShowDialog(this);
             }
             
             // 记录日志
-            _logManager.AddLog("系统", "已打开帮助界面");
+            _logManager.AddLog("系统", "已打开功能说明");
         }
         
         // 检查更新方法
