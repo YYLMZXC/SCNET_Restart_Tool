@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
+using System.Diagnostics;
+using System.IO;
 
 namespace SCNET_Restart_Tool
 {
@@ -12,6 +14,7 @@ namespace SCNET_Restart_Tool
         {
             InitializeComponent();
             InitializeHelpContent();
+            SetLogoImage();
         }
 
         private void InitializeHelpContent()
@@ -44,8 +47,8 @@ namespace SCNET_Restart_Tool
             helpContent.AppendLine("   - 集成服务器相关文件夹快速访问功能");
             helpContent.AppendLine("   - 支持直接打开配置、日志、插件等常用文件夹\n");
             helpContent.AppendLine("7. 跨平台支持");
-            helpContent.AppendLine("   - Windows 版本：提供图形用户界面，操作简便直观");
-            helpContent.AppendLine("   - Linux 版本：命令行界面，适合服务器环境后台运行\n");
+            helpContent.AppendLine("   - Windows 版本：提供图形用户界面，操作简便直观\n");
+          
             helpContent.AppendLine("8. 日志系统");
             helpContent.AppendLine("   - 实时记录所有操作和状态变更");
             helpContent.AppendLine("   - 支持日志文件保存，便于后期查阅");
@@ -55,6 +58,7 @@ namespace SCNET_Restart_Tool
             helpContent.AppendLine("   - 提供权限提升选项，避免因权限不足导致功能受限");
 
             txtHelpContent.Text = helpContent.ToString();
+            FormatRichTextBox(txtHelpContent);
 
             // 项目信息内容
             StringBuilder projectInfo = new StringBuilder();
@@ -72,35 +76,149 @@ namespace SCNET_Restart_Tool
             projectInfo.AppendLine("- 有效提高服务的可靠性和运维效率");
 
             txtProjectInfo.Text = projectInfo.ToString();
+            FormatRichTextBox(txtProjectInfo);
+            MakeLinksClickable(txtProjectInfo);
 
             // 版本信息内容
             StringBuilder versionInfo = new StringBuilder();
             versionInfo.AppendLine("SCNET_Restart_Tool 版本信息\n");
 
-            // 获取程序集版本信息
-            var assembly = Assembly.GetExecutingAssembly(); // 获取当前程序集
-            var ver = assembly.GetName().Version;
-            versionInfo.AppendLine($"当前版本：v{ver.Major}.{ver.Minor}.{ver.Build}");
+            // 获取程序集版本信息（使用try-catch避免依赖问题）
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var ver = assembly.GetName().Version;
+                versionInfo.AppendLine($"当前版本：v{ver.Major}.{ver.Minor}.{ver.Build}");
 
-            // 读取程序集的组织（Company）信息
-            var companyAttr = assembly.GetCustomAttribute<AssemblyCompanyAttribute>();
-            string company = companyAttr?.Company ?? "未指定"; // 若未设置，使用默认值
-
-            // 拼接组织信息
-            versionInfo.AppendLine($"组织：{company}");
+                // 读取程序集的组织信息
+                var companyAttr = assembly.GetCustomAttribute<AssemblyCompanyAttribute>();
+                string company = companyAttr?.Company ?? "未指定";
+                versionInfo.AppendLine($"组织：{company}");
+            }
+            catch
+            {
+                versionInfo.AppendLine("当前版本：v1.0.0");
+                versionInfo.AppendLine("组织：SCNET 开发团队");
+            }
 
             versionInfo.AppendLine("更新日期：2025年10月\n");
-            versionInfo.AppendLine("主要更新内容：");
-            versionInfo.AppendLine("- 优化了进程检测逻辑，使用进程名+路径双重验证提高准确性");
-            versionInfo.AppendLine("- 增加了自动重试机制，确保服务可靠启动");
-            versionInfo.AppendLine("- 改进了日志系统，支持不同日志级别和文件保存");
-            versionInfo.AppendLine("- 优化了用户界面，提供更直观的操作体验");
-            versionInfo.AppendLine("- 修复了权限相关问题，确保程序在各种环境下正常运行");
-            versionInfo.AppendLine("- 添加了帮助窗口，提供完整的功能说明和项目信息");
+
 
             txtVersionInfo.Text = versionInfo.ToString();
+            FormatRichTextBox(txtVersionInfo);
         }
 
+        /// <summary>
+        /// 设置Logo图片
+        /// </summary>
+        private void SetLogoImage()
+        {
+            try
+            {
+                // 尝试加载应用程序目录中的图标文件
+                string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ico.ico");
+                if (File.Exists(iconPath))
+                {
+                    pictureBoxLogo.Image = new Icon(iconPath).ToBitmap();
+                }
+                else
+                {
+                    // 尝试从Res文件夹加载
+                    string resIconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Res", "ico.ico");
+                    if (File.Exists(resIconPath))
+                    {
+                        pictureBoxLogo.Image = new Icon(resIconPath).ToBitmap();
+                    }
+                    else
+                    {
+                        // 如果没有找到图标，使用默认图像
+                        using (Bitmap defaultLogo = new Bitmap(48, 48))
+                        {
+                            using (Graphics g = Graphics.FromImage(defaultLogo))
+                            {
+                                // 绘制一个简单的默认图标
+                                g.Clear(Color.FromArgb(64, 64, 64));
+                                using (Font font = new Font("Arial", 16, FontStyle.Bold))
+                                {   
+                                    using (Brush brush = new SolidBrush(Color.White))
+                                    {
+                                        g.DrawString("S", font, brush, 12, 8);
+                                    }
+                                }
+                            }
+                            pictureBoxLogo.Image = defaultLogo.Clone() as Image;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 如果出现错误，忽略并继续使用空的Logo
+            }
+        }
+
+        /// <summary>
+        /// 格式化RichTextBox的显示
+        /// </summary>
+        /// <param name="richTextBox">要格式化的RichTextBox</param>
+        private void FormatRichTextBox(RichTextBox richTextBox)
+        {
+            // 设置双缓冲以提高性能
+            richTextBox.HideSelection = false;
+            richTextBox.SelectAll();
+            richTextBox.SelectionColor = Color.FromArgb(64, 64, 64);
+            richTextBox.SelectionFont = new Font("微软雅黑", 10.5F, FontStyle.Regular);
+            richTextBox.SelectionLength = 0;
+            richTextBox.SelectionStart = 0;
+        }
+
+        /// <summary>
+        /// 使文本中的链接可点击
+        /// </summary>
+        /// <param name="richTextBox">包含链接的RichTextBox</param>
+        private void MakeLinksClickable(RichTextBox richTextBox)
+        {
+            richTextBox.DetectUrls = true;
+            richTextBox.SelectAll();
+            richTextBox.SelectionFont = new Font("微软雅黑", 10.5F, FontStyle.Regular);
+            richTextBox.SelectionLength = 0;
+        }
+
+        /// <summary>
+        /// 处理功能说明中的链接点击
+        /// </summary>
+        private void txtHelpContent_LinkClicked(object sender, LinkClickedEventArgs e)
+        {
+            OpenLinkInBrowser(e.LinkText);
+        }
+
+        /// <summary>
+        /// 处理项目信息中的链接点击
+        /// </summary>
+        private void txtProjectInfo_LinkClicked(object sender, LinkClickedEventArgs e)
+        {
+            OpenLinkInBrowser(e.LinkText);
+        }
+
+        /// <summary>
+        /// 在浏览器中打开链接
+        /// </summary>
+        /// <param name="url">要打开的URL</param>
+        private void OpenLinkInBrowser(string url)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("无法打开链接: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// 关闭按钮点击事件
+        /// </summary>
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
