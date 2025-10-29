@@ -10,6 +10,20 @@ namespace SCNET_Restart_Tool
 {
     public partial class AboutForm : Form
     {
+        /// <summary>
+        /// 设置要显示的选项卡索引
+        /// </summary>
+        public int SelectedTabIndex
+        {
+            set
+            {
+                if (tabControl1 != null && value >= 0 && value < tabControl1.TabCount)
+                {
+                    tabControl1.SelectedIndex = value;
+                }
+            }
+        }
+
         public AboutForm()
         {
             InitializeComponent();

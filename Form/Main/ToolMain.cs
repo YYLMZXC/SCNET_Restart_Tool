@@ -59,10 +59,19 @@ namespace SCNET_Restart_Tool
             aboutBtn.Size = new Size(80, 30);
             aboutBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             aboutBtn.Location = new Point(this.ClientSize.Width - 90, 10);
-            aboutBtn.Click += aboutBtn_Click; // 绑定点击事件
+            
+            // 创建下拉菜单
+            CreateHelpMenu();
+            
+            // 按钮点击时显示下拉菜单
+            aboutBtn.Click += (s, e) =>
+            {
+                helpMenu.Show(aboutBtn, new Point(0, aboutBtn.Height));
+                _logManager.AddLog("系统", "打开帮助菜单");
+            };
 
             // 应用样式
-            SetButtonStyle(aboutBtn, _colorManage, "查看软件帮助与功能说明");
+            SetButtonStyle(aboutBtn, _colorManage, "打开帮助菜单");
 
             // 添加到主窗体并置于顶层
             this.Controls.Add(aboutBtn);
@@ -75,7 +84,156 @@ namespace SCNET_Restart_Tool
                     aboutBtn.Location = new Point(this.ClientSize.Width - 90, 10);
             };
         }
-        // 新增：关于按钮点击事件
+        
+        // 帮助下拉菜单
+        private ContextMenuStrip helpMenu;
+        
+        // 创建帮助菜单
+        private void CreateHelpMenu()
+        {
+            helpMenu = new ContextMenuStrip();
+            
+            // 功能说明菜单项
+            ToolStripMenuItem functionMenuItem = new ToolStripMenuItem("功能说明");
+            functionMenuItem.Image = GetSmallIcon("功能说明");
+            functionMenuItem.Click += (s, e) => ShowAboutForm(0); // 0表示功能说明选项卡
+            helpMenu.Items.Add(functionMenuItem);
+            
+            // 项目信息菜单项
+            ToolStripMenuItem projectMenuItem = new ToolStripMenuItem("项目信息");
+            projectMenuItem.Image = GetSmallIcon("项目信息");
+            projectMenuItem.Click += (s, e) => ShowAboutForm(1); // 1表示项目信息选项卡
+            helpMenu.Items.Add(projectMenuItem);
+            
+            // 版本信息菜单项
+            ToolStripMenuItem versionMenuItem = new ToolStripMenuItem("版本信息");
+            versionMenuItem.Image = GetSmallIcon("版本信息");
+            versionMenuItem.Click += (s, e) => ShowAboutForm(2); // 2表示版本信息选项卡
+            helpMenu.Items.Add(versionMenuItem);
+            
+            // 分隔线
+            helpMenu.Items.Add(new ToolStripSeparator());
+            
+            // 检查更新菜单项
+            ToolStripMenuItem updateMenuItem = new ToolStripMenuItem("检查更新");
+            updateMenuItem.Image = GetSmallIcon("更新");
+            updateMenuItem.Click += CheckForUpdates;
+            helpMenu.Items.Add(updateMenuItem);
+            
+            // 重置菜单项（添加一个分隔线）
+            helpMenu.Items.Add(new ToolStripSeparator());
+            
+            // 关于菜单项（保持原有功能）
+            ToolStripMenuItem aboutMenuItem = new ToolStripMenuItem("关于");
+            aboutMenuItem.Image = GetSmallIcon("关于");
+            aboutMenuItem.Click += aboutBtn_Click;
+            helpMenu.Items.Add(aboutMenuItem);
+            
+            // 设置菜单项样式
+            foreach (ToolStripItem item in helpMenu.Items)
+            {
+                if (item is ToolStripMenuItem menuItem)
+                {
+                    menuItem.Font = new Font("微软雅黑", 9F);
+                    menuItem.AutoSize = true;
+                    menuItem.Width = 120; // 统一宽度
+                }
+            }
+        }
+        
+        // 获取小图标（简化实现）
+        private Bitmap GetSmallIcon(string name)
+        {
+            // 创建一个简单的图标，实际项目中可以使用资源图片
+            Bitmap bmp = new Bitmap(16, 16);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.Clear(Color.Transparent);
+                // 根据名称绘制不同颜色的小方块作为图标
+                Brush brush = Brushes.LightBlue;
+                switch (name)
+                {
+                    case "功能说明": brush = Brushes.LightGreen;
+                        break;
+                    case "项目信息": brush = Brushes.LightYellow;
+                        break;
+                    case "版本信息": brush = Brushes.LightPink;
+                        break;
+                    case "更新": brush = Brushes.LightCoral;
+                        break;
+                    case "关于": brush = Brushes.LightGray;
+                        break;
+                }
+                g.FillRectangle(brush, 2, 2, 12, 12);
+            }
+            return bmp;
+        }
+        
+        // 显示AboutForm并选择指定选项卡
+        private void ShowAboutForm(int tabIndex)
+        {
+            using (var aboutForm = new AboutForm())
+            {
+                // 使用公共属性设置选项卡索引
+                aboutForm.SelectedTabIndex = tabIndex;
+                
+                aboutForm.ShowDialog(this);
+            }
+            
+            // 记录日志
+            string[] tabNames = { "功能说明", "项目信息", "版本信息" };
+            string tabName = tabIndex >= 0 && tabIndex < tabNames.Length ? tabNames[tabIndex] : "未知";
+            _logManager.AddLog("系统", $"打开帮助 - {tabName}");
+        }
+        
+        // 检查更新方法
+        private void CheckForUpdates(object sender, EventArgs e)
+        {
+            _logManager.AddLog("系统", "检查更新");
+            
+            // 检查更新的模拟实现
+            Task.Run(() =>
+            {
+                try
+                {
+                    // 模拟网络请求延迟
+                    Thread.Sleep(1000);
+                    
+                    // 在UI线程显示结果
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        MessageBox.Show("当前已是最新版本！\n版本号: " + GetCurrentVersion(), 
+                            "检查更新", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logManager.AddLog("错误", "检查更新失败: " + ex.Message);
+                    
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        MessageBox.Show("检查更新失败，请检查网络连接后重试。", 
+                            "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    });
+                }
+            });
+        }
+        
+        // 获取当前版本
+        private string GetCurrentVersion()
+        {
+            try
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var ver = assembly.GetName().Version;
+                return $"v{ver.Major}.{ver.Minor}.{ver.Build}";
+            }
+            catch
+            {
+                return "v1.0.0";
+            }
+        }
+        // 关于按钮点击事件
         private void aboutBtn_Click(object sender, EventArgs e)
         {
             // 使用 using 确保窗口关闭后释放资源
@@ -84,8 +242,8 @@ namespace SCNET_Restart_Tool
                 // 以模态窗口显示（阻止主窗口操作，提升用户体验）
                 aboutForm.ShowDialog(this);
             }
-            // 记录日志（可选，便于追踪用户操作）
-            _logManager.AddLog("系统", "打开软件关于界面");
+            // 记录日志
+            _logManager.AddLog("系统", "打开关于界面");
         }
         private void InitializeUI()
         {
