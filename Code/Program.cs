@@ -10,23 +10,12 @@ namespace SCNET_Restart_Tool
         [STAThread]
         static void Main()
         {
-            // 检查是否以管理员权限运行
+            // 检查是否以管理员权限运行，如果不是则自动以管理员权限重启
             if (!IsRunningAsAdmin())
             {
-                // 提示用户需要管理员权限
-                var result = MessageBox.Show(
-                    "本程序需要管理员权限才能正常工作（如进程管理、WMI操作等），是否以管理员身份重启？",
-                    "权限不足",
-                    MessageBoxButtons.YesNo,
-                    MessageBoxIcon.Warning);
-
-                if (result == DialogResult.Yes)
-                {
-                    // 以管理员身份重启程序
-                    RestartAsAdmin();
-                    return; // 退出当前非管理员进程
-                }
-                // 如果用户选择"否"，继续运行（但可能部分功能失效）
+                // 自动以管理员身份重启程序，不询问用户
+                RestartAsAdmin();
+                return; // 退出当前非管理员进程
             }
 
             // 正常启动程序
@@ -62,7 +51,7 @@ namespace SCNET_Restart_Tool
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"重启失败：{ex.Message}\n部分功能可能无法正常使用。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"无法获取管理员权限：{ex.Message}\n程序需要管理员权限才能正常工作。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }
