@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 
 namespace SCNET_Restart_Tool
 {
-    public partial class ToolMain : Form
+    public partial class ToolMain : System.Windows.Forms.Form
     {
         // 核心数据与状态
         private List<ServerConfig> _serverConfigs = new List<ServerConfig>();
@@ -169,21 +169,16 @@ namespace SCNET_Restart_Tool
             return bmp;
         }
         
-        // 显示AboutForm并选择指定选项卡
+        // 显示帮助窗口
         private void ShowAboutForm(int tabIndex)
         {
-            using (var aboutForm = new AboutForm())
+            using (var aboutForm = new Form.Help.HelpForm())
             {
-                // 使用公共属性设置选项卡索引
-                aboutForm.SelectedTabIndex = tabIndex;
-                
                 aboutForm.ShowDialog(this);
             }
             
             // 记录日志
-            string[] tabNames = { "功能说明", "项目信息", "版本信息" };
-            string tabName = tabIndex >= 0 && tabIndex < tabNames.Length ? tabNames[tabIndex] : "未知";
-            _logManager.AddLog("系统", $"打开帮助 - {tabName}");
+            _logManager.AddLog("系统", "已打开帮助界面");
         }
         
         // 检查更新方法
@@ -237,7 +232,7 @@ namespace SCNET_Restart_Tool
         private void aboutBtn_Click(object sender, EventArgs e)
         {
             // 使用 using 确保窗口关闭后释放资源
-            using (var aboutForm = new AboutForm())
+            using (var aboutForm = new Form.Help.HelpForm())
             {
                 // 以模态窗口显示（阻止主窗口操作，提升用户体验）
                 aboutForm.ShowDialog(this);

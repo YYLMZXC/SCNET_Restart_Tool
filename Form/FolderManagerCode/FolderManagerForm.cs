@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace SCNET_Restart_Tool
 {
-    public partial class FolderManagerForm : Form
+    public partial class FolderManagerForm : System.Windows.Forms.Form
     {
         private ServerConfig _currentServer;
         private readonly LogManager _logManager;
