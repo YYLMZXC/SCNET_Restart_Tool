@@ -172,13 +172,30 @@ namespace SCNET_Restart_Tool
         // 显示帮助窗口
         private void ShowAboutForm(int tabIndex)
         {
-            using (var aboutForm = new Form.Help.FunctionDescriptionForm())
+            switch (tabIndex)
             {
-                aboutForm.ShowDialog(this);
+                case 0: // 功能说明
+                    using (var form = new Form.Help.FunctionDescriptionForm())
+                    {
+                        form.ShowDialog(this);
+                        _logManager.AddLog("系统", "已打开功能说明");
+                    }
+                    break;
+                case 1: // 项目信息
+                    using (var form = new Form.Help.ProjectInfoForm())
+                    {
+                        form.ShowDialog(this);
+                        _logManager.AddLog("系统", "已打开项目信息");
+                    }
+                    break;
+                case 2: // 版本信息
+                    using (var form = new Form.Help.VersionInfoForm())
+                    {
+                        form.ShowDialog(this);
+                        _logManager.AddLog("系统", "已打开版本信息");
+                    }
+                    break;
             }
-            
-            // 记录日志
-            _logManager.AddLog("系统", "已打开功能说明");
         }
         
         // 检查更新方法
@@ -232,7 +249,7 @@ namespace SCNET_Restart_Tool
         private void aboutBtn_Click(object sender, EventArgs e)
         {
             // 使用 using 确保窗口关闭后释放资源
-            using (var aboutForm = new Form.Help.HelpForm())
+            using (var aboutForm = new Form.Help.AboutForm())
             {
                 // 以模态窗口显示（阻止主窗口操作，提升用户体验）
                 aboutForm.ShowDialog(this);

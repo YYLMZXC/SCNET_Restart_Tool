@@ -29,6 +29,10 @@ namespace SCNET_Restart_Tool.Form.Help
             sb.AppendLine("• 详细的操作日志记录");
             sb.AppendLine("• 支持批量操作和定时任务\n");
             
+            sb.AppendLine("【项目地址】");
+            sb.AppendLine("https://gitee.com/sc-net/SCNET_Restart_Tool");
+            sb.AppendLine("欢迎访问项目仓库获取最新版本和提交问题反馈！\n");
+            
             sb.AppendLine("【版权信息】");
             sb.AppendLine("© 2023 系统维护组 保留所有权利");
             sb.AppendLine("本软件仅供内部使用，未经授权不得传播或用于商业用途。");
