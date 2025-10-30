@@ -108,6 +108,7 @@ namespace SCNET_Restart_Tool
             mainSplitContainer.Dock = DockStyle.Fill;
             mainSplitContainer.Location = new Point(0, 0);
             mainSplitContainer.Name = "mainSplitContainer";
+            mainSplitContainer.Orientation = Orientation.Horizontal;
             // 
             // mainSplitContainer.Panel1
             // 
@@ -118,10 +119,9 @@ namespace SCNET_Restart_Tool
             // 
             // mainSplitContainer.Panel2
             // 
-            mainSplitContainer.Panel2.Controls.Add(aboutBtn);
-            mainSplitContainer.Panel2.Controls.Add(logSplit);
+            mainSplitContainer.Panel2Collapsed = true;
             mainSplitContainer.Size = new Size(1006, 849);
-            mainSplitContainer.SplitterDistance = 760;
+            mainSplitContainer.SplitterDistance = 849;
             mainSplitContainer.TabIndex = 0;
             // 
             // serverListSplit
@@ -585,10 +585,10 @@ namespace SCNET_Restart_Tool
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1006, 849);
             Controls.Add(mainSplitContainer);
+            Controls.Add(aboutBtn); // 将帮助按钮移到主窗体上
             Name = "ToolMain";
             Text = "SCNET服务端管理工具";
             mainSplitContainer.Panel1.ResumeLayout(false);
-            mainSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)mainSplitContainer).EndInit();
             mainSplitContainer.ResumeLayout(false);
             serverListSplit.Panel1.ResumeLayout(false);
@@ -607,8 +607,6 @@ namespace SCNET_Restart_Tool
             commandPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)intervalHoursNum).EndInit();
             ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
-            ((System.ComponentModel.ISupportInitialize)logSplit).EndInit();
-            logSplit.ResumeLayout(false);
             ResumeLayout(false);
 
         }

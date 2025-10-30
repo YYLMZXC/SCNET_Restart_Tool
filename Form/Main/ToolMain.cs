@@ -52,7 +52,14 @@ namespace SCNET_Restart_Tool
             }
 
             // 初始化右上角帮助按钮
-        InitializeHelpButton();
+            InitializeHelpButton();
+            
+            // 调整日志文本框大小以适应新布局
+            logTextBox.Size = new Size(this.ClientSize.Width - 10, 72);
+            logTextBox.Location = new Point(5, 410);
+            
+            // 调整清空日志按钮位置
+            clearLogBtn.Location = new Point(this.ClientSize.Width - 230, 432);
 
             InitializeUI();
             LoadServerData();
@@ -64,7 +71,7 @@ namespace SCNET_Restart_Tool
         // 初始化帮助按钮的方法
         private void InitializeHelpButton()
         {
-            aboutBtn = new Button();
+            // aboutBtn已在Designer.cs中初始化，这里只设置其属性和事件
             aboutBtn.Text = "帮助";
             aboutBtn.Size = new Size(80, 30);
             aboutBtn.Anchor = AnchorStyles.Top | AnchorStyles.Right;
@@ -83,8 +90,7 @@ namespace SCNET_Restart_Tool
             // 应用样式
             SetButtonStyle(aboutBtn, _colorManage, "打开帮助菜单");
 
-            // 添加到主窗体并置于顶层
-            this.Controls.Add(aboutBtn);
+            // 确保按钮置于顶层
             aboutBtn.BringToFront();
 
             // 窗口大小改变时调整位置
