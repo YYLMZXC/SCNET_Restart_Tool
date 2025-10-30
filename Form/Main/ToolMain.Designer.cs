@@ -245,7 +245,7 @@ namespace SCNET_Restart_Tool
             this.restartBtn.TabIndex = 2;
             this.restartBtn.Text = "重启";
             this.restartBtn.UseVisualStyleBackColor = true;
-            this.restartBtn.Click += new System.EventHandler(this.restartBtn_Click_1);
+          
             // 
             // stopBtn
             // 
@@ -290,7 +290,7 @@ namespace SCNET_Restart_Tool
             this.folderManagerBtn.TabIndex = 3;
             this.folderManagerBtn.Text = "文件夹";
             this.folderManagerBtn.UseVisualStyleBackColor = true;
-            this.folderManagerBtn.Click += new System.EventHandler(this.folderManagerBtn_Click_1);
+           
             // 
             // deleteBtn
             // 
@@ -572,7 +572,7 @@ namespace SCNET_Restart_Tool
             this.serverNameInput.Name = "serverNameInput";
             this.serverNameInput.Size = new System.Drawing.Size(250, 25);
             this.serverNameInput.TabIndex = 1;
-            this.serverNameInput.TextChanged += new System.EventHandler(this.serverNameInput_TextChanged);
+         
             // 
             // clearLogBtn
             // 
@@ -637,15 +637,6 @@ namespace SCNET_Restart_Tool
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1150, 749);
             this.Controls.Add(this.mainSplitContainer);
-            // 使用嵌入资源
-            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            using (System.IO.Stream stream = assembly.GetManifestResourceStream("SCNET_Restart_Tool.Res.ico.ico"))
-            {
-                if (stream != null)
-                {
-                    this.Icon = new System.Drawing.Icon(stream);
-                }
-            }
             this.Name = "ToolMain";
             this.Text = "SCNET服务端管理工具";
             this.mainSplitContainer.Panel1.ResumeLayout(false);

@@ -40,6 +40,16 @@ namespace SCNET_Restart_Tool
             MinimumSize = new Size(1000, 550);
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = _colorBg;
+            
+            // 使用嵌入资源加载图标
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (System.IO.Stream stream = assembly.GetManifestResourceStream("SCNET_Restart_Tool.Res.ico.ico"))
+            {
+                if (stream != null)
+                {
+                    this.Icon = new System.Drawing.Icon(stream);
+                }
+            }
 
             // 初始化右上角帮助按钮
         InitializeHelpButton();
@@ -1119,19 +1129,6 @@ namespace SCNET_Restart_Tool
             _logFlushTimer.Start();
         }
 
-        private void folderManagerBtn_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void restartBtn_Click_1(object sender, EventArgs e)
-        {
-
-        }
-
-        private void serverNameInput_TextChanged(object sender, EventArgs e)
-        {
-
-        }
+       
     }
 }
