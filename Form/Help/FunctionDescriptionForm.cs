@@ -60,7 +60,7 @@ namespace SCNET_Restart_Tool.Form.Help
                 Assembly assembly = Assembly.GetExecutingAssembly();
                 string resourceName = "SCNET_Restart_Tool.Resources.logo.ico"; // 请确认资源路径正确
 
-                using Stream? stream = assembly.GetManifestResourceStream(resourceName);
+                using Stream stream = assembly.GetManifestResourceStream(resourceName);
                 if (stream != null)
                 {
                     pictureBoxLogo.Image = new Icon(stream).ToBitmap();

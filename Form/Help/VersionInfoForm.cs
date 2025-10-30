@@ -58,33 +58,42 @@ namespace SCNET_Restart_Tool.Form.Help
         {
             try
             {
-                // 尝试从资源文件加载Logo
-                // 如果没有资源文件，创建一个简单的Logo
-                Bitmap logo = new Bitmap(48, 48);
-                using (Graphics g = Graphics.FromImage(logo))
+                // 使用 using 确保 Bitmap 资源释放
+                using (Bitmap logo = new Bitmap(48, 48))
                 {
-                    g.Clear(Color.LightBlue);
-                    using (Brush brush = new SolidBrush(Color.Blue))
-                    {   
-                        g.DrawString("SCNET", new Font("微软雅黑", 12F, FontStyle.Bold), brush, 2, 10);
-                        g.DrawString("重启", new Font("微软雅黑", 9F, FontStyle.Bold), brush, 8, 26);
+                    using (Graphics g = Graphics.FromImage(logo))
+                    {
+                        g.Clear(Color.LightBlue);
+                        // Font 也需释放，嵌套 using
+                        using (Font font1 = new Font("微软雅黑", 12F, FontStyle.Bold))
+                        using (Font font2 = new Font("微软雅黑", 9F, FontStyle.Bold))
+                        using (Brush brush = new SolidBrush(Color.Blue))
+                        {
+                            g.DrawString("SCNET", font1, brush, 2, 10);
+                            g.DrawString("重启", font2, brush, 8, 26);
+                        }
                     }
+                    // 克隆图像到 pictureBox，避免原 Bitmap 释放后图像失效
+                    pictureBoxLogo.Image?.Dispose(); // 释放旧图像
+                    pictureBoxLogo.Image = (Bitmap)logo.Clone();
                 }
-                pictureBoxLogo.Image = logo;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // 如果出现错误，使用默认的简单Logo
-                Bitmap defaultLogo = new Bitmap(48, 48);
-                using (Graphics g = Graphics.FromImage(defaultLogo))
+                using (Bitmap defaultLogo = new Bitmap(48, 48))
                 {
-                    g.Clear(Color.LightGray);
-                    using (Brush brush = new SolidBrush(Color.DarkGray))
-                    {   
-                        g.DrawString("S", new Font("微软雅黑", 16F, FontStyle.Bold), brush, 10, 10);
+                    using (Graphics g = Graphics.FromImage(defaultLogo))
+                    {
+                        g.Clear(Color.LightGray);
+                        using (Font font = new Font("微软雅黑", 16F, FontStyle.Bold))
+                        using (Brush brush = new SolidBrush(Color.DarkGray))
+                        {
+                            g.DrawString("S", font, brush, 10, 10);
+                        }
                     }
+                    pictureBoxLogo.Image?.Dispose(); // 释放旧图像
+                    pictureBoxLogo.Image = (Bitmap)defaultLogo.Clone();
                 }
-                pictureBoxLogo.Image = defaultLogo;
             }
         }
 

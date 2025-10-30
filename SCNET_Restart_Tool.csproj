@@ -33,6 +33,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Form\Settings\**" />
+    <EmbeddedResource Remove="Form\Settings\**" />
+    <None Remove="Form\Settings\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="System.Management" Version="9.0.0" />
   </ItemGroup>
@@ -55,16 +61,13 @@
     <None Include="Res\png\mod_icon.png" />
     <None Include="Res\png\log_icon.png" />
     <None Include="Res\png\config_icon.png" />
-    <None Include="Res\world_icon.ico" />
-    <None Include="Res\texture_icon.ico" />
-    <None Include="Res\skin_icon.ico" />
-    <None Include="Res\plugin_icon.ico" />
-    <None Include="Res\mod_icon.ico" />
-    <None Include="Res\log_icon.ico" />
-    <None Include="Res\config_icon.ico" />
-    <Content Include="Res\ico.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Form\Settings\" />
+    <EmbeddedResource Include="Res\world_icon.ico" />
+    <EmbeddedResource Include="Res\texture_icon.ico" />
+    <EmbeddedResource Include="Res\skin_icon.ico" />
+    <EmbeddedResource Include="Res\plugin_icon.ico" />
+    <EmbeddedResource Include="Res\mod_icon.ico" />
+    <EmbeddedResource Include="Res\log_icon.ico" />
+    <EmbeddedResource Include="Res\config_icon.ico" />
+    <EmbeddedResource Include="Res\ico.ico" />
   </ItemGroup>
 </Project>

@@ -637,7 +637,15 @@ namespace SCNET_Restart_Tool
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1150, 749);
             this.Controls.Add(this.mainSplitContainer);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            // 使用嵌入资源
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using (System.IO.Stream stream = assembly.GetManifestResourceStream("SCNET_Restart_Tool.Res.ico.ico"))
+            {
+                if (stream != null)
+                {
+                    this.Icon = new System.Drawing.Icon(stream);
+                }
+            }
             this.Name = "ToolMain";
             this.Text = "SCNET服务端管理工具";
             this.mainSplitContainer.Panel1.ResumeLayout(false);
