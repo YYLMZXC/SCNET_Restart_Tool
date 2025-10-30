@@ -447,8 +447,7 @@ namespace SCNET_Restart_Tool
             btn.Font = new Font("微软雅黑", 9F);
             btn.TextAlign = ContentAlignment.MiddleCenter;
             btn.Padding = new Padding(5, 2, 5, 2);
-            buttonToolTip.SetToolTip(btn, toolTip);
-
+           
             // Hover效果
             btn.MouseEnter += (s, e) => btn.BackColor = Color.FromArgb(
                 Math.Max(backColor.R - 10, 0),

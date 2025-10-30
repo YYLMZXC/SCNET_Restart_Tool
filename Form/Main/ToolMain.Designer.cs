@@ -7,7 +7,6 @@ namespace SCNET_Restart_Tool
     partial class ToolMain
     {
         private System.ComponentModel.IContainer components = null;
-        private System.Windows.Forms.ToolTip buttonToolTip;
         private System.Windows.Forms.Button aboutBtn;
         protected override void Dispose(bool disposing)
         {
@@ -21,8 +20,6 @@ namespace SCNET_Restart_Tool
         #region Windows 窗体设计器生成的代码
         private void InitializeComponent()
         {
-            components = new System.ComponentModel.Container();
-            buttonToolTip = new ToolTip(components);
             aboutBtn = new Button();
             mainSplitContainer = new SplitContainer();
             serverListSplit = new SplitContainer();
@@ -69,7 +66,6 @@ namespace SCNET_Restart_Tool
             clearLogBtn = new Button();
             logSplit = new SplitContainer();
             logTextBox = new RichTextBox();
-            logControlPanel = new Panel();
             ((System.ComponentModel.ISupportInitialize)mainSplitContainer).BeginInit();
             mainSplitContainer.Panel1.SuspendLayout();
             mainSplitContainer.Panel2.SuspendLayout();
@@ -89,8 +85,6 @@ namespace SCNET_Restart_Tool
             ((System.ComponentModel.ISupportInitialize)intervalHoursNum).BeginInit();
             ((System.ComponentModel.ISupportInitialize)portNum).BeginInit();
             ((System.ComponentModel.ISupportInitialize)logSplit).BeginInit();
-            logSplit.Panel1.SuspendLayout();
-            logSplit.Panel2.SuspendLayout();
             logSplit.SuspendLayout();
             SuspendLayout();
             // 
@@ -108,7 +102,6 @@ namespace SCNET_Restart_Tool
             aboutBtn.Size = new Size(70, 34);
             aboutBtn.TabIndex = 0;
             aboutBtn.Text = "帮助";
-            buttonToolTip.SetToolTip(aboutBtn, "帮助 - SCNET_Restart_Tool");
             // 
             // mainSplitContainer
             // 
@@ -118,13 +111,14 @@ namespace SCNET_Restart_Tool
             // 
             // mainSplitContainer.Panel1
             // 
+            mainSplitContainer.Panel1.Controls.Add(logTextBox);
+            mainSplitContainer.Panel1.Controls.Add(clearLogBtn);
             mainSplitContainer.Panel1.Controls.Add(serverListSplit);
             mainSplitContainer.Panel1.Controls.Add(serverEditPanel);
             // 
             // mainSplitContainer.Panel2
             // 
             mainSplitContainer.Panel2.Controls.Add(aboutBtn);
-            mainSplitContainer.Panel2.Controls.Add(clearLogBtn);
             mainSplitContainer.Panel2.Controls.Add(logSplit);
             mainSplitContainer.Size = new Size(1006, 849);
             mainSplitContainer.SplitterDistance = 760;
@@ -156,7 +150,6 @@ namespace SCNET_Restart_Tool
             serversGridView.BorderStyle = BorderStyle.Fixed3D;
             serversGridView.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             serversGridView.ColumnHeadersHeight = 29;
-            serversGridView.Dock = DockStyle.Fill;
             serversGridView.Location = new Point(0, 0);
             serversGridView.Name = "serversGridView";
             serversGridView.RowHeadersVisible = false;
@@ -368,10 +361,10 @@ namespace SCNET_Restart_Tool
             serverEditPanel.Controls.Add(exePathInput);
             serverEditPanel.Controls.Add(serverNameLabel);
             serverEditPanel.Controls.Add(serverNameInput);
-            serverEditPanel.Location = new Point(0, 468);
+            serverEditPanel.Location = new Point(3, 488);
             serverEditPanel.Name = "serverEditPanel";
             serverEditPanel.Padding = new Padding(13, 17, 13, 17);
-            serverEditPanel.Size = new Size(758, 377);
+            serverEditPanel.Size = new Size(533, 361);
             serverEditPanel.TabIndex = 1;
             // 
             // commandPanel
@@ -380,9 +373,9 @@ namespace SCNET_Restart_Tool
             commandPanel.Controls.Add(commandInput);
             commandPanel.Controls.Add(commandLabel);
             commandPanel.Dock = DockStyle.Bottom;
-            commandPanel.Location = new Point(13, 292);
+            commandPanel.Location = new Point(13, 276);
             commandPanel.Name = "commandPanel";
-            commandPanel.Size = new Size(732, 68);
+            commandPanel.Size = new Size(507, 68);
             commandPanel.TabIndex = 18;
             // 
             // sendCommandBtn
@@ -558,7 +551,7 @@ namespace SCNET_Restart_Tool
             // 
             // clearLogBtn
             // 
-            clearLogBtn.Location = new Point(10, 364);
+            clearLogBtn.Location = new Point(537, 432);
             clearLogBtn.Name = "clearLogBtn";
             clearLogBtn.Size = new Size(221, 50);
             clearLogBtn.TabIndex = 0;
@@ -571,14 +564,6 @@ namespace SCNET_Restart_Tool
             logSplit.Location = new Point(0, 421);
             logSplit.Name = "logSplit";
             logSplit.Orientation = Orientation.Horizontal;
-            // 
-            // logSplit.Panel1
-            // 
-            logSplit.Panel1.Controls.Add(logTextBox);
-            // 
-            // logSplit.Panel2
-            // 
-            logSplit.Panel2.Controls.Add(logControlPanel);
             logSplit.Size = new Size(242, 428);
             logSplit.SplitterDistance = 388;
             logSplit.SplitterWidth = 5;
@@ -587,21 +572,12 @@ namespace SCNET_Restart_Tool
             // logTextBox
             // 
             logTextBox.BackColor = Color.FromArgb(245, 245, 245);
-            logTextBox.Dock = DockStyle.Fill;
-            logTextBox.Location = new Point(0, 0);
+            logTextBox.Location = new Point(0, 410);
             logTextBox.Name = "logTextBox";
             logTextBox.ReadOnly = true;
-            logTextBox.Size = new Size(242, 388);
+            logTextBox.Size = new Size(536, 72);
             logTextBox.TabIndex = 0;
             logTextBox.Text = "";
-            // 
-            // logControlPanel
-            // 
-            logControlPanel.Dock = DockStyle.Fill;
-            logControlPanel.Location = new Point(0, 0);
-            logControlPanel.Name = "logControlPanel";
-            logControlPanel.Size = new Size(242, 35);
-            logControlPanel.TabIndex = 0;
             // 
             // ToolMain
             // 
@@ -631,8 +607,6 @@ namespace SCNET_Restart_Tool
             commandPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)intervalHoursNum).EndInit();
             ((System.ComponentModel.ISupportInitialize)portNum).EndInit();
-            logSplit.Panel1.ResumeLayout(false);
-            logSplit.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)logSplit).EndInit();
             logSplit.ResumeLayout(false);
             ResumeLayout(false);
@@ -685,6 +659,5 @@ namespace SCNET_Restart_Tool
         private System.Windows.Forms.SplitContainer logSplit;
         private System.Windows.Forms.RichTextBox logTextBox;
         private System.Windows.Forms.Button clearLogBtn;
-        private Panel logControlPanel;
     }
 }
