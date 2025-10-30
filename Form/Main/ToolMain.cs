@@ -643,12 +643,6 @@ namespace SCNET_Restart_Tool
             }
         }
 
-        // 添加日志条目
-        private void AddLogEntry(string log)
-        {
-            logTextBox.AppendText($"[{DateTime.Now:HH:mm:ss}] {log}\n");
-            logTextBox.ScrollToCaret();
-        }
         #endregion
 
         #region 服务器选择与编辑
