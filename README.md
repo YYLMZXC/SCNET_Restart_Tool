@@ -4,7 +4,7 @@
 
 SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务器）设计的高级监控与自动重启工具。该工具通过实时监控服务运行状态，提供多种智能重启机制和远程控制功能，确保服务端程序持续稳定运行，最大限度减少人工干预，提高服务可用性和运维效率。
 
-![主界面预览](Res/index.png)
+![主界面预览](src/Res/index.png)
 
 ## 核心功能特性
 
@@ -52,7 +52,7 @@ SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务
 
 ### 开发技术栈
 - **开发语言**：C#
-- **框架**：.NET 9.0 (Windows版) / .NET 8.0 (Linux版)
+- **框架**：.NET 10.0 (Windows版) / .NET 10.0 (Linux版)
 - **GUI框架**：Windows Forms (Windows版)
 - **网络通信**：Socket TCP/IP
 - **进程管理**：System.Diagnostics、WMI
@@ -96,18 +96,18 @@ SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务
 ## 安装与配置
 
 ### 系统要求
-- **Windows 版**：Windows 10/11，安装 .NET 9.0 Runtime 或更高版本
-- **Linux 版**：支持 .NET 8.0 的 Linux 发行版（如 Ubuntu 22.04+, CentOS 9+ 等）
+- **Windows 版**：Windows 10/11，安装 .NET 10.0 Runtime 或更高版本
+- **Linux 版**：支持 .NET 10.0 的 Linux 发行版（如 Ubuntu 22.04+, CentOS 9+ 等）
 - **硬件要求**：最小系统资源（CPU: 1GHz+, 内存: 512MB+）
 
 ### Windows 版安装步骤
-1. 确保系统已安装 .NET 9.0 Runtime 或更高版本
+1. 确保系统已安装 .NET 10.0 Runtime 或更高版本
 2. 下载编译好的可执行文件或使用 Visual Studio 编译源代码
 3. 直接运行可执行文件或创建快捷方式以便访问
 4. 首次运行程序时，系统会自动检查管理员权限，确保程序正常运行
 
 ### Linux 版安装步骤
-1. 确保系统已安装 .NET 8.0 Runtime
+1. 确保系统已安装 .NET 10.0 Runtime
 2. 下载编译好的 Linux 版本可执行文件或从源代码编译
 3. 授予可执行权限并通过命令行运行
 4. 根据提示配置监控选项、重启间隔等参数
@@ -190,7 +190,7 @@ SCNET_Restart_Tool/
 2. **配置文件备份**：建议定期备份程序配置文件，以防止配置丢失
 3. **网络安全**：使用远程命令功能时，请确保设置强密码并限制访问IP
 4. **日志管理**：定期清理日志文件，避免占用过多磁盘空间
-5. **系统兼容性**：Windows 版本需要 .NET 9.0 Runtime，Linux 版本需要 .NET 8.0 Runtime
+5. **系统兼容性**：Windows 版本需要 .NET 10.0 Runtime，Linux 版本需要 .NET 10.0 Runtime
 
 ## 常见问题解答
 
@@ -204,6 +204,10 @@ A: 请检查系统时间是否准确，以及定时重启设置是否正确保�
 A: 在全局设置中启用「开机自启」选项，或手动将程序快捷方式添加到系统启动项。
 
 ## 更新日志
+
+### v1.1.0
+- 项目框架升级至 .NET 10.0，Windows 版与 Linux 版统一使用 .NET 10.0 Runtime
+- System.Management 依赖包同步升级至 10.0.0
 
 ### v1.0.0
 - 初始版本发布
@@ -231,7 +235,7 @@ A: 在全局设置中启用「开机自启」选项，或手动将程序快捷�
 2. **Linux 版安装**
    - 从发布页面下载最新版本的 `LinuxRestartTool.zip`
    - 解压到目标目录
-   - 安装 .NET 8.0 Runtime：`sudo apt-get install -y dotnet-runtime-8.0`（Ubuntu/Debian）
+   - 安装 .NET 10.0 Runtime：`sudo apt-get install -y dotnet-runtime-10.0`（Ubuntu/Debian）
    - 运行程序：`dotnet LinuxRestartTool.dll`
    - 如需后台运行，可使用 systemd 服务配置或 nohup 命令
 

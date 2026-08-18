@@ -52,7 +52,7 @@ SCNET_Restart_Tool is an advanced monitoring and automatic restart tool specific
 
 ### Development Technology Stack
 - **Development Language:** C#
-- **Framework:** .NET 9.0 (Windows version) / .NET 8.0 (Linux version)
+- **Framework:** .NET 10.0 (Windows version) / .NET 10.0 (Linux version)
 - **GUI Framework:** Windows Forms (Windows version)
 - **Network Communication:** Socket TCP/IP
 - **Process Management:** System.Diagnostics, WMI
@@ -96,18 +96,18 @@ SCNET_Restart_Tool is an advanced monitoring and automatic restart tool specific
 ## Installation and Configuration
 
 ### System Requirements
-- **Windows Version:** Windows 10/11, .NET 9.0 Runtime or higher
-- **Linux Version:** Linux distributions supporting .NET 8.0 (such as Ubuntu 22.04+, CentOS 9+, etc.)
+- **Windows Version:** Windows 10/11, .NET 10.0 Runtime or higher
+- **Linux Version:** Linux distributions supporting .NET 10.0 (such as Ubuntu 22.04+, CentOS 9+, etc.)
 - **Hardware Requirements:** Minimal system resources (CPU: 1GHz+, RAM: 512MB+)
 
 ### Windows Version Installation Steps
-1. Ensure .NET 9.0 Runtime or higher is installed on the system
+1. Ensure .NET 10.0 Runtime or higher is installed on the system
 2. Download the compiled executable file or compile the source code using Visual Studio
 3. Run the executable file directly or create a shortcut for easy access
 4. The first time you run the program, the system will automatically check for administrator privileges to ensure normal program operation
 
 ### Linux Version Installation Steps
-1. Ensure .NET 8.0 Runtime is installed on the system
+1. Ensure .NET 10.0 Runtime is installed on the system
 2. Download the compiled Linux version executable file or compile from source code
 3. Grant executable permissions and run via command line
 4. Configure monitoring options, restart intervals, etc. according to prompts
@@ -190,7 +190,7 @@ SCNET_Restart_Tool/
 2. **Configuration File Backup:** Regular backup of program configuration files is recommended to prevent configuration loss
 3. **Network Security:** When using remote command functionality, please ensure strong passwords are set and access IPs are restricted
 4. **Log Management:** Regularly clean log files to avoid occupying too much disk space
-5. **System Compatibility:** Windows version requires .NET 9.0 Runtime, Linux version requires .NET 8.0 Runtime
+5. **System Compatibility:** Windows version requires .NET 10.0 Runtime, Linux version requires .NET 10.0 Runtime
 
 ## Frequently Asked Questions
 
@@ -204,6 +204,10 @@ A: Please check if the system time is accurate and if the scheduled restart sett
 A: Enable the "Run at Startup" option in global settings, or manually add the program shortcut to system startup items.
 
 ## Update Log
+
+### v1.1.0
+- Upgraded project framework to .NET 10.0; both Windows and Linux versions now use .NET 10.0 Runtime
+- System.Management dependency upgraded to 10.0.0
 
 ### v1.0.0
 - Initial version release
@@ -246,7 +250,7 @@ A: You need to add the program to the system startup items manually or configure
 1. **Required Software:**
    - Visual Studio 2022 or higher
    - .NET Framework 4.7.2 Development Tools
-   - .NET 8.0 SDK (for Linux version development)
+   - .NET 10.0 SDK
 
 2. **Project Import:**
    - Clone the project repository using Git
