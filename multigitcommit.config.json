@@ -1,6 +1,8 @@
 {
   "RemoteUrls": [
-    "https://gitee.com/yylmzxc/SCNET_Restart_Tool"
+    "https://gitee.com/yylmzxc/SCNET_Restart_Tool",
+    "https://cnb.cool/SurvivalcraftTool/SCNET_Restart_Tool",
+    "https://github.com/YYLMZXC/SCNET_Restart_Tool"
   ],
   "CheckAddAll": true,
   "CheckPushTags": false
