@@ -6,8 +6,13 @@ using System.Threading.Tasks;
 namespace SCNET_Restart_Tool;
 
 /// <summary>
-/// 文件夹操作工具类（Uno 版）
-/// 确认/提示/文件选择通过委托回调，由 UI 层注入实现
+/// 文件夹操作工具类（Uno 版）。
+/// 解耦设计说明：
+/// 本类为静态工具，不直接依赖任何 UI 框架或页面；
+/// 「确认对话框 / 信息提示 / 文件选择」等 UI 交互通过静态委托属性
+/// （ConfirmAsync / NotifyAsync / PickFileAsync）由 UI 层（MainPage 构造时注入 DialogService）提供实现，
+/// 从而实现「工具逻辑」与「界面展示」的彻底解耦。
+/// 所有公共方法均为 async 版本，调用方需在 UI 上下文调用。
 /// </summary>
 public static class FolderOperations
 {

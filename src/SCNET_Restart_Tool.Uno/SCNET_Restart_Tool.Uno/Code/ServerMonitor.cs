@@ -1,48 +1,75 @@
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SCNET_Restart_Tool;
 
 /// <summary>
-/// 服务端监控器（Uno 跨平台版）
-/// - 定时任务（每日定时关闭 / 间隔关闭）
-/// - 持续状态监控与自动启动
-/// - 进程启停与 TCP 指令发送
+/// 服务端监控调度器：专注于「何时做什么」的调度职责。
+/// - 每日定时关闭 / 间隔关闭（1 秒定时器逐秒检查）
+/// - 持续状态监控与自动启动（3 秒定时器轮询）
+/// 底层进程操作已拆分为 ServerProcessService，指令通讯已拆分为 ServerCommandService，
+/// 本类通过组合方式使用它们，仅保留公开门面方法供 UI 层调用，实现高内聚、低耦合。
+/// 原实现中的 Thread.Sleep 阻塞调用已改为异步等待（await Task.Delay），
+/// 并加入防重入标志，避免定时器回调并发重入导致重复关闭。
 /// </summary>
 public class ServerMonitor : IDisposable
 {
     private readonly ServerConfig _config;
-    private readonly object _lock = new object();
-    private Timer _timerDaily;
-    private Timer _timerContinuous;
+    private readonly ServerProcessService _processService;
+    private readonly ServerCommandService _commandService;
     private readonly Action<ServerConfig> _onStatusChanged;
     private readonly LogManager _logManager;
+    private readonly object _lock = new object();
+
+    // 定时器：每日任务 1 秒检查一次；状态监控 3 秒检查一次
+    private readonly Timer _timerDaily;
+    private readonly Timer _timerContinuous;
+
+    // 防重入标志：定时回调已改为异步（async void），
+    // 通过 Interlocked 原子交换防止上一次任务未完成时重复执行
+    private int _dailyTaskRunning;
+    private int _continuousTaskRunning;
+
     private bool _disposed;
 
-    /// <summary>UI 消息请求事件（替代 MessageBox，由界面层订阅并显示对话框）</summary>
+    /// <summary>
+    /// UI 消息请求事件（替代 MessageBox，由界面层订阅并显示对话框）。
+    /// 底层 ServerProcessService 的消息请求会统一转发到本事件。
+    /// </summary>
     public event Action<string, string>? MessageRequested;
 
     /// <summary>是否在监控中</summary>
     public bool IsMonitoring => _config.IsMonitoring;
 
+    /// <summary>
+    /// 构造函数
+    /// </summary>
+    /// <param name="config">要监控的服务端配置</param>
+    /// <param name="onStatusChanged">状态变更回调（通常在后台线程触发，由调用方负责切回 UI 线程）</param>
     public ServerMonitor(ServerConfig config, Action<ServerConfig> onStatusChanged)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _onStatusChanged = onStatusChanged ?? throw new ArgumentNullException(nameof(onStatusChanged));
         _logManager = LogManager.GetInstance();
 
-        // 定时器：每日任务 1 秒检查一次；状态监控 3 秒检查一次
+        // 组合职责单一的底层服务，并转发其消息请求事件（如“启动失败”“禁止多开”提示）
+        _processService = new ServerProcessService(config);
+        _processService.MessageRequested += (title, message) => MessageRequested?.Invoke(title, message);
+        _commandService = new ServerCommandService(config);
+
+        // 定时器初始处于暂停状态（Infinite），由 Start() 启动
         _timerDaily = new Timer(TimerDaily_Tick, null, Timeout.Infinite, Timeout.Infinite);
         _timerContinuous = new Timer(TimerContinuous_Tick, null, Timeout.Infinite, Timeout.Infinite);
 
+        // 初始化一次状态显示（创建监控器时同步当前真实状态）
         UpdateStatus();
     }
 
-    /// <summary>启动监控</summary>
+    /// <summary>
+    /// 启动监控：将服务器标记为监控中，并启动两个定时器。
+    /// 幂等操作，重复调用不会造成多次启动。
+    /// </summary>
     public void Start()
     {
         lock (_lock)
@@ -50,8 +77,8 @@ public class ServerMonitor : IDisposable
             if (!_config.IsMonitoring)
             {
                 _config.IsMonitoring = true;
-                _timerDaily.Change(0, 1000);
-                _timerContinuous.Change(0, 3000);
+                _timerDaily.Change(0, 1000);          // 立即执行一次，之后每秒检查
+                _timerContinuous.Change(0, 3000);     // 立即执行一次，之后每 3 秒检查
                 UpdateStatus();
                 _logManager.AddLog(_config.Name, "监控已开启（定时器已启动）");
             }
@@ -62,7 +89,10 @@ public class ServerMonitor : IDisposable
         }
     }
 
-    /// <summary>停止监控</summary>
+    /// <summary>
+    /// 停止监控：将服务器标记为非监控中，并暂停两个定时器。
+    /// 幂等操作，重复调用不会造成异常。
+    /// </summary>
     public void Stop()
     {
         lock (_lock)
@@ -82,12 +112,20 @@ public class ServerMonitor : IDisposable
         }
     }
 
-    /// <summary>定时任务检查（每日定时关闭 / 间隔关闭）</summary>
-    private void TimerDaily_Tick(object? state)
+    /// <summary>
+    /// 每日任务检查（每秒触发一次）：
+    /// 1) 到达设定的定时时间（HH:mm，秒为 0）时，执行每日定时关闭；
+    /// 2) 距上次间隔关闭超过 IntervalHours 时，执行间隔关闭。
+    /// 关闭前若启用了指令功能，先发送 close 指令并异步等待服务端保存存档，再强制关闭进程。
+    /// </summary>
+    private async void TimerDaily_Tick(object? state)
     {
+        // 防重入：上一次任务未完成时直接返回，避免并发重复关闭
+        if (Interlocked.Exchange(ref _dailyTaskRunning, 1) == 1) return;
+
         try
         {
-            // 每日定时关闭
+            // ---- 每日定时关闭 ----
             if (TimeSpan.TryParse(_config.ScheduleTime, out TimeSpan scheduleTime))
             {
                 var now = DateTime.Now;
@@ -96,14 +134,15 @@ public class ServerMonitor : IDisposable
                     _logManager.AddLog(_config.Name, $"触发每日定时关闭（设定时间：{_config.ScheduleTime}）");
                     if (_config.EnableCommands)
                     {
-                        SendServiceCommand("close 9 例行维护");
-                        Thread.Sleep(7000);
+                        // 先发送 close 指令，等待服务端存档退出后再强制关闭（异步等待，不阻塞线程池线程）
+                        _commandService.SendServiceCommand("close 9 例行维护");
+                        await Task.Delay(7000);
                     }
-                    KillProcess();
+                    _processService.KillProcess();
                 }
             }
 
-            // 间隔关闭
+            // ---- 间隔关闭 ----
             if (_config.IntervalHours > 0)
             {
                 var nextClose = _config.LastIntervalClose.AddHours(_config.IntervalHours);
@@ -112,10 +151,11 @@ public class ServerMonitor : IDisposable
                     _logManager.AddLog(_config.Name, $"触发间隔关闭（间隔：{_config.IntervalHours}小时）");
                     if (_config.EnableCommands)
                     {
-                        SendServiceCommand("close 9 间隔维护");
-                        Thread.Sleep(7000);
+                        _commandService.SendServiceCommand("close 9 间隔维护");
+                        await Task.Delay(7000);
                     }
-                    KillProcess();
+                    _processService.KillProcess();
+                    // 记录本次间隔关闭时间，作为下次间隔的起点
                     _config.LastIntervalClose = DateTime.Now;
                 }
             }
@@ -124,11 +164,22 @@ public class ServerMonitor : IDisposable
         {
             _logManager.AddLog(_config.Name, $"每日定时任务错误：{ex.Message}", "错误");
         }
+        finally
+        {
+            // 释放防重入标志，允许下一次任务执行
+            Interlocked.Exchange(ref _dailyTaskRunning, 0);
+        }
     }
 
-    /// <summary>持续检查服务端状态，自动启动</summary>
-    private void TimerContinuous_Tick(object? state)
+    /// <summary>
+    /// 持续状态检查（每 3 秒触发一次）：
+    /// 监控中且服务端未运行时，自动尝试启动（最多重试 3 次，每次间隔 2 秒）。
+    /// </summary>
+    private async void TimerContinuous_Tick(object? state)
     {
+        // 防重入：上一次任务未完成时直接返回
+        if (Interlocked.Exchange(ref _continuousTaskRunning, 1) == 1) return;
+
         try
         {
             UpdateStatus();
@@ -138,16 +189,16 @@ public class ServerMonitor : IDisposable
             {
                 _logManager.AddLog(_config.Name, "监控检测到服务端未运行，尝试自动启动...");
 
-                // 重试机制（防止偶然失败）
+                // 重试机制（防止偶发启动失败），最多尝试 3 次
                 int retryCount = 0;
-                while (retryCount < 3 && !IsProcessRunning())
+                while (retryCount < 3 && !_processService.IsProcessRunning())
                 {
-                    StartProcess();
-                    Thread.Sleep(2000);
+                    _processService.StartProcess();
+                    await Task.Delay(2000); // 等待进程启动完成后再检测
                     retryCount++;
                 }
 
-                if (IsProcessRunning())
+                if (_processService.IsProcessRunning())
                 {
                     _logManager.AddLog(_config.Name, "监控自动启动成功");
                 }
@@ -161,12 +212,21 @@ public class ServerMonitor : IDisposable
         {
             _logManager.AddLog(_config.Name, $"监控定时器错误：{ex.Message}", "错误");
         }
+        finally
+        {
+            // 释放防重入标志，允许下一次任务执行
+            Interlocked.Exchange(ref _continuousTaskRunning, 0);
+        }
     }
 
-    /// <summary>更新服务端状态</summary>
+    /// <summary>
+    /// 更新服务端运行状态并通知 UI 刷新。
+    /// 监控开启时状态显示为 Monitoring/Stopped，否则为 Running/Stopped；
+    /// 状态发生变化时输出状态变更日志。
+    /// </summary>
     private void UpdateStatus()
     {
-        var isProcessRunning = IsProcessRunning();
+        var isProcessRunning = _processService.IsProcessRunning();
         var oldStatus = _config.Status;
 
         if (_config.IsMonitoring)
@@ -183,202 +243,25 @@ public class ServerMonitor : IDisposable
             _logManager.AddLog(_config.Name, $"状态变更：{oldStatus} → {_config.Status}");
         }
 
+        // 通知 UI 层刷新（调用方负责切回 UI 线程）
         _onStatusChanged.Invoke(_config);
     }
 
-    /// <summary>检查进程是否运行（跨平台兼容：优先 Process API）</summary>
-    public bool IsProcessRunning()
-    {
-        if (string.IsNullOrEmpty(_config.ExePath))
-        {
-            _logManager.AddLog(_config.Name, "状态检测失败：未配置程序路径", "警告");
-            return false;
-        }
+    // ==================== 公开门面方法（转发到底层服务） ====================
 
-        string targetFileName = Path.GetFileName(_config.ExePath);
-        string targetProcessName = Path.GetFileNameWithoutExtension(targetFileName);
-        bool isRunning = false;
+    /// <summary>检查服务端进程是否运行（委托给 ServerProcessService）</summary>
+    public bool IsProcessRunning() => _processService.IsProcessRunning();
 
-        try
-        {
-            foreach (var process in Process.GetProcessesByName(targetProcessName))
-            {
-                try
-                {
-                    if (process.MainModule?.FileName.Equals(_config.ExePath, StringComparison.OrdinalIgnoreCase) == true)
-                    {
-                        isRunning = true;
-                        break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 捕获权限或位数问题，不中断检测
-                    _logManager.AddLog(_config.Name, $"进程路径验证警告：{ex.Message}", "警告");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logManager.AddLog(_config.Name, $"状态检测失败：{ex.Message}", "错误");
-        }
+    /// <summary>启动服务端进程（委托给 ServerProcessService）</summary>
+    public void StartProcess() => _processService.StartProcess();
 
-        _logManager.AddLog(_config.Name, $"监控状态检测：{(isRunning ? "运行中" : "已停止")}", "调试");
-        return isRunning;
-    }
+    /// <summary>关闭服务端进程（委托给 ServerProcessService）</summary>
+    public void KillProcess() => _processService.KillProcess();
 
-    /// <summary>启动服务端进程</summary>
-    public void StartProcess()
-    {
-        if (IsProcessRunning())
-        {
-            _logManager.AddLog(_config.Name, "启动失败：服务端已在运行中（禁止多开）", "警告");
-            MessageRequested?.Invoke("提示", "服务端已在运行中，禁止多开！");
-            return;
-        }
+    /// <summary>发送指令到服务端（委托给 ServerCommandService）</summary>
+    public string SendServiceCommand(string command) => _commandService.SendServiceCommand(command);
 
-        if (!File.Exists(_config.ExePath))
-        {
-            var error = $"启动失败：程序不存在（{_config.ExePath}）";
-            _logManager.AddLog(_config.Name, error, "错误");
-            MessageRequested?.Invoke("启动失败", error);
-            return;
-        }
-
-        try
-        {
-            string uniqueArgs = $"world={_config.Id} scnet_tool_id={Guid.NewGuid()}";
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = _config.ExePath,
-                Arguments = uniqueArgs,
-                UseShellExecute = true,
-                WorkingDirectory = Path.GetDirectoryName(_config.ExePath)
-            });
-            _logManager.AddLog(_config.Name, $"服务端已启动（路径：{_config.ExePath}，参数：{uniqueArgs}）");
-        }
-        catch (Exception ex)
-        {
-            var error = $"启动失败：{ex.Message}";
-            _logManager.AddLog(_config.Name, error, "错误");
-            MessageRequested?.Invoke("启动失败", error);
-        }
-    }
-
-    /// <summary>关闭服务端进程</summary>
-    public void KillProcess()
-    {
-        if (string.IsNullOrEmpty(_config.ExePath))
-        {
-            _logManager.AddLog(_config.Name, "关闭失败：未配置程序路径", "错误");
-            return;
-        }
-
-        string targetPath = _config.ExePath.ToLowerInvariant();
-        string targetFileName = Path.GetFileName(_config.ExePath).ToLowerInvariant();
-        bool isKilled = false;
-
-        try
-        {
-            string processName = Path.GetFileNameWithoutExtension(targetFileName);
-            foreach (var process in Process.GetProcessesByName(processName))
-            {
-                try
-                {
-                    string processPath = "";
-                    try
-                    {
-                        processPath = process.MainModule?.FileName?.ToLowerInvariant() ?? "";
-                    }
-                    catch (Exception ex)
-                    {
-                        _logManager.AddLog(_config.Name, $"获取进程路径失败：{ex.Message}", "警告");
-                    }
-
-                    // 路径匹配即可视为目标进程
-                    bool isMatch = processPath == targetPath ||
-                                   processPath.EndsWith(targetFileName);
-
-                    if (isMatch)
-                    {
-                        _logManager.AddLog(_config.Name, $"尝试关闭进程（PID：{process.Id}）");
-
-                        if (process.CloseMainWindow())
-                        {
-                            if (process.WaitForExit(2000))
-                            {
-                                _logManager.AddLog(_config.Name, $"进程正常关闭（PID：{process.Id}）");
-                                isKilled = true;
-                                break;
-                            }
-                        }
-
-                        try
-                        {
-                            process.Kill();
-                            if (process.WaitForExit(2000))
-                            {
-                                _logManager.AddLog(_config.Name, $"进程强制关闭（PID：{process.Id}）");
-                                isKilled = true;
-                                break;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            _logManager.AddLog(_config.Name, $"强制关闭失败：{ex.Message}", "警告");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logManager.AddLog(_config.Name, $"处理进程时出错：{ex.Message}", "警告");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _logManager.AddLog(_config.Name, $"关闭进程出错：{ex.Message}", "错误");
-        }
-
-        if (!isKilled)
-        {
-            _logManager.AddLog(_config.Name, "关闭失败：可能缺少管理员权限，请尝试以管理员身份运行程序", "错误");
-        }
-    }
-
-    /// <summary>发送指令到服务端</summary>
-    public string SendServiceCommand(string command)
-    {
-        try
-        {
-            _logManager.AddLog(_config.Name, $"发送指令：{command}");
-            using (var client = new TcpClient())
-            {
-                client.Connect(_config.Ip, _config.Port);
-                using (var stream = client.GetStream())
-                using (var writer = new StreamWriter(stream))
-                using (var reader = new StreamReader(stream))
-                {
-                    writer.AutoFlush = true;
-                    var message = string.IsNullOrEmpty(_config.Password)
-                        ? $"command {command}"
-                        : $"password {_config.Password} command {command}";
-
-                    writer.WriteLine(message);
-                    var response = reader.ReadLine() ?? "无响应";
-                    _logManager.AddLog(_config.Name, $"指令响应：{response}");
-                    return response;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            var error = $"指令发送失败：{ex.Message}";
-            _logManager.AddLog(_config.Name, error, "错误");
-            return error;
-        }
-    }
-
+    /// <summary>释放定时器等非托管资源</summary>
     public void Dispose()
     {
         if (_disposed) return;
