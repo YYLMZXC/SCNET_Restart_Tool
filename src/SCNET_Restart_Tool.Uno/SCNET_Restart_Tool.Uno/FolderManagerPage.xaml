@@ -1,0 +1,39 @@
+<Page x:Class="SCNET_Restart_Tool.Uno.FolderManagerPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:SCNET_Restart_Tool.Uno"
+      Background="#F5F7FA">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- 顶部标题栏 -->
+    <Grid Grid.Row="0" Background="White" Padding="16,10"
+          BorderThickness="0,0,0,1" BorderBrush="#E5E7EB">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <TextBlock Text="文件夹管理" FontSize="18" FontWeight="Bold" Foreground="#2C3E50"
+                   VerticalAlignment="Center" />
+        <TextBlock x:Name="serverNameText" FontSize="13" Foreground="#95A5A6"
+                   VerticalAlignment="Center" />
+      </StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+        <Button x:Name="batchBackupBtn" Content="批量备份所有目录"
+                Background="#3498DB" Foreground="White" CornerRadius="6" Padding="14,6"
+                Click="BatchBackupBtn_Click" />
+        <Button Content="返回主界面" Background="#95A5A6" Foreground="White"
+                CornerRadius="6" Padding="14,6" Click="BackBtn_Click" />
+      </StackPanel>
+    </Grid>
+
+    <!-- 标签页 -->
+    <TabView x:Name="folderTabView" Grid.Row="1" Margin="10"
+             TabWidthMode="Equal" IsAddTabButtonVisible="False" />
+  </Grid>
+</Page>
