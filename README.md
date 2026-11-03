@@ -4,7 +4,10 @@
 
 SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务器）设计的高级监控与自动重启工具。该工具通过实时监控服务运行状态，提供多种智能重启机制和远程控制功能，确保服务端程序持续稳定运行，最大限度减少人工干预，提高服务可用性和运维效率。
 
-![主界面预览](src/SCNET_Restart_Tool.NET/Res/index.png)
+### 最新版（Avalonia 跨平台版）界面预览
+
+![Avalonia 版主界面预览](src/SCNET_Restart_Tool.Avalonia/preview.png)
+
 
 ## 核心功能特性
 
@@ -44,6 +47,9 @@ SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务
 - 自动检测管理员权限，确保程序正常运行
 - 提供权限提升选项，避免因权限不足导致功能受限
 
+### 帮助与信息菜单
+- 主界面右上角「帮助」菜单提供：功能说明、项目信息、版本信息、检查更新、关于
+
 ### 跨平台支持
 - **最新版**基于 Avalonia UI（跨平台 XAML），一套代码支持 Windows / macOS / Linux 桌面端
 - 上一版基于 Uno Platform，UI 层使用 XAML（WinUI），已保留可构建
@@ -58,10 +64,10 @@ SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务
 - **UI 框架（上一版）**：Uno Platform 6.6（WinUI / XAML），单项目模式（`UnoSingleProject`）
 - **UI 框架（旧版）**：Windows Forms
 - **网络通信**：Socket TCP/IP
-- **进程管理**：System.Diagnostics、WMI
-- **配置管理（Avalonia / Uno 版）**：JSON 序列化（`ServerConfigManager`）
+- **进程管理**：System.Diagnostics.Process（跨平台 API）；旧版（WinForms）另使用 WMI（System.Management）
+- **配置管理（Avalonia / Uno 版）**：JSON 序列化（`ServerConfigManager`，`servers_config.json`，位于程序目录）
 - **配置管理（旧版）**：XML 序列化
-- **日志系统**：自定义 `LogManager` 组件
+- **日志系统**：自定义 `LogManager` 组件（按日期写入程序目录 `log_yyyyMMdd.txt`）
 
 ## 项目结构
 
@@ -74,6 +80,7 @@ SCNET_Restart_Tool/
 │   │   ├── Res/                   # 资源文件（图标、预览图 index.png 等）
 │   │   └── ...                    # 模型、服务、配置等核心逻辑
 │   ├── SCNET_Restart_Tool.Avalonia/  # 最新版 Avalonia UI 项目（推荐）
+│   │   ├── preview.png             # 界面预览图
 │   │   ├── SCNET_Restart_Tool.Avalonia.sln
 │   │   └── SCNET_Restart_Tool.Avalonia/    # 应用主工程
 │   │       ├── Program.cs                   # 入口（BuildAvaloniaApp）
@@ -84,10 +91,22 @@ SCNET_Restart_Tool/
 │   │       │   └── FolderManagerView        # 文件夹管理器
 │   │       ├── Controls/                    # 自定义控件
 │   │       │   ├── FolderBrowserControl     # 文件夹浏览控件
-│   │       │   └── BugsLogControl           # Bugs 日志控件
-│   │       ├── Services/                    # 对话框服务与进程/指令服务
-│   │       ├── Code/                        # 核心逻辑（模型与服务，与 Uno 版一致）
-│   │       └── Help/                        # 帮助内容常量
+│   │       │   └── BugsLogControl           # Bugs 日志控件（Game.log 分页预览）
+│   │       ├── Services/                    # 服务层
+│   │       │   ├── DialogService.cs         # 对话框服务（提示/确认/文件选择）
+│   │       │   ├── DialogWindow.cs          # 自定义对话框窗口（替代 ContentDialog）
+│   │       │   ├── ServerProcessService.cs  # 进程启停与状态检测
+│   │       │   └── ServerCommandService.cs  # TCP 指令通讯
+│   │       ├── Code/                        # 核心逻辑（与 Uno 版一致）
+│   │       │   ├── ServerStatus.cs          # 服务器状态枚举
+│   │       │   ├── ServerConfig.cs          # 服务器配置模型（含状态徽标配色）
+│   │       │   ├── ServerConfigManager.cs   # JSON 配置读写
+│   │       │   ├── ServerMonitor.cs         # 监控调度（定时/间隔/自动重启）
+│   │       │   ├── LogManager.cs            # 日志管理器（单例）
+│   │       │   ├── LogItem.cs               # 日志项数据结构
+│   │       │   └── FolderOperations.cs      # 文件夹操作（备份/清理/删除）
+│   │       ├── Help/HelpContent.cs          # 帮助内容常量
+│   │       └── Assets/app.ico               # 应用图标
 │   └── SCNET_Restart_Tool.Uno/    # 上一版 Uno Platform 项目
 │       ├── Directory.Build.props / Directory.Packages.props / global.json
 │       ├── SCNET_Restart_Tool.Uno.sln
@@ -147,17 +166,19 @@ dotnet build src\SCNET_Restart_Tool.NET\SCNET_Restart_Tool.NET.csproj
 ## 安装与使用
 
 ### 系统要求
-- **Windows**：Windows 10/11，安装 .NET 10.0 Runtime 或更高版本
-- **Linux（旧版 CLI）**：支持 .NET 10.0 的 Linux 发行版（如 Ubuntu 22.04+、CentOS 9+ 等）
+- **Windows（Avalonia / 旧版）**：Windows 10/11，安装 .NET 10.0 Runtime 或更高版本；监控进程建议以管理员身份运行
+- **macOS / Linux（Avalonia 版）**：支持 .NET 10.0 的系统（macOS 12+；Ubuntu 22.04+、CentOS 9+ 等）
+- **Linux（旧版 CLI）**：支持 .NET 10.0 的 Linux 发行版
 - **硬件要求**：最小系统资源（CPU: 1GHz+，内存: 512MB+）
 
 ### 基本操作流程
-1. **添加服务器**：在主界面点击「添加服务器」，填写服务器名称、程序路径、进程名等
+1. **添加服务器**：点击「增加」，填写服务器名称、程序路径、IP/端口等，然后点击「保存配置」
 2. **配置重启策略**：设置定时重启（HH:MM）或间隔重启（小时数，0 表示禁用）
-3. **启动监控**：选择已配置的服务器，点击「开始监控」
-4. **查看状态**：在主界面实时查看服务器运行状态和日志
-5. **远程控制**：使用命令输入框向服务端发送指令（如 `close 9 例行维护`）
-6. **管理文件夹**：点击「文件夹管理」，快速访问服务器相关目录
+3. **启动监控**：选择已配置的服务器，点击「开启监控」；服务意外退出时会自动重启
+4. **运行控制**：通过「启动 / 停止 / 重启 / 停止全部」按钮管理服务端进程
+5. **远程控制**：启用指令功能后，使用指令输入框 +「发送指令」（如 `close 9 例行维护`）
+6. **管理文件夹**：点击「文件夹」，快速访问 Bugs、Configs、Plugins、Worlds 等目录，支持备份 / 清理 / 删除
+7. **查看日志**：主界面底部实时显示运行日志，并按日期写入程序目录的 `log_yyyyMMdd.txt`
 
 ### 配置保存位置
 - **Avalonia / Uno 版**：程序目录下 JSON 配置文件（`servers_config.json`），由 `ServerConfigManager` 负责读写
@@ -165,10 +186,11 @@ dotnet build src\SCNET_Restart_Tool.NET\SCNET_Restart_Tool.NET.csproj
 
 ## 注意事项
 
-1. **管理员权限**：程序需要管理员权限才能正确监控和管理系统进程，请确保以管理员身份运行
-2. **配置文件备份**：建议定期备份程序配置文件，以防止配置丢失
-3. **网络安全**：使用远程命令功能时，请确保设置强密码并限制访问 IP
-4. **日志管理**：定期清理日志文件，避免占用过多磁盘空间
+1. **管理员权限**：Windows 下程序需要管理员权限才能正确监控和管理系统进程，请确保以管理员身份运行
+2. **跨平台行为差异**：优雅关闭（`CloseMainWindow`）仅在 Windows 上有效，macOS / Linux 上将直接强制结束进程；进程路径校验依赖系统权限
+3. **配置文件备份**：建议定期备份程序配置文件（`servers_config.json`），以防止配置丢失
+4. **网络安全**：使用远程命令功能时，请确保设置强密码并限制访问 IP
+5. **日志管理**：定期清理日志文件（`log_yyyyMMdd.txt`），避免占用过多磁盘空间
 
 ## 迁移说明（WinForms → Uno）
 
@@ -189,7 +211,7 @@ dotnet build src\SCNET_Restart_Tool.NET\SCNET_Restart_Tool.NET.csproj
 
 ## 更新日志
 
-### v2.1.0（Avalonia 版）
+### v2.1.0（Avalonia 版，2026-11）
 - 新增基于 Avalonia UI 11.3 的跨平台桌面版本（`src/SCNET_Restart_Tool.Avalonia`），一套代码支持 Windows / macOS / Linux
 - UI 层由 Uno（WinUI XAML）迁移至 Avalonia XAML，核心逻辑层原样复用
 - 对话框与文件选择改为 Avalonia `DialogWindow` / `StorageProvider`，不再依赖 WinRT
