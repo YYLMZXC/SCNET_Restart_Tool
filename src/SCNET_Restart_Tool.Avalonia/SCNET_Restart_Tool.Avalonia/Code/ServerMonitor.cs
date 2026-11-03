@@ -42,6 +42,9 @@ public class ServerMonitor : IDisposable
     /// <summary>是否在监控中</summary>
     public bool IsMonitoring => _config.IsMonitoring;
 
+    /// <summary>是否为远程管理模式（状态探测与停止均走 RCON 网络通道）</summary>
+    public bool IsRemote => _config.Mode == ManageMode.Remote;
+
     /// <summary>
     /// 构造函数
     /// </summary>
@@ -62,8 +65,8 @@ public class ServerMonitor : IDisposable
         _timerDaily = new Timer(TimerDaily_Tick, null, Timeout.Infinite, Timeout.Infinite);
         _timerContinuous = new Timer(TimerContinuous_Tick, null, Timeout.Infinite, Timeout.Infinite);
 
-        // 初始化一次状态显示（创建监控器时同步当前真实状态）
-        UpdateStatus();
+        // 初始化一次状态显示（创建监控器时同步当前真实状态；远程模式健康探测为异步，不阻塞构造）
+        _ = UpdateStatusAsync();
     }
 
     /// <summary>
@@ -79,7 +82,7 @@ public class ServerMonitor : IDisposable
                 _config.IsMonitoring = true;
                 _timerDaily.Change(0, 1000);          // 立即执行一次，之后每秒检查
                 _timerContinuous.Change(0, 3000);     // 立即执行一次，之后每 3 秒检查
-                UpdateStatus();
+                _ = UpdateStatusAsync();
                 _logManager.AddLog(_config.Name, "监控已开启（定时器已启动）");
             }
             else
@@ -102,7 +105,7 @@ public class ServerMonitor : IDisposable
                 _config.IsMonitoring = false;
                 _timerDaily.Change(Timeout.Infinite, Timeout.Infinite);
                 _timerContinuous.Change(Timeout.Infinite, Timeout.Infinite);
-                UpdateStatus();
+                _ = UpdateStatusAsync();
                 _logManager.AddLog(_config.Name, "监控已关闭（定时器已停止）");
             }
             else
@@ -134,7 +137,11 @@ public class ServerMonitor : IDisposable
                 {
                     _logManager.AddLog(_config.Name, $"触发每日定时关闭（设定时间：{_config.ScheduleTime}）");
                     await GracefulShutdownAsync("例行维护");
-                    _processService.KillProcess();
+                    // 远程模式无本地进程控制权，仅靠 RCON stop 让服务端自行存档退出
+                    if (!IsRemote)
+                    {
+                        _processService.KillProcess();
+                    }
                 }
             }
 
@@ -146,7 +153,10 @@ public class ServerMonitor : IDisposable
                 {
                     _logManager.AddLog(_config.Name, $"触发间隔关闭（间隔：{_config.IntervalHours}小时）");
                     await GracefulShutdownAsync("间隔维护");
-                    _processService.KillProcess();
+                    if (!IsRemote)
+                    {
+                        _processService.KillProcess();
+                    }
                     // 记录本次间隔关闭时间，作为下次间隔的起点
                     _config.LastIntervalClose = DateTime.Now;
                 }
@@ -174,10 +184,10 @@ public class ServerMonitor : IDisposable
 
         try
         {
-            UpdateStatus();
+            await UpdateStatusAsync();
 
-            // 监控中且服务端未运行时，触发自动启动
-            if (_config.IsMonitoring && _config.Status == ServerStatus.Stopped)
+            // 监控中且服务端未运行时，触发自动启动（仅本地模式：远程无启动通道，服务端需在宿主机自行启动）
+            if (!IsRemote && _config.IsMonitoring && _config.Status == ServerStatus.Stopped)
             {
                 _logManager.AddLog(_config.Name, "监控检测到服务端未运行，尝试自动启动...");
 
@@ -214,21 +224,25 @@ public class ServerMonitor : IDisposable
 
     /// <summary>
     /// 更新服务端运行状态并通知 UI 刷新。
+    /// - 本地模式：枚举本地进程判断存活；
+    /// - 远程模式：GET /health 网络探测 RCON 端口（静默轮询，不刷调试日志）。
     /// 监控开启时状态显示为 Monitoring/Stopped，否则为 Running/Stopped；
     /// 状态发生变化时输出状态变更日志。
     /// </summary>
-    private void UpdateStatus()
+    private async Task UpdateStatusAsync()
     {
-        var isProcessRunning = _processService.IsProcessRunning();
+        var isRunning = IsRemote
+            ? await _commandService.CheckHealthAsync(quiet: true).ConfigureAwait(false)
+            : _processService.IsProcessRunning();
         var oldStatus = _config.Status;
 
         if (_config.IsMonitoring)
         {
-            _config.Status = isProcessRunning ? ServerStatus.Monitoring : ServerStatus.Stopped;
+            _config.Status = isRunning ? ServerStatus.Monitoring : ServerStatus.Stopped;
         }
         else
         {
-            _config.Status = isProcessRunning ? ServerStatus.Running : ServerStatus.Stopped;
+            _config.Status = isRunning ? ServerStatus.Running : ServerStatus.Stopped;
         }
 
         if (oldStatus != _config.Status)
@@ -242,14 +256,53 @@ public class ServerMonitor : IDisposable
 
     // ==================== 公开门面方法（转发到底层服务） ====================
 
-    /// <summary>检查服务端进程是否运行（委托给 ServerProcessService）</summary>
-    public bool IsProcessRunning() => _processService.IsProcessRunning();
+    /// <summary>
+    /// 检查服务端是否运行：本地模式查进程存活，远程模式做一次健康探测。
+    /// </summary>
+    public async Task<bool> IsRunningAsync() => IsRemote
+        ? await _commandService.CheckHealthAsync().ConfigureAwait(false)
+        : _processService.IsProcessRunning();
 
-    /// <summary>启动服务端进程（委托给 ServerProcessService）</summary>
-    public void StartProcess() => _processService.StartProcess();
+    /// <summary>启动服务端进程（仅本地模式可用；远程模式无启动通道，记录警告）</summary>
+    public void StartProcess()
+    {
+        if (IsRemote)
+        {
+            _logManager.AddLog(_config.Name, "远程管理模式不支持启动：请在服务端宿主机上启动服务端", "警告");
+            return;
+        }
+        _processService.StartProcess();
+    }
 
-    /// <summary>关闭服务端进程（委托给 ServerProcessService）</summary>
-    public void KillProcess() => _processService.KillProcess();
+    /// <summary>关闭服务端进程（仅本地模式可用；远程模式请使用 StopAsync）</summary>
+    public void KillProcess()
+    {
+        if (IsRemote)
+        {
+            _logManager.AddLog(_config.Name, "远程管理模式无法强制结束进程，请使用停止（RCON stop）", "警告");
+            return;
+        }
+        _processService.KillProcess();
+    }
+
+    /// <summary>
+    /// 停止服务器（按管理模式自动选择通道）：
+    /// - 远程模式：经 RCON 发送 stop 指令（服务端延迟存档退出），无强杀兜底；
+    /// - 本地模式：与既有行为一致，直接结束本地进程。
+    /// </summary>
+    /// <param name="reason">停止原因（透传给服务端公告）</param>
+    public async Task StopAsync(string reason = "远程停止")
+    {
+        if (IsRemote)
+        {
+            await GracefulShutdownAsync(reason).ConfigureAwait(false);
+            await UpdateStatusAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            _processService.KillProcess();
+        }
+    }
 
     /// <summary>
     /// 经 RCON 标准接口向服务端发送指令并返回展示文本（委托给 ServerCommandService）。
@@ -264,12 +317,13 @@ public class ServerMonitor : IDisposable
     /// <summary>
     /// 优雅关闭：经 RCON 发送 stop 指令，服务端会在延迟 N 秒内存档并自行退出。
     /// 等待「延迟秒数 + 存档余量（3 秒）」后返回，由调用方决定是否兜底强杀进程。
-    /// 未启用指令功能或指令失败时直接返回（交由强杀流程处理）。
+    /// 本地模式未启用指令功能、或指令失败时直接返回（交由强杀流程处理）；
+    /// 远程模式 RCON 是唯一通道，指令失败只能告警（无强杀手段）。
     /// </summary>
     /// <param name="reason">关闭原因（透传给服务端公告）</param>
     private async Task GracefulShutdownAsync(string reason)
     {
-        if (!_config.EnableCommands) return;
+        if (!_config.EnableCommands && !IsRemote) return;
 
         // ScNetworkDEV 标准：stop [秒数] [原因]，延迟 9 秒给玩家留缓冲并完成存档
         const int delaySeconds = 9;
@@ -277,7 +331,9 @@ public class ServerMonitor : IDisposable
         var result = await _commandService.SendCommandAsync($"stop {delaySeconds} {reason}").ConfigureAwait(false);
         if (!result.Ok)
         {
-            _logManager.AddLog(_config.Name, $"优雅关闭指令未生效（{result.ToDisplayText()}），将直接强制关闭", "警告");
+            _logManager.AddLog(_config.Name, IsRemote
+                ? $"远程停止指令未生效（{result.ToDisplayText()}），远程模式无法强制关闭，请检查网络与口令"
+                : $"优雅关闭指令未生效（{result.ToDisplayText()}），将直接强制关闭", "警告");
             return;
         }
 

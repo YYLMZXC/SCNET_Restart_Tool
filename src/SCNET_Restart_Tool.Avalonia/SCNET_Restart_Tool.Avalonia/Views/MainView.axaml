@@ -64,21 +64,26 @@
               <ListBox.ItemTemplate>
                 <DataTemplate>
                   <Border Padding="12,8" BorderBrush="#F0F2F5" BorderThickness="0,0,0,1">
-                    <Grid ColumnDefinitions="Auto,2*,1.2*,2*,Auto">
+                    <Grid ColumnDefinitions="Auto,2*,Auto,1.2*,2*,Auto">
                       <TextBlock Grid.Column="0" Text="{Binding Id}" Foreground="#99A1A8"
                                  Width="34" VerticalAlignment="Center" />
                       <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
                         <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#2C3E50"
                                    TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding ExeName}" FontSize="11" Foreground="#99A1A8"
+                        <TextBlock Text="{Binding DisplaySubtitle}" FontSize="11" Foreground="#99A1A8"
                                    TextTrimming="CharacterEllipsis" />
                       </StackPanel>
-                      <TextBlock Grid.Column="2" Text="{Binding DisplayIpPort}" Foreground="#66707A"
+                      <Border Grid.Column="2" Background="{Binding ModeBrush}" CornerRadius="10"
+                              Padding="8,3" VerticalAlignment="Center" Margin="6,0,6,0">
+                        <TextBlock Text="{Binding ModeText}" Foreground="White" FontSize="12"
+                                   HorizontalAlignment="Center" />
+                      </Border>
+                      <TextBlock Grid.Column="3" Text="{Binding DisplayIpPort}" Foreground="#66707A"
                                  VerticalAlignment="Center" Margin="6,0,0,0" />
-                      <TextBlock Grid.Column="3" Text="{Binding ExePath}" Foreground="#8A939B"
+                      <TextBlock Grid.Column="4" Text="{Binding DisplayPath}" Foreground="#8A939B"
                                  FontSize="12" TextTrimming="CharacterEllipsis"
                                  VerticalAlignment="Center" Margin="6,0,6,0" />
-                      <Border Grid.Column="4" Background="{Binding StatusBrush}" CornerRadius="10"
+                      <Border Grid.Column="5" Background="{Binding StatusBrush}" CornerRadius="10"
                               Padding="8,3" VerticalAlignment="Center">
                         <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="12"
                                    HorizontalAlignment="Center" />
@@ -192,16 +197,31 @@
             <TextBlock Text="服务器配置" FontWeight="Bold" Foreground="#2C3E50" FontSize="15"
                        Margin="0,0,0,2" />
 
-            <TextBlock Classes="label" Text="服务器名：" />
+            <!-- 管理方式：本地（进程/文件）与远程（RCON 网络）单选，切换后按模式显示对应配置项 -->
+            <TextBlock Classes="label" Text="管理方式：" Margin="0,2,0,2" />
+            <Grid ColumnDefinitions="*,*">
+              <RadioButton x:Name="modeLocalRadio" Grid.Column="0" Content="本地管理"
+                           IsEnabled="False" GroupName="ManageMode"
+                           Checked="ModeRadio_Changed" Unchecked="ModeRadio_Changed" />
+              <RadioButton x:Name="modeRemoteRadio" Grid.Column="1" Content="远程管理（RCON）"
+                           IsEnabled="False" GroupName="ManageMode"
+                           Checked="ModeRadio_Changed" Unchecked="ModeRadio_Changed" />
+            </Grid>
+            <TextBlock x:Name="modeHintText" FontSize="11" Foreground="#99A1A8" TextWrapping="Wrap"
+                       Text="本地：可启动/重启进程、管理文件夹与 ServerSetting.json" />
+
+            <TextBlock Classes="label" Text="服务器名：" Margin="0,4,0,2" />
             <TextBox x:Name="serverNameInput" IsEnabled="False" />
 
-            <TextBlock Classes="label" Text="程序路径：" Margin="0,4,0,4" />
-            <Grid ColumnDefinitions="*,Auto">
-              <TextBox x:Name="exePathInput" IsEnabled="False" />
-              <Button x:Name="browseExeBtn" Grid.Column="1" Content="浏览" Margin="6,0,0,0"
-                      Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
-                      Padding="16,6" Click="BrowseExeBtn_Click" />
-            </Grid>
+            <StackPanel x:Name="exePathSection">
+              <TextBlock Classes="label" Text="程序路径：" Margin="0,4,0,4" />
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBox x:Name="exePathInput" IsEnabled="False" />
+                <Button x:Name="browseExeBtn" Grid.Column="1" Content="浏览" Margin="6,0,0,0"
+                        Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                        Padding="16,6" Click="BrowseExeBtn_Click" />
+              </Grid>
+            </StackPanel>
 
             <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
               <StackPanel Grid.Column="0" Margin="0,0,5,0">
@@ -232,8 +252,8 @@
             <CheckBox x:Name="useTlsChk" Content="加密连接（TLS，服务端自签证书）"
                       IsEnabled="False" Margin="0,4,0,0" IsChecked="True" />
 
-            <!-- 服务端 ServerSetting.json 直读直写：与编辑面板无关，选中服务器即可操作 -->
-            <Border Classes="card" Background="#F8FAFC" Padding="10,8" Margin="0,12,0,0">
+            <!-- 服务端 ServerSetting.json 直读直写：与编辑面板无关，选中服务器即可操作（仅本地模式） -->
+            <Border x:Name="serverSettingPanel" Classes="card" Background="#F8FAFC" Padding="10,8" Margin="0,12,0,0">
               <StackPanel Spacing="6">
                 <TextBlock Classes="groupTitle" Text="服务端设置（ServerSetting.json）" Margin="0" />
                 <Grid ColumnDefinitions="*,*">

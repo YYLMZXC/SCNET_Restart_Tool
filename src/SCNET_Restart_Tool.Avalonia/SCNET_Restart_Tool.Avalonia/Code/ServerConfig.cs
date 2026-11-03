@@ -25,7 +25,10 @@ public class ServerConfig : INotifyPropertyChanged
     /// <summary>服务器显示名称</summary>
     public string Name { get; set; } = "新服务端";
 
-    /// <summary>服务器程序可执行文件完整路径</summary>
+    /// <summary>管理方式（本地进程管理 / 远程 RCON 管理），旧配置缺省为本地</summary>
+    public ManageMode Mode { get; set; } = ManageMode.Local;
+
+    /// <summary>服务器程序可执行文件完整路径（仅本地管理模式使用）</summary>
     public string ExePath { get; set; } = "";
 
     /// <summary>服务器程序文件名（由路径推导，便于界面展示）</summary>
@@ -67,6 +70,31 @@ public class ServerConfig : INotifyPropertyChanged
 
     /// <summary>是否启用指令功能（发送 close 等管理指令）</summary>
     public bool EnableCommands { get; set; } = false;
+
+    // ==================== 模式派生属性（不序列化） ====================
+
+    /// <summary>是否为本地管理模式</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsLocal => Mode == ManageMode.Local;
+
+    /// <summary>管理模式徽标文本（供列表显示）</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ModeText => IsLocal ? "本地" : "远程";
+
+    /// <summary>管理模式徽标颜色（本地蓝 / 远程橙，静态缓存避免频繁分配）</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public IBrush ModeBrush => IsLocal ? LocalModeBrush : RemoteModeBrush;
+
+    /// <summary>列表副标题：本地显示程序名，远程显示远程说明</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string DisplaySubtitle => IsLocal ? ExeName : "远程服务器（RCON 管理）";
+
+    /// <summary>列表目标列文本：本地显示程序路径，远程显示占位说明</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string DisplayPath => IsLocal ? ExePath : "无本地路径（仅网络管理）";
+
+    private static readonly IBrush LocalModeBrush = new SolidColorBrush(Color.Parse("#3498DB"));
+    private static readonly IBrush RemoteModeBrush = new SolidColorBrush(Color.Parse("#E67E22"));
 
     // ==================== 派生路径属性（由 ExePath 运行时推导，不序列化） ====================
 
@@ -168,6 +196,10 @@ public class ServerConfig : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Name)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ExeName)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ExePath)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ModeText)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ModeBrush)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplaySubtitle)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayPath)));
     }
 
     /// <summary>属性变更通知事件（XAML 绑定引擎订阅）</summary>

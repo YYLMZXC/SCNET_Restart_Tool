@@ -204,6 +204,8 @@ public partial class MainView : UserControl
             intervalHoursInput.Text = "0";
             enableCommandsChk.IsChecked = false;
             useTlsChk.IsChecked = true;
+            modeLocalRadio.IsChecked = true;
+            modeRemoteRadio.IsChecked = false;
         }
         else
         {
@@ -216,10 +218,44 @@ public partial class MainView : UserControl
             intervalHoursInput.Text = server.IntervalHours.ToString("0.##");
             enableCommandsChk.IsChecked = server.EnableCommands;
             useTlsChk.IsChecked = server.UseTls;
+            modeLocalRadio.IsChecked = server.IsLocal;
+            modeRemoteRadio.IsChecked = server.Mode == ManageMode.Remote;
         }
+
+        // 按当前管理方式刷新本地专属区块的显隐（新增模式固定显示本地配置）
+        UpdateModeSections();
 
         // 服务端设置分组：选中即尝试从 ServerSetting.json 预填（文件缺失时用服务端默认值，不弹窗）
         LoadServerSettingPanel(server);
+    }
+
+    /// <summary>管理方式单选切换：即时刷新本地专属区块显隐与指令功能锁定状态</summary>
+    private void ModeRadio_Changed(object? sender, RoutedEventArgs e)
+    {
+        UpdateModeSections();
+    }
+
+    /// <summary>
+    /// 按当前选中的管理方式（单选）调整编辑面板：
+    /// - 远程模式：隐藏程序路径与服务端设置（ServerSetting.json 直读写）区块，指令功能必选并锁定；
+    /// - 本地模式：全部显示，指令功能由用户自行勾选。
+    /// </summary>
+    private void UpdateModeSections()
+    {
+        bool isLocal = modeRemoteRadio.IsChecked != true;
+
+        exePathSection.IsVisible = isLocal;
+        serverSettingPanel.IsVisible = isLocal;
+        modeHintText.Text = isLocal
+            ? "本地：可启动/重启进程、管理文件夹与 ServerSetting.json"
+            : "远程：仅通过 RCON 网络管理（状态探测 / 停止 / 指令），无法启动与访问本地文件";
+
+        // 远程模式 RCON 是唯一管理通道，指令功能必选并锁定；本地模式跟随编辑状态
+        if (!isLocal)
+        {
+            enableCommandsChk.IsChecked = true;
+        }
+        enableCommandsChk.IsEnabled = _isEditing && isLocal;
     }
 
     /// <summary>
@@ -286,6 +322,9 @@ public partial class MainView : UserControl
     /// </summary>
     private async void SaveEditBtn_Click(object? sender, RoutedEventArgs e)
     {
+        // 当前编辑选定的管理方式（远程模式无本地路径，走另一套校验）
+        bool isRemote = modeRemoteRadio.IsChecked == true;
+
         // 校验一：服务器名称必填
         if (string.IsNullOrWhiteSpace(serverNameInput.Text))
         {
@@ -294,6 +333,7 @@ public partial class MainView : UserControl
         }
 
         // 校验二：启用指令功能时口令必填且长度达标（服务端侧同样拒绝过短口令）
+        // 远程模式指令功能锁定为必选，因此远程必然要求口令
         if (enableCommandsChk.IsChecked == true)
         {
             string password = passwordInput.Text ?? "";
@@ -305,8 +345,15 @@ public partial class MainView : UserControl
             }
         }
 
-        // 校验三：程序路径非空但不存在时，询问用户是否继续
-        if (!string.IsNullOrWhiteSpace(exePathInput.Text) && !File.Exists(exePathInput.Text))
+        // 校验三（远程模式）：IP 必填（RCON 是唯一管理通道）
+        if (isRemote && string.IsNullOrWhiteSpace(ipInput.Text))
+        {
+            await DialogService.ShowAsync("验证错误", "远程管理模式必须填写服务器 IP 地址");
+            return;
+        }
+
+        // 校验四（仅本地模式）：程序路径非空但不存在时，询问用户是否继续
+        if (!isRemote && !string.IsNullOrWhiteSpace(exePathInput.Text) && !File.Exists(exePathInput.Text))
         {
             var result = await DialogService.ConfirmAsync("程序路径不存在，是否继续？", "路径验证");
             if (!result) return;
@@ -318,11 +365,12 @@ public partial class MainView : UserControl
             {
                 // ---- 新增服务器：生成新 ID，构造配置对象 ----
                 var newId = ServerConfigManager.GenerateNewId(_serverItems.ToList());
-                var newExePath = exePathInput.Text?.Trim() ?? "";
+                var newExePath = isRemote ? "" : exePathInput.Text?.Trim() ?? "";
                 var newServer = new ServerConfig
                 {
                     Id = newId,
                     Name = serverNameInput.Text?.Trim() ?? "",
+                    Mode = isRemote ? ManageMode.Remote : ManageMode.Local,
                     ExePath = newExePath,
                     ExeName = Path.GetFileName(newExePath),
                     Ip = ipInput.Text?.Trim() ?? "",
@@ -331,7 +379,7 @@ public partial class MainView : UserControl
                     UseTls = useTlsChk.IsChecked == true,
                     ScheduleTime = scheduleTimeInput.Text?.Trim() ?? "",
                     IntervalHours = ParseDouble(intervalHoursInput.Text, 0),
-                    EnableCommands = enableCommandsChk.IsChecked == true,
+                    EnableCommands = isRemote || enableCommandsChk.IsChecked == true,
                     Status = ServerStatus.Stopped
                 };
 
@@ -363,9 +411,11 @@ public partial class MainView : UserControl
     /// </summary>
     private void ApplyEditToServer(ServerConfig server)
     {
-        var exePath = exePathInput.Text?.Trim() ?? "";
+        bool isRemote = modeRemoteRadio.IsChecked == true;
+        var exePath = isRemote ? "" : exePathInput.Text?.Trim() ?? "";
 
         server.Name = serverNameInput.Text?.Trim() ?? "";
+        server.Mode = isRemote ? ManageMode.Remote : ManageMode.Local;
         server.ExePath = exePath;
         server.ExeName = Path.GetFileName(exePath);
         server.Ip = ipInput.Text?.Trim() ?? "";
@@ -374,7 +424,8 @@ public partial class MainView : UserControl
         server.UseTls = useTlsChk.IsChecked == true;
         server.ScheduleTime = scheduleTimeInput.Text?.Trim() ?? "";
         server.IntervalHours = ParseDouble(intervalHoursInput.Text, server.IntervalHours);
-        server.EnableCommands = enableCommandsChk.IsChecked == true;
+        // 远程模式 RCON 是唯一管理通道，指令功能必须启用
+        server.EnableCommands = isRemote || enableCommandsChk.IsChecked == true;
     }
 
     /// <summary>取消编辑：退出编辑模式并恢复面板显示</summary>
@@ -440,6 +491,8 @@ public partial class MainView : UserControl
     private void SetEditControlsEnabled(bool enabled)
     {
         serverNameInput.IsEnabled = enabled;
+        modeLocalRadio.IsEnabled = enabled;
+        modeRemoteRadio.IsEnabled = enabled;
         exePathInput.IsEnabled = enabled;
         browseExeBtn.IsEnabled = enabled;
         ipInput.IsEnabled = enabled;
@@ -449,6 +502,9 @@ public partial class MainView : UserControl
         intervalHoursInput.IsEnabled = enabled;
         enableCommandsChk.IsEnabled = enabled;
         useTlsChk.IsEnabled = enabled;
+
+        // enableCommandsChk 的可用性还受管理方式约束（远程模式锁定为必选），统一在此校正
+        UpdateModeSections();
     }
 
     /// <summary>将当前服务器列表持久化到配置文件</summary>
@@ -468,6 +524,14 @@ public partial class MainView : UserControl
     private async void StartBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (_selectedServer == null) return;
+
+        // 远程模式无远程启动通道（服务端不监听启动指令），引导用户在宿主机上启动
+        if (_selectedServer.Mode == ManageMode.Remote)
+        {
+            await DialogService.ShowAsync("无法远程启动",
+                "远程管理模式不支持启动服务器：请在服务端所在的宿主机上启动服务端进程");
+            return;
+        }
 
         try
         {
@@ -496,7 +560,11 @@ public partial class MainView : UserControl
         }
     }
 
-    /// <summary>停止选中服务器进程（后台线程执行，避免阻塞 UI）</summary>
+    /// <summary>
+    /// 停止选中服务器：
+    /// - 远程模式：经 RCON 发送 stop 指令（服务端延迟存档退出），无强杀手段；
+    /// - 本地模式：结束本地进程（后台线程执行，避免阻塞 UI）。
+    /// </summary>
     private async void StopBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (_selectedServer == null) return;
@@ -505,13 +573,20 @@ public partial class MainView : UserControl
         {
             _selectedServer.Status = ServerStatus.Stopping;
             _selectedServer.RaisePropertyChanged();
-            await Task.Run(monitor.KillProcess);
+            if (monitor.IsRemote)
+            {
+                await monitor.StopAsync("远程停止");
+            }
+            else
+            {
+                await Task.Run(monitor.KillProcess);
+            }
             _selectedServer.RaisePropertyChanged();
             UpdateButtonStates();
         }
     }
 
-    /// <summary>重启选中服务器：先关闭进程，等待 1.5 秒后再启动</summary>
+    /// <summary>重启选中服务器：本地模式先关闭进程再启动；远程模式无启动通道，仅执行远程停止</summary>
     private async void RestartBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (_selectedServer == null) return;
@@ -519,9 +594,18 @@ public partial class MainView : UserControl
         _logManager.AddLog(_selectedServer.Name, "开始重启服务器");
         if (_serverMonitors.TryGetValue(_selectedServer.Id, out var monitor))
         {
-            await Task.Run(monitor.KillProcess);
-            await Task.Delay(1500); // 等待进程完全退出，避免端口占用
-            await Task.Run(monitor.StartProcess);
+            if (monitor.IsRemote)
+            {
+                // 远程模式无远程启动能力：仅能停止，需在服务端宿主机上手动启动
+                await monitor.StopAsync("远程重启（停止阶段）");
+                _logManager.AddLog(_selectedServer.Name, "远程模式无法远程启动：服务端已停止，请在宿主机上启动", "警告");
+            }
+            else
+            {
+                await Task.Run(monitor.KillProcess);
+                await Task.Delay(1500); // 等待进程完全退出，避免端口占用
+                await Task.Run(monitor.StartProcess);
+            }
             _selectedServer.RaisePropertyChanged();
             UpdateButtonStates();
         }
@@ -552,12 +636,19 @@ public partial class MainView : UserControl
             server.RaisePropertyChanged();
         }
 
-        // 逐个关闭进程，间隔等待，避免短时间内并发关闭造成资源竞争
+        // 逐个关闭：本地模式结束进程，远程模式经 RCON 优雅停止（间隔等待，避免资源竞争）
         foreach (var server in runningServers)
         {
             if (_serverMonitors.TryGetValue(server.Id, out var monitor))
             {
-                await Task.Run(monitor.KillProcess);
+                if (monitor.IsRemote)
+                {
+                    await monitor.StopAsync("批量停止");
+                }
+                else
+                {
+                    await Task.Run(monitor.KillProcess);
+                }
                 await Task.Delay(500);
             }
         }
@@ -892,17 +983,21 @@ public partial class MainView : UserControl
         bool hasRunningServers = _serverItems.Any(s =>
             s.Status == ServerStatus.Running || s.Status == ServerStatus.Monitoring);
 
-        // 编辑类按钮：有选中且非编辑中，且监控中的服务器不允许编辑/删除
+        // 编辑类按钮：有选中且非编辑中，且监控中的服务器不允许编辑/删除；
+        // 文件夹管理依赖本地目录，仅本地模式可用
+        bool selectedIsLocal = _selectedServer?.IsLocal != false;
         editBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring != true;
         deleteBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring != true;
-        folderManagerBtn.IsEnabled = hasSelection && !_isEditing;
+        folderManagerBtn.IsEnabled = hasSelection && !_isEditing && selectedIsLocal;
 
-        // 运行控制按钮：根据服务器状态决定
-        startBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.Status == ServerStatus.Stopped;
+        // 运行控制按钮：根据服务器状态决定；
+        // 启动/重启依赖本地进程控制，仅本地模式可用（远程模式无远程启动通道）
+        startBtn.IsEnabled = hasSelection && !_isEditing && selectedIsLocal &&
+                             _selectedServer?.Status == ServerStatus.Stopped;
         stopBtn.IsEnabled = hasSelection && !_isEditing &&
                             (_selectedServer?.Status == ServerStatus.Running ||
                              _selectedServer?.Status == ServerStatus.Monitoring);
-        restartBtn.IsEnabled = hasSelection && !_isEditing &&
+        restartBtn.IsEnabled = hasSelection && !_isEditing && selectedIsLocal &&
                                (_selectedServer?.Status == ServerStatus.Running ||
                                 _selectedServer?.Status == ServerStatus.Monitoring);
         stopAllBtn.IsEnabled = hasRunningServers && !_isEditing;
@@ -911,8 +1006,8 @@ public partial class MainView : UserControl
         startMonitorBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring != true;
         stopMonitorBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring == true;
 
-        // 服务端设置分组（ServerSetting.json 直读直写）：选中服务器且非编辑中即可操作
-        bool serverSettingEnabled = hasSelection && !_isEditing;
+        // 服务端设置分组（ServerSetting.json 直读直写）：本地模式选中服务器且非编辑中即可操作
+        bool serverSettingEnabled = hasSelection && !_isEditing && selectedIsLocal;
         serverPortInput.IsEnabled = serverSettingEnabled;
         rconPortInput.IsEnabled = serverSettingEnabled;
         rconBindInput.IsEnabled = serverSettingEnabled;
@@ -928,13 +1023,14 @@ public partial class MainView : UserControl
         saveEditBtn.IsEnabled = _isEditing;
         cancelEditBtn.IsEnabled = _isEditing;
 
-        // 指令区：需启用指令功能且服务器正在运行（输入框始终可编辑，便于提前准备指令）
+        // 指令区：发送需服务器正在运行；输入框与常用指令下拉始终可操作，便于提前准备指令
         bool commandReady = hasSelection && !_isEditing &&
                             _selectedServer?.EnableCommands == true &&
                             (_selectedServer?.Status == ServerStatus.Running ||
                              _selectedServer?.Status == ServerStatus.Monitoring);
         sendCommandBtn.IsEnabled = commandReady;
-        quickCommandBox.IsEnabled = commandReady;
+        quickCommandBox.IsEnabled = hasSelection && !_isEditing &&
+                                    _selectedServer?.EnableCommands == true;
 
         // 底部状态提示文本
         statusHintText.Text = _isEditing
