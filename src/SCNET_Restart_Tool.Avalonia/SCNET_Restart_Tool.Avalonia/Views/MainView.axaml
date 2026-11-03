@@ -135,29 +135,53 @@
             <!-- 监控控制 -->
             <StackPanel Grid.Column="2">
               <TextBlock Classes="groupTitle" Text="监控控制" />
-              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="-3">
-                <Button x:Name="startMonitorBtn" Grid.Row="0" Grid.Column="0" Content="开启监控" Margin="3"
+              <Grid ColumnDefinitions="*,*" Margin="-3">
+                <Button x:Name="startMonitorBtn" Grid.Column="0" Content="开启监控" Margin="3"
                         Theme="{StaticResource ColorButton}" Background="#9B59B6" IsEnabled="False"
                         FontSize="12" Click="StartMonitorBtn_Click" />
-                <Button x:Name="stopMonitorBtn" Grid.Row="0" Grid.Column="1" Content="关闭监控" Margin="3"
+                <Button x:Name="stopMonitorBtn" Grid.Column="1" Content="关闭监控" Margin="3"
                         Theme="{StaticResource ColorButton}" Background="#9B59B6" IsEnabled="False"
                         FontSize="12" Click="StopMonitorBtn_Click" />
-                <Button x:Name="sendCommandBtn" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                        Content="发送指令" Margin="3"
-                        Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
-                        Click="SendCommandBtn_Click" />
               </Grid>
             </StackPanel>
           </Grid>
         </Border>
 
-        <!-- 指令输入 -->
+        <!-- 指令输入：常用指令下拉快捷选择 + 手动输入 + 发送（回车等效） -->
         <Border Grid.Row="2" Classes="card" Padding="10,9" Margin="0,8,0,0">
-          <Grid ColumnDefinitions="Auto,*">
-            <TextBlock Text="指令：" Foreground="#5A6672" VerticalAlignment="Center" Margin="0,0,6,0" />
-            <TextBox x:Name="commandInput" Grid.Column="1" Text="say 服务器即将重启"
-                     Watermark="RCON 指令（如 stop 9 例行维护 / say 内容 / list）" />
-          </Grid>
+          <StackPanel Spacing="6">
+            <Grid ColumnDefinitions="Auto,*">
+              <TextBlock Text="常用指令：" Foreground="#5A6672" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <ComboBox x:Name="quickCommandBox" Grid.Column="1" IsEnabled="False"
+                        SelectionChanged="QuickCommandBox_SelectionChanged">
+                <ComboBoxItem Content="stop 9 例行维护 —— 延迟 9 秒存档关闭" Tag="stop 9 例行维护" />
+                <ComboBoxItem Content="stop now —— 立即关闭服务器" Tag="stop now" />
+                <ComboBoxItem Content="list —— 查看在线玩家列表" Tag="list" />
+                <ComboBoxItem Content="help —— 查看全部指令帮助" Tag="help" />
+                <ComboBoxItem Content="help stop —— 查看指定指令用法（示例）" Tag="help stop" />
+                <ComboBoxItem Content="time set day —— 游戏时间设为白天" Tag="time set day" />
+                <ComboBoxItem Content="time set night —— 游戏时间设为夜晚" Tag="time set night" />
+                <ComboBoxItem Content="gamerule keepInventory true —— 死亡不掉落" Tag="gamerule keepInventory true" />
+                <ComboBoxItem Content="admission on —— 开放新玩家准入" Tag="admission on" />
+                <ComboBoxItem Content="admission off —— 关闭新玩家准入" Tag="admission off" />
+                <ComboBoxItem Content="kick &lt;玩家&gt; —— 踢出玩家（请替换 &lt;玩家&gt;）" Tag="kick &lt;玩家&gt;" />
+                <ComboBoxItem Content="ban add &lt;玩家&gt; —— 封禁玩家（请替换 &lt;玩家&gt;）" Tag="ban add &lt;玩家&gt;" />
+                <ComboBoxItem Content="op &lt;玩家&gt; —— 授予管理员权限（请替换 &lt;玩家&gt;）" Tag="op &lt;玩家&gt;" />
+                <ComboBoxItem Content="give &lt;玩家&gt; &lt;物品id&gt; [数量] —— 给予物品" Tag="give &lt;玩家&gt; &lt;物品id&gt; [数量]" />
+                <ComboBoxItem Content="clear animal —— 清理动物实体" Tag="clear animal" />
+                <ComboBoxItem Content="tune —— 查看服务器性能参数" Tag="tune" />
+              </ComboBox>
+            </Grid>
+            <Grid ColumnDefinitions="Auto,*,Auto">
+              <TextBlock Text="指  令：" Foreground="#5A6672" VerticalAlignment="Center" Margin="0,0,6,0" />
+              <TextBox x:Name="commandInput" Grid.Column="1"
+                       Watermark="从上方下拉选择或手动输入（可省略前导 /），回车或点「发送」执行"
+                       KeyDown="CommandInput_KeyDown" />
+              <Button x:Name="sendCommandBtn" Grid.Column="2" Content="发送" Margin="6,0,0,0" MinWidth="72"
+                      Theme="{StaticResource ColorButton}" Background="#2ECC71" IsEnabled="False"
+                      Click="SendCommandBtn_Click" />
+            </Grid>
+          </StackPanel>
         </Border>
       </Grid>
 
@@ -212,7 +236,7 @@
             <Border Classes="card" Background="#F8FAFC" Padding="10,8" Margin="0,12,0,0">
               <StackPanel Spacing="6">
                 <TextBlock Classes="groupTitle" Text="服务端设置（ServerSetting.json）" Margin="0" />
-                <Grid ColumnDefinitions="*,*" Margin="0,0,0,0">
+                <Grid ColumnDefinitions="*,*">
                   <StackPanel Grid.Column="0" Margin="0,0,5,0">
                     <TextBlock Classes="label" Text="服务端端口：" Margin="0" />
                     <TextBox x:Name="serverPortInput" Text="28887" IsEnabled="False" />
@@ -222,7 +246,28 @@
                     <TextBox x:Name="rconPortInput" Text="28900" IsEnabled="False" />
                   </StackPanel>
                 </Grid>
-                <CheckBox x:Name="rconEnabledChk" Content="开启 RCON 远程控制" IsChecked="False" IsEnabled="False" />
+                <Grid ColumnDefinitions="*,*">
+                  <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                    <TextBlock Classes="label" Text="RCON 监听地址（空=仅本机）：" Margin="0" />
+                    <TextBox x:Name="rconBindInput" Text="127.0.0.1" IsEnabled="False" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                    <TextBlock Classes="label" Text="指令超时（秒，1-120）：" Margin="0" />
+                    <TextBox x:Name="rconTimeoutInput" Text="10" IsEnabled="False" />
+                  </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,*">
+                  <CheckBox x:Name="rconEnabledChk" Content="开启 RCON 远程控制" IsChecked="False" IsEnabled="False" />
+                  <CheckBox x:Name="rconPlaintextChk" Grid.Column="1" Content="允许明文（关 TLS，仅受信内网）"
+                            IsChecked="False" IsEnabled="False" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                  <TextBlock Classes="label" Text="TLS 证书：" Margin="0,6,5,0" VerticalAlignment="Center" />
+                  <TextBox x:Name="rconCertInput" Grid.Column="1" Watermark="留空 = 服务端自签证书" IsEnabled="False" />
+                  <Button x:Name="browseCertBtn" Grid.Column="2" Content="…" Margin="4,0,0,0" MinWidth="32"
+                          Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                          Click="BrowseCertBtn_Click" />
+                </Grid>
                 <Grid ColumnDefinitions="*,*">
                   <Button x:Name="readServerSettingBtn" Grid.Column="0" Content="读取设置" Margin="0,0,4,0"
                           Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
@@ -232,7 +277,7 @@
                           Click="ApplyServerSettingBtn_Click" />
                 </Grid>
                 <TextBlock FontSize="11" Foreground="#99A1A8" TextWrapping="Wrap"
-                           Text="修改需重启服务端生效；口令（≥12 字符）在本工具配置后，由本工具启动服务端时自动注入，服务端手动设置过口令则不覆盖" />
+                           Text="修改需重启服务端生效；应用时会同步本工具的连接参数（端口 / 加密 / 地址）；口令（≥12 字符）由本工具启动服务端时自动注入，服务端手动设置过口令则不覆盖" />
               </StackPanel>
             </Border>
 

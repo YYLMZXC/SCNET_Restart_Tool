@@ -36,14 +36,20 @@ public static class HelpContent
 - 默认 TLS 加密（服务端自签证书），仅内网受信环境可取消「加密连接」选项
 - 勾选「启用指令功能」并配置 IP / 端口 / RCON 口令后可发送指令（口令必填，至少 12 字符）
 - 由本工具启动服务端时会自动注入 SC_RCON_PASSWORD 环境变量应用口令（服务端手动设置过则不覆盖）
-- 指令可省略前导斜杠，如 stop 9 例行维护、say 公告内容、list 等
+- 底部「常用指令」下拉内置服务端支持的常用命令（stop / list / kick / ban / op / give / time / gamerule 等），选中即填入输入框；也可手动输入，可省略前导斜杠
+- 输入框内按回车等效于点击「发送」；需要带参数的指令（如 kick <玩家>）选中后请替换尖括号占位符
 - 底层自带连接 5 秒 / 响应 15 秒超时，不会因网络问题卡住界面
 
 【服务端设置（ServerSetting.json）】
-- 选中服务器即自动读取其根目录 ServerSetting.json，预填服务端端口与 RCON 配置
-- 支持直接修改服务端端口（ServerPort）、开启 / 关闭 RCON（RconEnabled）、RCON 端口（RconPort）
+- 选中服务器即自动读取其根目录 ServerSetting.json，预填服务端端口与 RCON 全部配置
+- 支持直接修改：服务端端口（ServerPort）、RCON 开关（RconEnabled）、监听地址（RconBindAddress）、
+  RCON 端口（RconPort）、明文开关（RconAllowPlaintext）、TLS 证书路径（RconCertificatePath，空=自签）、
+  指令超时秒数（RconCommandTimeoutSeconds，1-120）
 - 「应用到服务端」就地写回，其余服务端配置原样保留；写入后需重启服务端生效
-- 应用 RCON 设置时自动把本工具的指令通讯端口对齐为新 RCON 端口，开启 RCON 会顺带启用指令功能
+- 应用时自动同步本工具连接参数：通讯端口对齐 RCON 端口；开启 RCON 顺带启用指令功能；
+  加密方式对齐传输层（服务端明文 / TLS 二选一）；监听地址为环回时连接 IP 一并对齐
+- 监听地址默认仅环回 127.0.0.1；改为 0.0.0.0 等对外地址等于把控制面暴露到所有网卡，请自行承担风险
+- 允许明文时口令会在网络上以可读形式出现，仅建议本机 / 受信内网使用
 - 口令（≥12 字符）在本工具编辑面板配置即可：启动服务端时自动经 SC_RCON_PASSWORD 注入，无需在服务端控制台手动执行 rcon password（服务端已手动设置过口令时不覆盖，以服务端为准）
 
 【文件夹管理】
@@ -127,6 +133,8 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
             sb.AppendLine("- 加载配置时自动把旧默认端口 5612 迁移为实际默认端口 28900（自定义端口不受影响）");
             sb.AppendLine("- 新增服务端设置分组：直读直写 ServerSetting.json，可改服务端端口、开启 RCON 与 RCON 端口");
             sb.AppendLine("- 由本工具启动服务端时自动注入 SC_RCON_PASSWORD 口令（服务端手动设置过则不覆盖），口令校验对齐服务端 12 字符下限");
+            sb.AppendLine("- 指令区新增「常用指令」下拉快捷选择与「发送」按钮（输入框回车等效），内置服务端实际支持的命令集");
+            sb.AppendLine("- 服务端设置扩展为 RCON 全部 6 键（监听地址 / 明文开关 / 证书路径 / 指令超时），应用时自动同步本工具的端口 / 加密 / 连接地址");
             sb.AppendLine("- 优雅关闭指令由 close 改为标准 stop 指令（延迟 9 秒存档退出）");
             sb.AppendLine("- 指令通讯加入连接 / 响应超时，网络异常不再无限等待");
             sb.AppendLine("- 帮助菜单内容更新：功能说明、项目信息、版本信息、检查更新、关于");

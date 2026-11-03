@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using SCNET_Restart_Tool;
@@ -242,7 +243,11 @@ public partial class MainView : UserControl
 
         serverPortInput.Text = snapshot.ServerPort.ToString();
         rconPortInput.Text = snapshot.RconPort.ToString();
+        rconBindInput.Text = snapshot.BindAddress;
+        rconTimeoutInput.Text = snapshot.CommandTimeoutSeconds.ToString();
         rconEnabledChk.IsChecked = snapshot.RconEnabled;
+        rconPlaintextChk.IsChecked = snapshot.AllowPlaintext;
+        rconCertInput.Text = snapshot.CertificatePath;
     }
 
     #endregion
@@ -609,7 +614,7 @@ public partial class MainView : UserControl
         // 校验一：指令内容不能为空
         if (string.IsNullOrWhiteSpace(commandInput.Text))
         {
-            await DialogService.ShowAsync("提示", "请输入指令内容");
+            await DialogService.ShowAsync("提示", "请输入指令内容（可从「常用指令」下拉快速选择）");
             return;
         }
 
@@ -637,13 +642,37 @@ public partial class MainView : UserControl
         }
     }
 
+    /// <summary>
+    /// 常用指令下拉快捷选择：把选中项的指令模板（Tag）填入指令输入框，
+    /// 含占位符（如 &lt;玩家&gt;）的模板填充后聚焦输入框，便于直接补全参数。
+    /// </summary>
+    private void QuickCommandBox_SelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (quickCommandBox.SelectedItem is ComboBoxItem item && item.Tag is string template)
+        {
+            commandInput.Text = template;
+            commandInput.Focus();
+            // 光标移到末尾，方便直接续写参数
+            commandInput.CaretIndex = commandInput.Text.Length;
+        }
+    }
+
+    /// <summary>指令输入框回车即发送（与「发送」按钮等效）</summary>
+    private void CommandInput_KeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            SendCommandBtn_Click(sendCommandBtn, new RoutedEventArgs());
+        }
+    }
+
     #endregion
 
     #region 服务端设置（ServerSetting.json）
 
     /// <summary>
     /// 读取服务端设置：从服务端根目录的 ServerSetting.json 加载
-    /// ServerPort / RconEnabled / RconPort 并填充服务端设置分组。
+    /// ServerPort 与 RCON 全部 6 个配置键并填充服务端设置分组。
     /// </summary>
     private async void ReadServerSettingBtn_Click(object? sender, RoutedEventArgs e)
     {
@@ -651,11 +680,9 @@ public partial class MainView : UserControl
 
         if (ServerSettingService.TryRead(_selectedServer, out var snapshot, out string error))
         {
-            serverPortInput.Text = snapshot.ServerPort.ToString();
-            rconPortInput.Text = snapshot.RconPort.ToString();
-            rconEnabledChk.IsChecked = snapshot.RconEnabled;
+            LoadServerSettingPanelValues(snapshot);
             _logManager.AddLog(_selectedServer.Name,
-                $"已读取 ServerSetting.json：服务端端口 {snapshot.ServerPort}，RCON {(snapshot.RconEnabled ? $"开启（端口 {snapshot.RconPort}）" : "关闭")}");
+                $"已读取 ServerSetting.json：服务端端口 {snapshot.ServerPort}，RCON {(snapshot.RconEnabled ? $"开启（{snapshot.BindAddress}:{snapshot.RconPort}，{(snapshot.AllowPlaintext ? "明文" : "TLS")})" : "关闭")}");
         }
         else
         {
@@ -664,15 +691,39 @@ public partial class MainView : UserControl
         }
     }
 
+    /// <summary>把设置快照填充到服务端设置分组（读取按钮与选中预填共用）</summary>
+    private void LoadServerSettingPanelValues(ServerSettingSnapshot snapshot)
+    {
+        serverPortInput.Text = snapshot.ServerPort.ToString();
+        rconPortInput.Text = snapshot.RconPort.ToString();
+        rconBindInput.Text = snapshot.BindAddress;
+        rconTimeoutInput.Text = snapshot.CommandTimeoutSeconds.ToString();
+        rconEnabledChk.IsChecked = snapshot.RconEnabled;
+        rconPlaintextChk.IsChecked = snapshot.AllowPlaintext;
+        rconCertInput.Text = snapshot.CertificatePath;
+    }
+
+    /// <summary>浏览选择 RCON TLS 证书文件（pfx），填充证书路径输入框</summary>
+    private async void BrowseCertBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        var path = await DialogService.PickFileAsync("选择 RCON TLS 证书", "证书文件（pfx）", new[] { ".pfx" });
+        if (string.IsNullOrEmpty(path)) return;
+        rconCertInput.Text = path;
+    }
+
     /// <summary>
-    /// 应用服务端设置：把面板中的服务端端口 / RCON 开关 / RCON 端口写回 ServerSetting.json。
-    /// 写入成功后同步工具侧配置：指令通讯端口对齐新 RCON 端口，开启 RCON 时顺带启用指令功能。
+    /// 应用服务端设置：把面板中的 ServerPort 与 RCON 全部 6 个键写回 ServerSetting.json。
+    /// 写入成功后同步工具侧连接参数：
+    /// - 指令通讯端口对齐 RconPort；
+    /// - 开启 RCON 时顺带启用指令功能；
+    /// - 加密方式对齐传输层（服务端 AllowPlaintext 为二选一：明文 / TLS，不一致就连不上）；
+    /// - 监听地址为环回时连接 IP 对齐该地址，非环回（如 0.0.0.0）时保留用户配置。
     /// </summary>
     private async void ApplyServerSettingBtn_Click(object? sender, RoutedEventArgs e)
     {
         if (_selectedServer == null) return;
 
-        // 校验输入：两个端口必须是有效整数（范围校验由服务层完成）
+        // 校验输入：端口与超时必须是有效整数（范围校验由服务层完成）
         if (!int.TryParse(serverPortInput.Text?.Trim(), out int serverPort))
         {
             await DialogService.ShowAsync("验证错误", "服务端端口必须是整数");
@@ -683,9 +734,24 @@ public partial class MainView : UserControl
             await DialogService.ShowAsync("验证错误", "RCON 端口必须是整数");
             return;
         }
+        if (!int.TryParse(rconTimeoutInput.Text?.Trim(), out int timeoutSeconds))
+        {
+            await DialogService.ShowAsync("验证错误", "指令超时秒数必须是整数");
+            return;
+        }
 
-        bool rconEnabled = rconEnabledChk.IsChecked == true;
-        if (!ServerSettingService.TryWrite(_selectedServer, serverPort, rconEnabled, rconPort, out string error))
+        var settings = new ServerSettingSnapshot
+        {
+            ServerPort = serverPort,
+            RconEnabled = rconEnabledChk.IsChecked == true,
+            BindAddress = rconBindInput.Text?.Trim() ?? "",
+            RconPort = rconPort,
+            AllowPlaintext = rconPlaintextChk.IsChecked == true,
+            CertificatePath = rconCertInput.Text?.Trim() ?? "",
+            CommandTimeoutSeconds = timeoutSeconds
+        };
+
+        if (!ServerSettingService.TryWrite(_selectedServer, settings, out string error))
         {
             _logManager.AddLog(_selectedServer.Name, $"写入 ServerSetting.json 失败：{error}", "错误");
             await DialogService.ShowAsync("写入失败", error);
@@ -693,22 +759,48 @@ public partial class MainView : UserControl
         }
 
         _logManager.AddLog(_selectedServer.Name,
-            $"已写入 ServerSetting.json：服务端端口 {serverPort}，RCON {(rconEnabled ? $"开启（端口 {rconPort}）" : "关闭")}（重启服务端后生效）");
+            $"已写入 ServerSetting.json：服务端端口 {settings.ServerPort}，RCON {(settings.RconEnabled ? $"开启（{settings.BindAddress}:{settings.RconPort}，{(settings.AllowPlaintext ? "明文" : "TLS")}，超时 {settings.CommandTimeoutSeconds}s）" : "关闭")}（重启服务端后生效）");
 
-        // 同步工具侧配置：指令通道端口必须指向 RCON 端口；开启 RCON 视为要使用指令功能
-        _selectedServer.Port = rconPort;
-        if (rconEnabled && !_selectedServer.EnableCommands)
+        // ---- 同步工具侧连接参数（两侧一致才能连通） ----
+        _selectedServer.Port = settings.RconPort;
+
+        if (settings.RconEnabled && !_selectedServer.EnableCommands)
         {
             _selectedServer.EnableCommands = true;
             _logManager.AddLog(_selectedServer.Name, "已同步启用本工具的指令功能（对齐服务端 RCON 开关）");
         }
+
+        // 传输层二选一：服务端明文时工具必须关 TLS，服务端 TLS 时工具必须开 TLS
+        bool requiredTls = !settings.AllowPlaintext;
+        if (_selectedServer.UseTls != requiredTls)
+        {
+            _selectedServer.UseTls = requiredTls;
+            _logManager.AddLog(_selectedServer.Name,
+                $"已同步连接加密方式为 {(requiredTls ? "TLS（对齐服务端默认加密）" : "明文（对齐服务端允许明文的配置）")}");
+        }
+
+        // 监听地址为环回时连接 IP 一并对齐；绑定 0.0.0.0 等对外地址时服务器实际 IP 工具无法推断，保留用户配置
+        if (IsLoopbackAddress(settings.BindAddress) && _selectedServer.Ip != settings.BindAddress)
+        {
+            _selectedServer.Ip = settings.BindAddress;
+            _logManager.AddLog(_selectedServer.Name, $"已同步连接地址为环回地址 {settings.BindAddress}");
+        }
+
         _selectedServer.RaisePropertyChanged();
         SaveServerConfigs();
-        LoadServerToEditPanel(_selectedServer); // 刷新编辑面板显示（端口 / 指令开关）
+        LoadServerToEditPanel(_selectedServer); // 刷新编辑面板显示（端口 / 加密 / 地址 / 指令开关）
         UpdateButtonStates();
 
         var notes = "已写入 ServerSetting.json，重启服务端后生效。";
-        if (rconEnabled)
+        if (settings.AllowPlaintext)
+        {
+            notes += "\n\n注意：已允许明文传输，口令会以可读形式出现在网络上，仅建议本机 / 受信内网使用。";
+        }
+        if (!IsLoopbackAddress(settings.BindAddress))
+        {
+            notes += $"\n\n监听地址为 {settings.BindAddress}（非环回）：请在编辑面板确认连接 IP 为该服务器的可达地址。";
+        }
+        if (settings.RconEnabled)
         {
             string password = _selectedServer.Password ?? "";
             if (password.Length >= ServerCommandService.MinimumPasswordLength)
@@ -724,6 +816,13 @@ public partial class MainView : UserControl
         }
         await DialogService.ShowAsync("应用成功", notes);
     }
+
+    /// <summary>判断 RCON 监听地址是否为环回地址（127.x / localhost / ::1）</summary>
+    private static bool IsLoopbackAddress(string address) =>
+        string.Equals(address, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(address, "localhost", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(address, "::1", StringComparison.OrdinalIgnoreCase) ||
+        (address.StartsWith("127.", StringComparison.Ordinal) && address.Length > 4);
 
     #endregion
 
@@ -816,7 +915,12 @@ public partial class MainView : UserControl
         bool serverSettingEnabled = hasSelection && !_isEditing;
         serverPortInput.IsEnabled = serverSettingEnabled;
         rconPortInput.IsEnabled = serverSettingEnabled;
+        rconBindInput.IsEnabled = serverSettingEnabled;
+        rconTimeoutInput.IsEnabled = serverSettingEnabled;
         rconEnabledChk.IsEnabled = serverSettingEnabled;
+        rconPlaintextChk.IsEnabled = serverSettingEnabled;
+        rconCertInput.IsEnabled = serverSettingEnabled;
+        browseCertBtn.IsEnabled = serverSettingEnabled;
         readServerSettingBtn.IsEnabled = serverSettingEnabled;
         applyServerSettingBtn.IsEnabled = serverSettingEnabled;
 
@@ -824,11 +928,13 @@ public partial class MainView : UserControl
         saveEditBtn.IsEnabled = _isEditing;
         cancelEditBtn.IsEnabled = _isEditing;
 
-        // 指令按钮：需启用指令功能且服务器正在运行
-        sendCommandBtn.IsEnabled = hasSelection && !_isEditing &&
-                                   _selectedServer?.EnableCommands == true &&
-                                   (_selectedServer?.Status == ServerStatus.Running ||
-                                    _selectedServer?.Status == ServerStatus.Monitoring);
+        // 指令区：需启用指令功能且服务器正在运行（输入框始终可编辑，便于提前准备指令）
+        bool commandReady = hasSelection && !_isEditing &&
+                            _selectedServer?.EnableCommands == true &&
+                            (_selectedServer?.Status == ServerStatus.Running ||
+                             _selectedServer?.Status == ServerStatus.Monitoring);
+        sendCommandBtn.IsEnabled = commandReady;
+        quickCommandBox.IsEnabled = commandReady;
 
         // 底部状态提示文本
         statusHintText.Text = _isEditing
