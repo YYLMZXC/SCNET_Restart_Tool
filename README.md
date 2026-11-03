@@ -45,7 +45,8 @@ SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务
 - 提供权限提升选项，避免因权限不足导致功能受限
 
 ### 跨平台支持
-- 新版基于 Uno Platform，UI 层使用 XAML（WinUI），理论上可扩展到 Windows / macOS / Linux / WebAssembly 等多平台
+- **最新版**基于 Avalonia UI（跨平台 XAML），一套代码支持 Windows / macOS / Linux 桌面端
+- 上一版基于 Uno Platform，UI 层使用 XAML（WinUI），已保留可构建
 - 旧版 Windows 版提供 WinForms 图形界面，Linux 版提供命令行界面
 
 ## 技术架构
@@ -53,11 +54,12 @@ SCNET_Restart_Tool 是一款专为 SCNET 服务端程序（如生存战争服务
 ### 开发技术栈
 - **开发语言**：C#
 - **运行时**：.NET 10.0
-- **UI 框架（新版）**：Uno Platform 6.6（WinUI / XAML），单项目模式（`UnoSingleProject`）
+- **UI 框架（最新版）**：Avalonia UI 11.3（Fluent 主题，跨平台 XAML）
+- **UI 框架（上一版）**：Uno Platform 6.6（WinUI / XAML），单项目模式（`UnoSingleProject`）
 - **UI 框架（旧版）**：Windows Forms
 - **网络通信**：Socket TCP/IP
 - **进程管理**：System.Diagnostics、WMI
-- **配置管理（新版）**：JSON 序列化（`ServerConfigManager`）
+- **配置管理（Avalonia / Uno 版）**：JSON 序列化（`ServerConfigManager`）
 - **配置管理（旧版）**：XML 序列化
 - **日志系统**：自定义 `LogManager` 组件
 
@@ -71,7 +73,22 @@ SCNET_Restart_Tool/
 │   │   ├── 界面/                  # WinForms 界面代码（主窗体、设置、文件夹管理等）
 │   │   ├── Res/                   # 资源文件（图标、预览图 index.png 等）
 │   │   └── ...                    # 模型、服务、配置等核心逻辑
-│   └── SCNET_Restart_Tool.Uno/    # 新版 Uno Platform 项目（推荐）
+│   ├── SCNET_Restart_Tool.Avalonia/  # 最新版 Avalonia UI 项目（推荐）
+│   │   ├── SCNET_Restart_Tool.Avalonia.sln
+│   │   └── SCNET_Restart_Tool.Avalonia/    # 应用主工程
+│   │       ├── Program.cs                   # 入口（BuildAvaloniaApp）
+│   │       ├── App.axaml / App.axaml.cs     # 应用主题、全局样式与入口类
+│   │       ├── MainWindow.axaml / .axaml.cs # 主窗口（承载视图切换导航）
+│   │       ├── Views/                       # 视图（对应原 Uno 版 Page）
+│   │       │   ├── MainView                 # 主界面（列表/控制/编辑/日志）
+│   │       │   └── FolderManagerView        # 文件夹管理器
+│   │       ├── Controls/                    # 自定义控件
+│   │       │   ├── FolderBrowserControl     # 文件夹浏览控件
+│   │       │   └── BugsLogControl           # Bugs 日志控件
+│   │       ├── Services/                    # 对话框服务与进程/指令服务
+│   │       ├── Code/                        # 核心逻辑（模型与服务，与 Uno 版一致）
+│   │       └── Help/                        # 帮助内容常量
+│   └── SCNET_Restart_Tool.Uno/    # 上一版 Uno Platform 项目
 │       ├── Directory.Build.props / Directory.Packages.props / global.json
 │       ├── SCNET_Restart_Tool.Uno.sln
 │       └── SCNET_Restart_Tool.Uno/          # 应用主工程
@@ -96,10 +113,22 @@ SCNET_Restart_Tool/
 
 ## 构建说明
 
-> **注意**：新版 Uno 项目使用 `Uno.Sdk`（含 `XamlCompiler` 等 MSBuild 自定义任务）。
-> 在 Windows 上请使用 **Visual Studio 的 MSBuild** 构建（`dotnet build` 环境下 `XamlCompiler.exe` 可能静默退出导致 XAML 编译异常）。
+### 构建 Avalonia 最新版（推荐）
 
-### 构建 Uno 新版（推荐）
+```powershell
+dotnet build src\SCNET_Restart_Tool.Avalonia\SCNET_Restart_Tool.Avalonia.sln -c Release
+# 运行
+dotnet run --project src\SCNET_Restart_Tool.Avalonia\SCNET_Restart_Tool.Avalonia
+```
+
+或在 Visual Studio / Rider 中直接打开 `src\SCNET_Restart_Tool.Avalonia\SCNET_Restart_Tool.Avalonia.sln` 进行构建与运行。
+
+> **注意**：构建 Uno 项目请继续参考下方说明（`Uno.Sdk` 的 `XamlCompiler` 建议使用 VS MSBuild）。
+
+### 构建 Uno 上一版
+
+> **注意**：Uno 项目使用 `Uno.Sdk`（含 `XamlCompiler` 等 MSBuild 自定义任务）。
+> 在 Windows 上请使用 **Visual Studio 的 MSBuild** 构建（`dotnet build` 环境下 `XamlCompiler.exe` 可能静默退出导致 XAML 编译异常）。
 
 ```powershell
 # 使用 VS MSBuild（路径以实际 VS 版本为准，此处为 VS 2026 Community）
@@ -131,7 +160,7 @@ dotnet build src\SCNET_Restart_Tool.NET\SCNET_Restart_Tool.NET.csproj
 6. **管理文件夹**：点击「文件夹管理」，快速访问服务器相关目录
 
 ### 配置保存位置
-- **新版（Uno）**：JSON 配置文件，由 `ServerConfigManager` 负责读写
+- **Avalonia / Uno 版**：程序目录下 JSON 配置文件（`servers_config.json`），由 `ServerConfigManager` 负责读写
 - **旧版（WinForms）**：程序目录下 `ServerConfigs.xml`
 
 ## 注意事项
@@ -149,7 +178,22 @@ dotnet build src\SCNET_Restart_Tool.NET\SCNET_Restart_Tool.NET.csproj
 - WinForms `Timer` / `Invoke` 分别由 `System.Threading.Timer` / `DispatcherQueue` 替代
 - 文件对话框等 UI 能力通过 `FolderOperations` 中的静态委托（`ConfirmAsync` / `NotifyAsync` / `PickFileAsync`）由 UI 层注入
 
+## 迁移说明（Uno → Avalonia）
+
+- 在 Uno 版基础上迁移，`Code/` 下的模型与服务（`ServerMonitor` / `ServerProcessService` / `ServerCommandService` / `LogManager` / `FolderOperations` 等）原样复用
+- UI 层改用 Avalonia 11 XAML（Fluent 主题）：`Page` → `UserControl` 视图，`Frame` 导航 → 主窗口内 `ContentControl` 视图切换
+- `ContentDialog` → 自定义 `DialogWindow`（模态 `ShowDialog`）；`FileOpenPicker` → `StorageProvider.OpenFilePickerAsync`（跨平台文件选择）
+- `ListView` / `TabView` / `PasswordBox` 分别由 `ListBox` / `TabControl` / `TextBox(PasswordChar)` 替代；`x:Bind` → `{Binding}`
+- `DispatcherQueue` → `Avalonia.Threading.Dispatcher` / `DispatcherTimer`；彩色按钮通过自定义 `ControlTheme` 保持品牌配色
+- 状态徽标配色由 `ServerConfig.StatusBrush` 提供（Avalonia `IBrush`），仍通过手动 `RaisePropertyChanged` 刷新
+
 ## 更新日志
+
+### v2.1.0（Avalonia 版）
+- 新增基于 Avalonia UI 11.3 的跨平台桌面版本（`src/SCNET_Restart_Tool.Avalonia`），一套代码支持 Windows / macOS / Linux
+- UI 层由 Uno（WinUI XAML）迁移至 Avalonia XAML，核心逻辑层原样复用
+- 对话框与文件选择改为 Avalonia `DialogWindow` / `StorageProvider`，不再依赖 WinRT
+- Uno 版与旧版保留，可继续构建
 
 ### v2.0.0（迁移版）
 - 项目迁移至 Uno Platform 6.6（WinUI / XAML），UI 层全面重写

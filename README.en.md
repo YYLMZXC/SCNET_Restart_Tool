@@ -45,7 +45,8 @@ SCNET_Restart_Tool is an advanced monitoring and automatic restart tool specific
 - Permission elevation options to avoid functionality limitations due to insufficient permissions
 
 ### Cross-Platform Support
-- The new version is built on Uno Platform with a XAML (WinUI) UI layer, targeting Windows / macOS / Linux / WebAssembly and more
+- The latest version is built on Avalonia UI (cross-platform XAML), a single code base targeting Windows / macOS / Linux desktops
+- The previous version is built on Uno Platform with a XAML (WinUI) UI layer
 - The legacy Windows version provides a WinForms GUI, and the Linux version provides a CLI
 
 ## Technical Architecture
@@ -53,7 +54,8 @@ SCNET_Restart_Tool is an advanced monitoring and automatic restart tool specific
 ### Development Technology Stack
 - **Development Language:** C#
 - **Runtime:** .NET 10.0
-- **UI Framework (new):** Uno Platform 6.6 (WinUI / XAML), single project mode (`UnoSingleProject`)
+- **UI Framework (latest):** Avalonia UI 11.3 (Fluent theme, cross-platform XAML)
+- **UI Framework (previous):** Uno Platform 6.6 (WinUI / XAML), single project mode (`UnoSingleProject`)
 - **UI Framework (legacy):** Windows Forms
 - **Network Communication:** Socket TCP/IP
 - **Process Management:** System.Diagnostics, WMI
@@ -71,7 +73,10 @@ SCNET_Restart_Tool/
 │   │   ├── 界面/                  # WinForms UI code (main form, settings, folder manager, etc.)
 │   │   ├── Res/                   # Resources (icons, preview image index.png, etc.)
 │   │   └── ...                    # Models, services, configuration logic
-│   └── SCNET_Restart_Tool.Uno/    # New Uno Platform project (recommended)
+│   ├── SCNET_Restart_Tool.Avalonia/  # Latest Avalonia UI project (recommended)
+│   │   ├── SCNET_Restart_Tool.Avalonia.sln
+│   │   └── SCNET_Restart_Tool.Avalonia/  # Main app project (App / Views / Controls / Services / Code)
+│   └── SCNET_Restart_Tool.Uno/    # Previous Uno Platform project
 │       ├── Directory.Build.props / Directory.Packages.props / global.json
 │       ├── SCNET_Restart_Tool.Uno.sln
 │       └── SCNET_Restart_Tool.Uno/          # Main app project
@@ -96,11 +101,21 @@ SCNET_Restart_Tool/
 
 ## Build Instructions
 
-> **Note:** The new Uno project uses `Uno.Sdk` (which includes custom MSBuild tasks such as `XamlCompiler`).
+### Build the Avalonia Version (Recommended)
+
+```powershell
+dotnet build src\SCNET_Restart_Tool.Avalonia\SCNET_Restart_Tool.Avalonia.sln -c Release
+# Run
+dotnet run --project src\SCNET_Restart_Tool.Avalonia\SCNET_Restart_Tool.Avalonia
+```
+
+Alternatively, open `src\SCNET_Restart_Tool.Avalonia\SCNET_Restart_Tool.Avalonia.sln` in Visual Studio / Rider to build and run.
+
+### Build the Previous Uno Version
+
+> **Note:** The Uno project uses `Uno.Sdk` (which includes custom MSBuild tasks such as `XamlCompiler`).
 > On Windows, please build with **Visual Studio's MSBuild** (`dotnet build` may cause `XamlCompiler.exe`
 > to exit silently, making XAML compilation errors impossible to diagnose).
-
-### Build the New Uno Version (Recommended)
 
 ```powershell
 # Use VS MSBuild (adjust the path to your actual VS version, here VS 2026 Community)
@@ -132,7 +147,7 @@ dotnet build src\SCNET_Restart_Tool.NET\SCNET_Restart_Tool.NET.csproj
 6. **Manage Folders:** Click "Folder Management" to quickly access server-related directories
 
 ### Configuration File Location
-- **New version (Uno):** JSON configuration file, read/written by `ServerConfigManager`
+- **Avalonia / Uno version:** JSON configuration file (`servers_config.json`), read/written by `ServerConfigManager`
 - **Legacy version (WinForms):** `ServerConfigs.xml` in the program directory
 
 ## Notes
