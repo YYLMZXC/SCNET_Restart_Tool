@@ -18,6 +18,9 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+
+        // 标题只显示到日（如 SCNET服务端管理工具 26.11.03），版本号取自构建时间
+        Title = AppVersion.WindowTitle;
         TryApplyWindowIcon();
 
         _mainView.FolderManagerRequested += OnFolderManagerRequested;

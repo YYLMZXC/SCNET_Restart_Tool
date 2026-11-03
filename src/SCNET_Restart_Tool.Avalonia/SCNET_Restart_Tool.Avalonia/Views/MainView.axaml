@@ -36,6 +36,9 @@
           <Border Background="#E8F4FD" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
             <TextBlock Text="Avalonia 版" FontSize="11" Foreground="#3498DB" />
           </Border>
+          <!-- 版本号由构建时间自动生成（yy.MM.dd），在代码中填充 -->
+          <TextBlock x:Name="versionText" FontSize="11" Foreground="#99A1A8"
+                     VerticalAlignment="Center" />
         </StackPanel>
         <Button x:Name="helpBtn" Grid.Column="1" Content="帮助"
                 Theme="{StaticResource ColorButton}" Background="#3498DB" Padding="20,6"

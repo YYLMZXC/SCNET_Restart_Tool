@@ -61,6 +61,9 @@ public partial class MainView : UserControl
 
         serversListBox.ItemsSource = _serverItems;
 
+        // 版本号由构建时间自动生成（只显示到日，如 26.11.03）
+        versionText.Text = AppVersion.Short;
+
         InitializeLogBuffer();
         LoadServerData();
         UpdateButtonStates();
@@ -620,12 +623,10 @@ public partial class MainView : UserControl
         versionItem.Click += async (_, _) => await DialogService.ShowAsync("版本信息", HelpContent.VersionInfo);
 
         var updateItem = new MenuItem { Header = "检查更新" };
-        updateItem.Click += async (_, _) => await DialogService.ShowAsync("检查更新", "当前已是最新版本！\n版本号: v1.0.0");
+        updateItem.Click += async (_, _) => await DialogService.ShowAsync("检查更新", HelpContent.CheckUpdate);
 
         var aboutItem = new MenuItem { Header = "关于" };
-        aboutItem.Click += async (_, _) => await DialogService.ShowAsync(
-            "关于软件",
-            "项目地址：https://gitee.com/sc-net/SCNET_Restart_Tool\n\n本工具为 SCNET 服务端管理工具 Avalonia 版。");
+        aboutItem.Click += async (_, _) => await DialogService.ShowAsync("关于软件", HelpContent.About);
 
         menu.Items.Add(functionItem);
         menu.Items.Add(projectItem);

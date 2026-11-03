@@ -1,0 +1,18 @@
+<Project>
+
+  <!--
+    版本号自动化：构建时把当前时间写入程序集元数据（AssemblyMetadata: BuildTimeTicks），
+    由 Code/AppVersion.cs 换算为「26.11.03-2010」（yy.MM.dd-HHmm）形式的版本号，
+    源码中无需手工维护版本常量，每次编译自动更新。
+
+    以 Ticks 传递可避免格式化时的区域性（历法）差异；
+    放在 Directory.Build.props 而非 csproj，是为了让版本逻辑集中一处。
+  -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>BuildTimeTicks</_Parameter1>
+      <_Parameter2>$([System.DateTime]::Now.Ticks)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+</Project>
