@@ -190,7 +190,7 @@
               </StackPanel>
             </Grid>
 
-            <TextBlock Classes="label" Text="RCON 口令（必填）：" Margin="0,4,0,4" />
+            <TextBlock Classes="label" Text="RCON 口令（启用指令时必填，≥12 字符）：" Margin="0,4,0,4" />
             <TextBox x:Name="passwordInput" PasswordChar="*" IsEnabled="False" />
 
             <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
@@ -232,7 +232,7 @@
                           Click="ApplyServerSettingBtn_Click" />
                 </Grid>
                 <TextBlock FontSize="11" Foreground="#99A1A8" TextWrapping="Wrap"
-                           Text="修改需重启服务端生效；RCON 还需在服务端控制台执行 rcon password（或设置 SC_RCON_PASSWORD）设置口令，否则不会监听" />
+                           Text="修改需重启服务端生效；口令（≥12 字符）在本工具配置后，由本工具启动服务端时自动注入，服务端手动设置过口令则不覆盖" />
               </StackPanel>
             </Border>
 

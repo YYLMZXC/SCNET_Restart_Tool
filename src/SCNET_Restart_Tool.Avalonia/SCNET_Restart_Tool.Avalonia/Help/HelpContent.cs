@@ -34,7 +34,8 @@ public static class HelpContent
 【远程指令（RCON 标准接口）】
 - 与 ScNetworkDEV 服务端的 RCON 通道对接：HTTP/1.1 短连接，默认端口 28900
 - 默认 TLS 加密（服务端自签证书），仅内网受信环境可取消「加密连接」选项
-- 勾选「启用指令功能」并配置 IP / 端口 / RCON 口令后可发送指令（口令必填）
+- 勾选「启用指令功能」并配置 IP / 端口 / RCON 口令后可发送指令（口令必填，至少 12 字符）
+- 由本工具启动服务端时会自动注入 SC_RCON_PASSWORD 环境变量应用口令（服务端手动设置过则不覆盖）
 - 指令可省略前导斜杠，如 stop 9 例行维护、say 公告内容、list 等
 - 底层自带连接 5 秒 / 响应 15 秒超时，不会因网络问题卡住界面
 
@@ -43,7 +44,7 @@ public static class HelpContent
 - 支持直接修改服务端端口（ServerPort）、开启 / 关闭 RCON（RconEnabled）、RCON 端口（RconPort）
 - 「应用到服务端」就地写回，其余服务端配置原样保留；写入后需重启服务端生效
 - 应用 RCON 设置时自动把本工具的指令通讯端口对齐为新 RCON 端口，开启 RCON 会顺带启用指令功能
-- RCON 口令不在 ServerSetting.json 内：需在服务端控制台执行 rcon password（或设置 SC_RCON_PASSWORD 环境变量）
+- 口令（≥12 字符）在本工具编辑面板配置即可：启动服务端时自动经 SC_RCON_PASSWORD 注入，无需在服务端控制台手动执行 rcon password（服务端已手动设置过口令时不覆盖，以服务端为准）
 
 【文件夹管理】
 - 按标签页管理 Bugs、CharacterSkins、Configs、TexturePacks、NetMods、Plugins、Worlds 目录
@@ -102,7 +103,7 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
 注意事项：
 - Windows 下监控系统进程建议以管理员身份运行
 - 优雅关闭仅在 Windows 有效，macOS / Linux 上为直接结束进程
-- RCON 口令即服务端控制台「rcon password」设置的口令，请使用强口令
+- RCON 口令至少 12 个字符（服务端要求）；由本工具启动服务端时自动注入，服务端手动设置过则以服务端为准
 - 服务端默认仅监听环回地址（127.0.0.1:28900），远程管理需显式修改服务端配置
 - 取消「加密连接」仅在已受信的本机 / 内网环境使用，公网必须保留 TLS";
 
@@ -125,6 +126,7 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
             sb.AppendLine("- 指令通道更新为 ScNetworkDEV 服务端 RCON 标准接口（HTTP/1.1 + TLS，默认端口 28900）");
             sb.AppendLine("- 加载配置时自动把旧默认端口 5612 迁移为实际默认端口 28900（自定义端口不受影响）");
             sb.AppendLine("- 新增服务端设置分组：直读直写 ServerSetting.json，可改服务端端口、开启 RCON 与 RCON 端口");
+            sb.AppendLine("- 由本工具启动服务端时自动注入 SC_RCON_PASSWORD 口令（服务端手动设置过则不覆盖），口令校验对齐服务端 12 字符下限");
             sb.AppendLine("- 优雅关闭指令由 close 改为标准 stop 指令（延迟 9 秒存档退出）");
             sb.AppendLine("- 指令通讯加入连接 / 响应超时，网络异常不再无限等待");
             sb.AppendLine("- 帮助菜单内容更新：功能说明、项目信息、版本信息、检查更新、关于");

@@ -107,13 +107,26 @@ public sealed class ServerProcessService
         {
             // 附带唯一参数，避免同一世界被重复启动
             string uniqueArgs = $"world={_config.Id} scnet_tool_id={Guid.NewGuid()}";
-            Process.Start(new ProcessStartInfo
+            var startInfo = new ProcessStartInfo
             {
                 FileName = _config.ExePath,
                 Arguments = uniqueArgs,
-                UseShellExecute = true,
+                // 注入环境变量要求 UseShellExecute=false（true 时环境变量不可用）；
+                // 控制台程序在该模式下默认仍会分配独立控制台窗口，服务端控制台照常可见
+                UseShellExecute = false,
                 WorkingDirectory = Path.GetDirectoryName(_config.ExePath)
-            });
+            };
+
+            // RCON 口令自动注入：服务端启动链会读取 SC_RCON_PASSWORD 并在凭据文件不存在时应用
+            // （已手动设置过口令则安全忽略，不会覆盖）；省去在服务端控制台执行 rcon password 的步骤
+            if (_config.EnableCommands && !string.IsNullOrEmpty(_config.Password))
+            {
+                startInfo.EnvironmentVariables[ServerCommandService.PasswordEnvironmentVariable] = _config.Password;
+                _logManager.AddLog(_config.Name,
+                    $"已注入 {ServerCommandService.PasswordEnvironmentVariable} 环境变量（服务端未设置过口令时自动应用）");
+            }
+
+            Process.Start(startInfo);
             _logManager.AddLog(_config.Name, $"服务端已启动（路径：{_config.ExePath}，参数：{uniqueArgs}）");
         }
         catch (Exception ex)

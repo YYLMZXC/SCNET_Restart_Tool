@@ -277,7 +277,7 @@ public partial class MainView : UserControl
 
     /// <summary>
     /// 保存编辑：新增时创建新服务器并加入列表，编辑时更新选中项；
-    /// 保存前进行名称非空、程序路径存在性校验，最后持久化配置并退出编辑模式。
+    /// 保存前进行名称非空、口令长度、程序路径存在性校验，最后持久化配置并退出编辑模式。
     /// </summary>
     private async void SaveEditBtn_Click(object? sender, RoutedEventArgs e)
     {
@@ -288,7 +288,19 @@ public partial class MainView : UserControl
             return;
         }
 
-        // 校验二：程序路径非空但不存在时，询问用户是否继续
+        // 校验二：启用指令功能时口令必填且长度达标（服务端侧同样拒绝过短口令）
+        if (enableCommandsChk.IsChecked == true)
+        {
+            string password = passwordInput.Text ?? "";
+            if (password.Length < ServerCommandService.MinimumPasswordLength)
+            {
+                await DialogService.ShowAsync("验证错误",
+                    $"RCON 口令至少 {ServerCommandService.MinimumPasswordLength} 个字符（服务端要求），当前 {password.Length} 个");
+                return;
+            }
+        }
+
+        // 校验三：程序路径非空但不存在时，询问用户是否继续
         if (!string.IsNullOrWhiteSpace(exePathInput.Text) && !File.Exists(exePathInput.Text))
         {
             var result = await DialogService.ConfirmAsync("程序路径不存在，是否继续？", "路径验证");
@@ -608,10 +620,11 @@ public partial class MainView : UserControl
             return;
         }
 
-        // 校验三：RCON 标准协议要求口令必填（服务端无口令时不监听指令通道）
-        if (string.IsNullOrEmpty(_selectedServer.Password))
+        // 校验三：RCON 标准协议要求口令必填且长度达标（服务端无口令时不监听指令通道）
+        if ((_selectedServer.Password ?? "").Length < ServerCommandService.MinimumPasswordLength)
         {
-            await DialogService.ShowAsync("配置缺失", "RCON 口令未配置，请先在编辑模式中填写口令");
+            await DialogService.ShowAsync("配置缺失",
+                $"RCON 口令未配置或长度不足 {ServerCommandService.MinimumPasswordLength} 字符，请先在编辑模式中填写");
             return;
         }
 
@@ -697,7 +710,17 @@ public partial class MainView : UserControl
         var notes = "已写入 ServerSetting.json，重启服务端后生效。";
         if (rconEnabled)
         {
-            notes += "\n\nRCON 需先设置口令才会监听：在服务端控制台执行 rcon password（或设置环境变量 SC_RCON_PASSWORD）。";
+            string password = _selectedServer.Password ?? "";
+            if (password.Length >= ServerCommandService.MinimumPasswordLength)
+            {
+                notes += "\n\n口令已配置：下次由本工具启动服务端时会自动注入 SC_RCON_PASSWORD，无需在服务端手动设置。";
+            }
+            else
+            {
+                notes += $"\n\nRCON 口令尚未配置或长度不足 {ServerCommandService.MinimumPasswordLength} 字符："
+                       + "\n请在「修改」编辑面板填写口令并保存，下次由本工具启动服务端时会自动注入；"
+                       + "\n否则需在服务端控制台执行 rcon password 手动设置（无口令 RCON 不监听）。";
+            }
         }
         await DialogService.ShowAsync("应用成功", notes);
     }

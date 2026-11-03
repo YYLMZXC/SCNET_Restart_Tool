@@ -70,6 +70,16 @@ public sealed class ServerCommandService
     /// <summary>RCON 口令请求头（与服务端 RconServer.PasswordHeader 一致）</summary>
     private const string PasswordHeader = "X-RCON-Password";
 
+    /// <summary>
+    /// RCON 口令最短长度（与服务端 RconPasswordHash.MinimumPasswordLength 一致）：
+    /// 过短的口令在服务端设置口令时即被拒绝。
+    /// </summary>
+    public const int MinimumPasswordLength = 12;
+
+    /// <summary>RCON 口令环境变量（与服务端 RconManager 读取的变量名一致）：
+    /// 供启动服务端进程时注入，服务端仅在凭据文件不存在时应用（不覆盖手动设置的口令）</summary>
+    public const string PasswordEnvironmentVariable = "SC_RCON_PASSWORD";
+
     /// <summary>建立 TCP 连接的超时时间</summary>
     private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(5);
 
