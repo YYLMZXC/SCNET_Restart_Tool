@@ -28,12 +28,15 @@ public static class HelpContent
 - 开启监控后每 3 秒检测一次进程状态，服务异常退出时自动拉起（最多重试 3 次）
 - 定时重启：每天到设定时间（HH:mm）自动关闭服务端，随后由监控重新拉起
 - 间隔重启：按设定的小时数周期关闭，填 0 表示不启用该策略
-- 启用指令功能时，关闭前先发送 close 指令让服务端保存存档，再执行关闭
+- 启用指令功能时，关闭前先经 RCON 发送 stop 指令（服务端延迟 9 秒存档退出），超时再兜底强杀
 - 监控状态随配置持久化，下次启动程序自动恢复
 
-【远程指令】
-- 勾选「启用指令功能」并配置 IP / 端口 / 密码后，可通过 TCP 向服务端发送指令
-- 在底部指令框输入内容（如 say、close 等），点击「发送指令」，结果即时弹窗反馈
+【远程指令（RCON 标准接口）】
+- 与 ScNetworkDEV 服务端的 RCON 通道对接：HTTP/1.1 短连接，默认端口 28900
+- 默认 TLS 加密（服务端自签证书），仅内网受信环境可取消「加密连接」选项
+- 勾选「启用指令功能」并配置 IP / 端口 / RCON 口令后可发送指令（口令必填）
+- 指令可省略前导斜杠，如 stop 9 例行维护、say 公告内容、list 等
+- 底层自带连接 5 秒 / 响应 15 秒超时，不会因网络问题卡住界面
 
 【文件夹管理】
 - 按标签页管理 Bugs、CharacterSkins、Configs、TexturePacks、NetMods、Plugins、Worlds 目录
@@ -68,7 +71,7 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
 - 多服务器统一管理，配置集中保存
 - 进程状态实时监控，异常退出自动恢复
 - 定时重启与间隔重启两种策略可组合使用
-- TCP 指令远程控制，支持密码校验
+- RCON 标准远程控制（HTTP/1.1 + TLS，口令认证）
 - 目录快捷访问，支持批量备份与日志清理
 - 运行日志实时展示并按日期落盘
 
@@ -77,7 +80,7 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
 - 运行时：.NET 10
 - 界面：Avalonia UI 11（Fluent 主题，跨平台 XAML）
 - 配置：System.Text.Json（servers_config.json）
-- 通讯：Socket TCP
+- 通讯：RCON（HTTP/1.1 over TLS，ScNetworkDEV 服务端标准接口）
 
 适用平台：
 - Windows 10 / 11
@@ -92,7 +95,9 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
 注意事项：
 - Windows 下监控系统进程建议以管理员身份运行
 - 优雅关闭仅在 Windows 有效，macOS / Linux 上为直接结束进程
-- 远程指令功能请设置强密码并限制可访问的 IP";
+- RCON 口令即服务端控制台「rcon password」设置的口令，请使用强口令
+- 服务端默认仅监听环回地址（127.0.0.1:28900），远程管理需显式修改服务端配置
+- 取消「加密连接」仅在已受信的本机 / 内网环境使用，公网必须保留 TLS";
 
     /// <summary>版本信息：当前版本（构建时间生成）、版本规则与更新日志</summary>
     public static string VersionInfo
@@ -110,6 +115,9 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
             sb.AppendLine();
             sb.AppendLine("【本版本（版本号按构建时间自动编号）】");
             sb.AppendLine($"- 当前构建：{AppVersion.Full}（{AppVersion.BuildTimeText}）");
+            sb.AppendLine("- 指令通道更新为 ScNetworkDEV 服务端 RCON 标准接口（HTTP/1.1 + TLS，默认端口 28900）");
+            sb.AppendLine("- 优雅关闭指令由 close 改为标准 stop 指令（延迟 9 秒存档退出）");
+            sb.AppendLine("- 指令通讯加入连接 / 响应超时，网络异常不再无限等待");
             sb.AppendLine("- 帮助菜单内容更新：功能说明、项目信息、版本信息、检查更新、关于");
             sb.AppendLine("- 版本号改为按构建时间自动生成，窗口标题仅显示到日（yy.MM.dd）");
             sb.AppendLine("- 界面标题栏同步显示当前版本号");
@@ -152,7 +160,7 @@ SCNET 服务端管理工具，用于批量管理 SCNET 服务端程序，实时�
 构建时间：{AppVersion.BuildTimeText}
 
 用于 SCNET 服务端的批量管理、状态监控与自动重启，
-支持定时 / 间隔重启、TCP 远程指令、目录管理与日志记录。
+支持定时 / 间隔重启、RCON 远程指令、目录管理与日志记录。
 
 技术栈：.NET 10 + Avalonia UI 11（Windows / macOS / Linux）
 

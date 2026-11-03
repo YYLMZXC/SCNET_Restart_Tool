@@ -156,7 +156,7 @@
           <Grid ColumnDefinitions="Auto,*">
             <TextBlock Text="指令：" Foreground="#5A6672" VerticalAlignment="Center" Margin="0,0,6,0" />
             <TextBox x:Name="commandInput" Grid.Column="1" Text="say 服务器即将重启"
-                     Watermark="输入要发送的指令" />
+                     Watermark="RCON 指令（如 stop 9 例行维护 / say 内容 / list）" />
           </Grid>
         </Border>
       </Grid>
@@ -185,12 +185,12 @@
                 <TextBox x:Name="ipInput" Text="127.0.0.1" IsEnabled="False" />
               </StackPanel>
               <StackPanel Grid.Column="1" Margin="5,0,0,0">
-                <TextBlock Classes="label" Text="端口：" />
-                <TextBox x:Name="portInput" Text="5612" IsEnabled="False" />
+                <TextBlock Classes="label" Text="RCON 端口：" />
+                <TextBox x:Name="portInput" Text="28900" IsEnabled="False" />
               </StackPanel>
             </Grid>
 
-            <TextBlock Classes="label" Text="密码（可选）：" Margin="0,4,0,4" />
+            <TextBlock Classes="label" Text="RCON 口令（必填）：" Margin="0,4,0,4" />
             <TextBox x:Name="passwordInput" PasswordChar="*" IsEnabled="False" />
 
             <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
@@ -205,6 +205,8 @@
             </Grid>
 
             <CheckBox x:Name="enableCommandsChk" Content="启用指令功能" IsEnabled="False" Margin="0,6,0,0" />
+            <CheckBox x:Name="useTlsChk" Content="加密连接（TLS，服务端自签证书）"
+                      IsEnabled="False" Margin="0,4,0,0" IsChecked="True" />
 
             <Grid ColumnDefinitions="*,*" Margin="0,6,0,0">
               <Button x:Name="saveEditBtn" Grid.Column="0" Content="保存配置" Margin="0,0,4,0"

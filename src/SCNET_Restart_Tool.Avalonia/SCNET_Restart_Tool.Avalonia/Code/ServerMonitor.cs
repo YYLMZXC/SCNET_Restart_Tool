@@ -116,7 +116,8 @@ public class ServerMonitor : IDisposable
     /// 每日任务检查（每秒触发一次）：
     /// 1) 到达设定的定时时间（HH:mm，秒为 0）时，执行每日定时关闭；
     /// 2) 距上次间隔关闭超过 IntervalHours 时，执行间隔关闭。
-    /// 关闭前若启用了指令功能，先发送 close 指令并异步等待服务端保存存档，再强制关闭进程。
+    /// 关闭前若启用了指令功能，先经 RCON 发送 stop 指令（服务端延迟 N 秒存档退出），
+    /// 等待「延迟秒数 + 存档余量」后再兜底强制关闭进程。
     /// </summary>
     private async void TimerDaily_Tick(object? state)
     {
@@ -132,12 +133,7 @@ public class ServerMonitor : IDisposable
                 if (now.Hour == scheduleTime.Hours && now.Minute == scheduleTime.Minutes && now.Second == 0)
                 {
                     _logManager.AddLog(_config.Name, $"触发每日定时关闭（设定时间：{_config.ScheduleTime}）");
-                    if (_config.EnableCommands)
-                    {
-                        // 先发送 close 指令，等待服务端存档退出后再强制关闭（异步等待，不阻塞线程池线程）
-                        _commandService.SendServiceCommand("close 9 例行维护");
-                        await Task.Delay(7000);
-                    }
+                    await GracefulShutdownAsync("例行维护");
                     _processService.KillProcess();
                 }
             }
@@ -149,11 +145,7 @@ public class ServerMonitor : IDisposable
                 if (DateTime.Now >= nextClose)
                 {
                     _logManager.AddLog(_config.Name, $"触发间隔关闭（间隔：{_config.IntervalHours}小时）");
-                    if (_config.EnableCommands)
-                    {
-                        _commandService.SendServiceCommand("close 9 间隔维护");
-                        await Task.Delay(7000);
-                    }
+                    await GracefulShutdownAsync("间隔维护");
                     _processService.KillProcess();
                     // 记录本次间隔关闭时间，作为下次间隔的起点
                     _config.LastIntervalClose = DateTime.Now;
@@ -258,8 +250,38 @@ public class ServerMonitor : IDisposable
     /// <summary>关闭服务端进程（委托给 ServerProcessService）</summary>
     public void KillProcess() => _processService.KillProcess();
 
-    /// <summary>发送指令到服务端（委托给 ServerCommandService）</summary>
-    public string SendServiceCommand(string command) => _commandService.SendServiceCommand(command);
+    /// <summary>
+    /// 经 RCON 标准接口向服务端发送指令并返回展示文本（委托给 ServerCommandService）。
+    /// 底层含连接 / 响应超时，不会无限阻塞调用方。
+    /// </summary>
+    public async Task<string> SendServiceCommandAsync(string command)
+    {
+        var result = await _commandService.SendCommandAsync(command).ConfigureAwait(false);
+        return result.ToDisplayText();
+    }
+
+    /// <summary>
+    /// 优雅关闭：经 RCON 发送 stop 指令，服务端会在延迟 N 秒内存档并自行退出。
+    /// 等待「延迟秒数 + 存档余量（3 秒）」后返回，由调用方决定是否兜底强杀进程。
+    /// 未启用指令功能或指令失败时直接返回（交由强杀流程处理）。
+    /// </summary>
+    /// <param name="reason">关闭原因（透传给服务端公告）</param>
+    private async Task GracefulShutdownAsync(string reason)
+    {
+        if (!_config.EnableCommands) return;
+
+        // ScNetworkDEV 标准：stop [秒数] [原因]，延迟 9 秒给玩家留缓冲并完成存档
+        const int delaySeconds = 9;
+        var result = await _commandService.SendCommandAsync($"stop {delaySeconds} {reason}").ConfigureAwait(false);
+        if (!result.Ok)
+        {
+            _logManager.AddLog(_config.Name, $"优雅关闭指令未生效（{result.ToDisplayText()}），将直接强制关闭", "警告");
+            return;
+        }
+
+        // 等待服务端按延迟计划自行退出（含存档余量），不阻塞线程池线程
+        await Task.Delay(TimeSpan.FromSeconds(delaySeconds + 3)).ConfigureAwait(false);
+    }
 
     /// <summary>释放定时器等非托管资源</summary>
     public void Dispose()

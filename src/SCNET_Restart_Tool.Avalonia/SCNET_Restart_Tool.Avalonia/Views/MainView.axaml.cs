@@ -197,11 +197,12 @@ public partial class MainView : UserControl
             serverNameInput.Text = "";
             exePathInput.Text = "";
             ipInput.Text = "127.0.0.1";
-            portInput.Text = "5612";
+            portInput.Text = "28900";
             passwordInput.Text = "";
             scheduleTimeInput.Text = "01:00";
             intervalHoursInput.Text = "0";
             enableCommandsChk.IsChecked = false;
+            useTlsChk.IsChecked = true;
         }
         else
         {
@@ -213,6 +214,7 @@ public partial class MainView : UserControl
             scheduleTimeInput.Text = server.ScheduleTime;
             intervalHoursInput.Text = server.IntervalHours.ToString("0.##");
             enableCommandsChk.IsChecked = server.EnableCommands;
+            useTlsChk.IsChecked = server.UseTls;
         }
     }
 
@@ -280,8 +282,9 @@ public partial class MainView : UserControl
                     ExePath = newExePath,
                     ExeName = Path.GetFileName(newExePath),
                     Ip = ipInput.Text?.Trim() ?? "",
-                    Port = ParseInt(portInput.Text, 5612),
+                    Port = ParseInt(portInput.Text, 28900),
                     Password = passwordInput.Text ?? "",
+                    UseTls = useTlsChk.IsChecked == true,
                     ScheduleTime = scheduleTimeInput.Text?.Trim() ?? "",
                     IntervalHours = ParseDouble(intervalHoursInput.Text, 0),
                     EnableCommands = enableCommandsChk.IsChecked == true,
@@ -324,6 +327,7 @@ public partial class MainView : UserControl
         server.Ip = ipInput.Text?.Trim() ?? "";
         server.Port = ParseInt(portInput.Text, server.Port);
         server.Password = passwordInput.Text ?? "";
+        server.UseTls = useTlsChk.IsChecked == true;
         server.ScheduleTime = scheduleTimeInput.Text?.Trim() ?? "";
         server.IntervalHours = ParseDouble(intervalHoursInput.Text, server.IntervalHours);
         server.EnableCommands = enableCommandsChk.IsChecked == true;
@@ -400,6 +404,7 @@ public partial class MainView : UserControl
         scheduleTimeInput.IsEnabled = enabled;
         intervalHoursInput.IsEnabled = enabled;
         enableCommandsChk.IsEnabled = enabled;
+        useTlsChk.IsEnabled = enabled;
     }
 
     /// <summary>将当前服务器列表持久化到配置文件</summary>
@@ -576,11 +581,18 @@ public partial class MainView : UserControl
             return;
         }
 
+        // 校验三：RCON 标准协议要求口令必填（服务端无口令时不监听指令通道）
+        if (string.IsNullOrEmpty(_selectedServer.Password))
+        {
+            await DialogService.ShowAsync("配置缺失", "RCON 口令未配置，请先在编辑模式中填写口令");
+            return;
+        }
+
         if (_serverMonitors.TryGetValue(_selectedServer.Id, out var monitor))
         {
-            // TCP 通讯为阻塞操作，放入后台线程执行
+            // RCON 通讯底层全异步且自带连接/响应超时，直接等待即可，不会阻塞 UI 线程
             var command = commandInput.Text!.Trim();
-            var result = await Task.Run(() => monitor.SendServiceCommand(command));
+            var result = await monitor.SendServiceCommandAsync(command);
             await DialogService.ShowAsync("发送结果", $"指令响应:\n{result}");
         }
     }

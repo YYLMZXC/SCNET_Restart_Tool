@@ -31,14 +31,17 @@ public class ServerConfig : INotifyPropertyChanged
     /// <summary>服务器程序文件名（由路径推导，便于界面展示）</summary>
     public string ExeName { get; set; } = "";
 
-    /// <summary>指令通讯 IP 地址</summary>
+    /// <summary>RCON 指令通讯 IP 地址</summary>
     public string Ip { get; set; } = "127.0.0.1";
 
-    /// <summary>指令通讯端口</summary>
-    public int Port { get; set; } = 5612;
+    /// <summary>RCON 指令通讯端口（ScNetworkDEV 服务端默认 28900）</summary>
+    public int Port { get; set; } = 28900;
 
-    /// <summary>指令通讯密码（为空则免密认证）</summary>
+    /// <summary>RCON 口令（标准协议必填：服务端未配置口令时不会监听指令通道）</summary>
     public string Password { get; set; } = "";
+
+    /// <summary>是否使用 TLS 加密连接（服务端默认自签证书；仅内网受信环境建议关闭）</summary>
+    public bool UseTls { get; set; } = true;
 
     /// <summary>每日定时关闭时间（HH:mm 格式，如 "01:00"）</summary>
     public string ScheduleTime { get; set; } = "01:00";
