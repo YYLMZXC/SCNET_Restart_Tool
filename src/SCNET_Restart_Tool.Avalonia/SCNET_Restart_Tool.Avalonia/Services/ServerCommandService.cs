@@ -115,10 +115,10 @@ public sealed class ServerCommandService
             return RconCommandResult.Failure("指令内容为空");
         }
 
-        // 标准协议要求口令必填：无口令的 RCON 在服务端侧本就不会监听
-        if (string.IsNullOrEmpty(_config.Password))
+        // 标准协议要求口令必填且长度达标：无口令的 RCON 在服务端侧本就不会监听
+        if (_config.Password.Length < MinimumPasswordLength)
         {
-            const string error = "未配置 RCON 口令，无法发送指令（请在服务器配置中填写口令）";
+            var error = $"RCON 口令未配置或长度不足 {MinimumPasswordLength} 字符（服务端要求），无法发送指令";
             _logManager.AddLog(_config.Name, error, "错误");
             return RconCommandResult.Failure(error);
         }
@@ -145,6 +145,14 @@ public sealed class ServerCommandService
             _logManager.AddLog(_config.Name, error, "调试");
             return RconCommandResult.Failure(error);
         }
+        catch (OperationCanceledException)
+        {
+            // 走到这里的是连接/读写超时（非调用方主动取消）：给出明确原因而非含糊的「操作已取消」
+            var error = $"RCON 通讯超时（连接 {ConnectTimeout.TotalSeconds:0} 秒 / 响应 {ResponseTimeout.TotalSeconds:0} 秒上限，" +
+                        $"目标 {_config.Ip}:{_config.Port}）";
+            _logManager.AddLog(_config.Name, error, "错误");
+            return RconCommandResult.Failure(error);
+        }
         catch (Exception ex)
         {
             var error = $"指令发送失败：{ex.Message}";
@@ -163,7 +171,10 @@ public sealed class ServerCommandService
         {
             RconHttpResponse response = await SendHttpRequestAsync("GET", PathHealth, "", null, cancellationToken)
                 .ConfigureAwait(false);
-            return response.StatusCode == 200;
+            bool healthy = response.StatusCode == 200;
+            _logManager.AddLog(_config.Name,
+                $"RCON 健康探测{(healthy ? "成功" : "异常")}（{_config.Ip}:{_config.Port} → HTTP {response.StatusCode}）", "调试");
+            return healthy;
         }
         catch (Exception ex)
         {
@@ -185,6 +196,9 @@ public sealed class ServerCommandService
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
+        _logManager.AddLog(_config.Name,
+            $"RCON 连接 {_config.Ip}:{_config.Port}（传输：{(_config.UseTls ? "TLS" : "明文")}，{method} {path}）", "调试");
+
         using var client = new TcpClient();
         timeout.CancelAfter(ConnectTimeout);
         await client.ConnectAsync(_config.Ip, _config.Port, timeout.Token).ConfigureAwait(false);
@@ -202,6 +216,8 @@ public sealed class ServerCommandService
                 EnabledSslProtocols = System.Security.Authentication.SslProtocols.Tls12 | System.Security.Authentication.SslProtocols.Tls13,
                 CertificateRevocationCheckMode = X509RevocationMode.NoCheck
             }, timeout.Token).ConfigureAwait(false);
+            _logManager.AddLog(_config.Name,
+                $"RCON TLS 握手完成：{ssl.SslProtocol}（套件 {ssl.NegotiatedCipherSuite}）", "调试");
             stream = ssl;
         }
         else
@@ -231,7 +247,10 @@ public sealed class ServerCommandService
             await stream.FlushAsync(timeout.Token).ConfigureAwait(false);
 
             byte[] raw = await ReadUntilEndAsync(stream, timeout.Token).ConfigureAwait(false);
-            return ParseHttpResponse(raw);
+            RconHttpResponse response = ParseHttpResponse(raw);
+            _logManager.AddLog(_config.Name,
+                $"RCON 响应到达：{method} {path} → HTTP {response.StatusCode}（{raw.Length} 字节）", "调试");
+            return response;
         }
     }
 

@@ -59,6 +59,9 @@ public static class ServerSettingService
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
+    /// <summary>全局日志管理器（单例）：读取 / 写入 / 校验失败均落日志，便于排查配置问题</summary>
+    private static readonly LogManager _logManager = LogManager.GetInstance();
+
     /// <summary>解析出的当前值（文件缺失或键不存在时取服务端同款默认值）</summary>
     public static ServerSettingSnapshot Defaults => new()
     {
@@ -86,11 +89,14 @@ public static class ServerSettingService
         if (string.IsNullOrEmpty(config.ExePath))
         {
             error = "未配置服务器程序路径，无法定位 ServerSetting.json";
+            _logManager.AddLog(config.Name, $"读取 ServerSetting.json 失败：{error}", "调试");
             return false;
         }
         if (!File.Exists(path))
         {
             error = $"配置文件不存在：{path}";
+            // 选中服务器预填时每回都会触发，属于常态情况，只记调试日志
+            _logManager.AddLog(config.Name, $"ServerSetting.json 不存在（显示默认值）：{path}", "调试");
             return false;
         }
 
@@ -100,33 +106,21 @@ public static class ServerSettingService
             if (root is not JsonObject)
             {
                 error = "ServerSetting.json 根节点不是 JSON 对象";
+                _logManager.AddLog(config.Name, $"读取 ServerSetting.json 失败：{error}", "错误");
                 return false;
             }
 
             // 与服务端语义一致：先递归收全部层级的嵌套标量键，再由根级扁平键覆盖（与出现顺序无关）
-            var rootObject = (JsonObject)root;
-            var values = new System.Collections.Generic.Dictionary<string, JsonNode>();
-            CollectNestedScalarKeys(rootObject, values);
-            foreach (var pair in rootObject)
-            {
-                if (pair.Value is not JsonObject && pair.Key is not null)
-                {
-                    values[pair.Key] = pair.Value!;
-                }
-            }
-
-            snapshot = new ServerSettingSnapshot
-            {
-                ServerPort = ReadInt(values, "ServerPort", DefaultServerPort),
-                RconEnabled = ReadBool(values, "RconEnabled", false),
-                RconPort = ReadInt(values, "RconPort", DefaultRconPort)
-            };
+            var values = CollectValues((JsonObject)root);
+            snapshot = SnapshotFromValues(values);
             error = "";
+            _logManager.AddLog(config.Name, DescribeSnapshot("已读取 ServerSetting.json", snapshot, path), "调试");
             return true;
         }
         catch (Exception ex) when (ex is JsonException or IOException)
         {
             error = $"读取 ServerSetting.json 失败：{ex.Message}";
+            _logManager.AddLog(config.Name, error, "错误");
             return false;
         }
     }
@@ -145,17 +139,20 @@ public static class ServerSettingService
         if (serverPort < 1 || serverPort > 65535)
         {
             error = $"服务端端口无效：{serverPort}（应在 1-65535 之间）";
+            _logManager.AddLog(config.Name, $"写入 ServerSetting.json 被拒绝：{error}", "警告");
             return false;
         }
         if (rconPort < 1 || rconPort > 65535)
         {
             error = $"RCON 端口无效：{rconPort}（应在 1-65535 之间）";
+            _logManager.AddLog(config.Name, $"写入 ServerSetting.json 被拒绝：{error}", "警告");
             return false;
         }
         // 服务端 Normalize 规则：两端口相同时会直接关闭 RCON —— 提前拦截，避免写出自相矛盾的配置
         if (rconEnabled && rconPort == serverPort)
         {
             error = "RCON 端口不能与服务端端口相同（服务端会因此直接关闭 RCON）";
+            _logManager.AddLog(config.Name, $"写入 ServerSetting.json 被拒绝：{error}", "警告");
             return false;
         }
 
@@ -163,13 +160,15 @@ public static class ServerSettingService
         if (string.IsNullOrEmpty(config.ExePath))
         {
             error = "未配置服务器程序路径，无法定位 ServerSetting.json";
+            _logManager.AddLog(config.Name, $"写入 ServerSetting.json 失败：{error}", "错误");
             return false;
         }
 
         try
         {
+            bool fileExisted = File.Exists(path);
             JsonObject root;
-            if (File.Exists(path))
+            if (fileExisted)
             {
                 root = JsonNode.Parse(File.ReadAllText(path)) as JsonObject
                        ?? throw new JsonException("根节点不是 JSON 对象");
@@ -179,32 +178,103 @@ public static class ServerSettingService
                 root = new JsonObject();
             }
 
-            // 就地更新（仅第一处命中；服务端读取时根级键优先，此写法与已有文件的键位保持一致）
-            if (!SetKeyInPlace(root, "ServerPort", serverPort))
+            // 旧值快照：供日志描述「改了什么」；无变化时跳过写盘，避免无意义的文件时间戳变动
+            var updated = new ServerSettingSnapshot
             {
-                AddToSection(root, NetworkSection, "ServerPort", serverPort);
+                ServerPort = serverPort,
+                RconEnabled = rconEnabled,
+                RconPort = rconPort
+            };
+            string changes = fileExisted ? DescribeChanges(SnapshotFromValues(CollectValues(root)), updated) : "";
+
+            if (fileExisted && changes.Length == 0)
+            {
+                error = "";
+                _logManager.AddLog(config.Name, "ServerSetting.json 内容无变化，跳过写入", "调试");
+                return true;
             }
-            if (!SetKeyInPlace(root, "RconEnabled", rconEnabled))
+
+            // 就地更新（仅第一处命中；服务端读取时根级键优先，此写法与已有文件的键位保持一致）。
+            // 注意：必须用强类型 JsonValue.Create(int/bool) 生成 JsonValuePrimitive——
+            // 经 object 装箱的 JsonValue.Create(object) 会生成 JsonValueCustomized，
+            // 写出时需要 TypeInfoResolver（本项目为 source-gen 模式，无反射元数据，会直接抛异常）
+            if (!SetKeyInPlace(root, "ServerPort", JsonValue.Create(serverPort)!))
             {
-                AddToSection(root, RconSection, "RconEnabled", rconEnabled);
+                AddToSection(root, NetworkSection, "ServerPort", JsonValue.Create(serverPort)!);
             }
-            if (!SetKeyInPlace(root, "RconPort", rconPort))
+            if (!SetKeyInPlace(root, "RconEnabled", JsonValue.Create(rconEnabled)!))
             {
-                AddToSection(root, RconSection, "RconPort", rconPort);
+                AddToSection(root, RconSection, "RconEnabled", JsonValue.Create(rconEnabled)!);
+            }
+            if (!SetKeyInPlace(root, "RconPort", JsonValue.Create(rconPort)!))
+            {
+                AddToSection(root, RconSection, "RconPort", JsonValue.Create(rconPort)!);
             }
 
             File.WriteAllText(path, root.ToJsonString(JsonOptions));
             error = "";
+            _logManager.AddLog(config.Name, fileExisted
+                ? $"ServerSetting.json 已更新：{changes}（{path}）"
+                : DescribeSnapshot("已创建 ServerSetting.json", updated, path));
             return true;
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
         {
             error = $"写入 ServerSetting.json 失败：{ex.Message}";
+            _logManager.AddLog(config.Name, error, "错误");
             return false;
         }
     }
 
     // ==================== 读取辅助 ====================
+
+    /// <summary>
+    /// 按服务端语义收集键值：先递归收全部层级的嵌套标量键，再由根级扁平键覆盖（与出现顺序无关）。
+    /// </summary>
+    private static System.Collections.Generic.Dictionary<string, JsonNode> CollectValues(JsonObject root)
+    {
+        var values = new System.Collections.Generic.Dictionary<string, JsonNode>();
+        CollectNestedScalarKeys(root, values);
+        foreach (var pair in root)
+        {
+            if (pair.Value is not JsonObject && pair.Key is not null)
+            {
+                values[pair.Key] = pair.Value!;
+            }
+        }
+        return values;
+    }
+
+    /// <summary>从收集好的键值表解析出三个管理键的快照（键缺失时取服务端默认值）</summary>
+    private static ServerSettingSnapshot SnapshotFromValues(System.Collections.Generic.Dictionary<string, JsonNode> values) => new()
+    {
+        ServerPort = ReadInt(values, "ServerPort", DefaultServerPort),
+        RconEnabled = ReadBool(values, "RconEnabled", false),
+        RconPort = ReadInt(values, "RconPort", DefaultRconPort)
+    };
+
+    /// <summary>生成一行快照描述（日志用）</summary>
+    private static string DescribeSnapshot(string prefix, ServerSettingSnapshot snapshot, string path) =>
+        $"{prefix}：服务端端口 {snapshot.ServerPort}，RCON {(snapshot.RconEnabled ? $"开启（端口 {snapshot.RconPort}）" : "关闭")}（{path}）";
+
+    /// <summary>对比新旧快照，只列出发生变化的键（日志「改了什么」用）；无变化返回空串</summary>
+    private static string DescribeChanges(ServerSettingSnapshot oldSnapshot, ServerSettingSnapshot updated)
+    {
+        var items = new System.Collections.Generic.List<string>();
+        if (oldSnapshot.ServerPort != updated.ServerPort)
+        {
+            items.Add($"ServerPort {oldSnapshot.ServerPort} → {updated.ServerPort}");
+        }
+        if (oldSnapshot.RconEnabled != updated.RconEnabled)
+        {
+            items.Add($"RconEnabled {(oldSnapshot.RconEnabled ? "开启" : "关闭")} → {(updated.RconEnabled ? "开启" : "关闭")}");
+        }
+        if (oldSnapshot.RconPort != updated.RconPort)
+        {
+            items.Add($"RconPort {oldSnapshot.RconPort} → {updated.RconPort}");
+        }
+        return string.Join("；", items);
+    }
 
     /// <summary>递归收集嵌套节内的标量键（不收根级扁平键，根级由调用方按「优先覆盖」语义另行合入）</summary>
     private static void CollectNestedScalarKeys(JsonObject node, System.Collections.Generic.Dictionary<string, JsonNode> values)
@@ -241,8 +311,9 @@ public static class ServerSettingService
     /// <summary>
     /// 就地更新已存在的键：深度优先查找首个同名标量键并改值。
     /// 返回是否命中；未命中（返回 false）时由调用方把键落到规范节。
+    /// value 由调用方以强类型 JsonValue.Create(int/bool) 生成（避免装箱走 JsonValueCustomized 路径）。
     /// </summary>
-    private static bool SetKeyInPlace(JsonObject node, string key, object value)
+    private static bool SetKeyInPlace(JsonObject node, string key, JsonNode value)
     {
         foreach (var pair in node)
         {
@@ -255,7 +326,7 @@ public static class ServerSettingService
             }
             else if (pair.Key == key)
             {
-                node[key] = JsonValue.Create(value);
+                node[key] = value;
                 return true;
             }
         }
@@ -263,7 +334,7 @@ public static class ServerSettingService
     }
 
     /// <summary>把键写入指定节（节不存在时创建），返回是否已写入</summary>
-    private static bool AddToSection(JsonObject root, string section, string key, object value)
+    private static bool AddToSection(JsonObject root, string section, string key, JsonNode value)
     {
         JsonObject target;
         if (root.TryGetPropertyValue(section, out JsonNode? sectionNode) && sectionNode is JsonObject existing)
@@ -275,7 +346,7 @@ public static class ServerSettingService
             target = new JsonObject();
             root[section] = target;
         }
-        target[key] = JsonValue.Create(value);
+        target[key] = value;
         return true;
     }
 }

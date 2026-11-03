@@ -119,11 +119,17 @@ public sealed class ServerProcessService
 
             // RCON 口令自动注入：服务端启动链会读取 SC_RCON_PASSWORD 并在凭据文件不存在时应用
             // （已手动设置过口令则安全忽略，不会覆盖）；省去在服务端控制台执行 rcon password 的步骤
-            if (_config.EnableCommands && !string.IsNullOrEmpty(_config.Password))
+            if (_config.EnableCommands && _config.Password.Length >= ServerCommandService.MinimumPasswordLength)
             {
                 startInfo.EnvironmentVariables[ServerCommandService.PasswordEnvironmentVariable] = _config.Password;
                 _logManager.AddLog(_config.Name,
                     $"已注入 {ServerCommandService.PasswordEnvironmentVariable} 环境变量（服务端未设置过口令时自动应用）");
+            }
+            else if (_config.EnableCommands)
+            {
+                _logManager.AddLog(_config.Name,
+                    $"已启用指令功能但 RCON 口令未配置或长度不足 {ServerCommandService.MinimumPasswordLength} 字符，" +
+                    "跳过口令注入（服务端将无法监听 RCON，请在编辑面板配置口令）", "警告");
             }
 
             Process.Start(startInfo);

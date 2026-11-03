@@ -185,9 +185,10 @@ public class ServerMonitor : IDisposable
                 int retryCount = 0;
                 while (retryCount < 3 && !_processService.IsProcessRunning())
                 {
+                    retryCount++;
+                    _logManager.AddLog(_config.Name, $"自动启动尝试第 {retryCount}/3 次", "调试");
                     _processService.StartProcess();
                     await Task.Delay(2000); // 等待进程启动完成后再检测
-                    retryCount++;
                 }
 
                 if (_processService.IsProcessRunning())
@@ -272,6 +273,7 @@ public class ServerMonitor : IDisposable
 
         // ScNetworkDEV 标准：stop [秒数] [原因]，延迟 9 秒给玩家留缓冲并完成存档
         const int delaySeconds = 9;
+        _logManager.AddLog(_config.Name, $"开始优雅关闭：发送 stop {delaySeconds} {reason}，服务端将延迟存档退出", "信息");
         var result = await _commandService.SendCommandAsync($"stop {delaySeconds} {reason}").ConfigureAwait(false);
         if (!result.Ok)
         {
@@ -280,6 +282,7 @@ public class ServerMonitor : IDisposable
         }
 
         // 等待服务端按延迟计划自行退出（含存档余量），不阻塞线程池线程
+        _logManager.AddLog(_config.Name, $"优雅关闭指令已接受，等待服务端 {delaySeconds + 3} 秒内自行存档退出", "调试");
         await Task.Delay(TimeSpan.FromSeconds(delaySeconds + 3)).ConfigureAwait(false);
     }
 
