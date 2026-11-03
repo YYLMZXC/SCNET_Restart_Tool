@@ -1,0 +1,81 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SCNET_Restart_Tool.Avalonia.App"
+             RequestedThemeVariant="Light">
+
+  <Application.Resources>
+    <!--
+      彩色按钮主题：Fluent 默认按钮在鼠标悬停时会切换为浅灰背景，
+      这里用自定义 ControlTheme 保证彩色按钮在任何状态下都保持品牌配色（悬停/按下通过透明度反馈）。
+    -->
+    <ControlTheme x:Key="ColorButton" TargetType="Button">
+      <Setter Property="Background" Value="#3498DB" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Padding" Value="14,7" />
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="PART_Bg"
+                  Background="{TemplateBinding Background}"
+                  CornerRadius="6"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+
+      <Style Selector="^:pointerover /template/ Border#PART_Bg">
+        <Setter Property="Opacity" Value="0.88" />
+      </Style>
+      <Style Selector="^:pressed /template/ Border#PART_Bg">
+        <Setter Property="Opacity" Value="0.72" />
+      </Style>
+      <Style Selector="^:disabled">
+        <Setter Property="Opacity" Value="0.38" />
+      </Style>
+    </ControlTheme>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+
+    <!-- 全局字体与配色（与 WinForms / Uno 版保持一致的浅色风格） -->
+    <Style Selector="Window">
+      <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI, sans-serif" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Background" Value="#F5F7FA" />
+      <Setter Property="Foreground" Value="#333333" />
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="MinHeight" Value="32" />
+      <Setter Property="Padding" Value="8,5" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="TextBlock">
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+
+    <Style Selector="TabItem">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="MinHeight" Value="34" />
+      <Setter Property="Padding" Value="16,6" />
+    </Style>
+  </Application.Styles>
+
+</Application>

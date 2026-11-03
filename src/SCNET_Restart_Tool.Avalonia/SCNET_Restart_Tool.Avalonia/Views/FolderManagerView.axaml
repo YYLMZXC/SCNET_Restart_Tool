@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SCNET_Restart_Tool.Avalonia.Views.FolderManagerView">
+
+  <Grid RowDefinitions="Auto,*" Background="#F5F7FA">
+
+    <!-- 顶部标题栏 -->
+    <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="16,10">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <TextBlock Text="文件夹管理" FontSize="18" FontWeight="Bold" Foreground="#2C3E50"
+                     VerticalAlignment="Center" />
+          <TextBlock x:Name="serverNameText" FontSize="12" Foreground="#95A5A6"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Button x:Name="batchBackupBtn" Content="批量备份所有目录"
+                  Theme="{StaticResource ColorButton}" Background="#3498DB" Padding="16,6"
+                  Click="BatchBackupBtn_Click" />
+          <Button Content="返回主界面"
+                  Theme="{StaticResource ColorButton}" Background="#95A5A6" Padding="16,6"
+                  Click="BackBtn_Click" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- 标签页（Bugs / 各资源目录） -->
+    <TabControl x:Name="folderTabControl" Grid.Row="1" Margin="10" />
+  </Grid>
+</UserControl>

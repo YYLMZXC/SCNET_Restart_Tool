@@ -1,0 +1,13 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="SCNET_Restart_Tool.Avalonia.MainWindow"
+        Title="SCNET服务端管理工具"
+        Width="1200" Height="780"
+        MinWidth="1000" MinHeight="640"
+        WindowStartupLocation="CenterScreen"
+        Background="#F5F7FA">
+
+  <!-- 主界面与文件夹管理界面共用同一窗口，通过内容切换实现页面导航 -->
+  <ContentControl x:Name="RootContent" />
+
+</Window>

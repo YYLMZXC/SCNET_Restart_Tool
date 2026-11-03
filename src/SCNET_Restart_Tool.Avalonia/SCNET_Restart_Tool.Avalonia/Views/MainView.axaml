@@ -1,0 +1,240 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SCNET_Restart_Tool.Avalonia.Views.MainView">
+
+  <UserControl.Styles>
+    <!-- 表单标签 -->
+    <Style Selector="TextBlock.label">
+      <Setter Property="Foreground" Value="#5A6672" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Margin" Value="0,0,0,4" />
+    </Style>
+    <!-- 分组标题 -->
+    <Style Selector="TextBlock.groupTitle">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Foreground" Value="#3498DB" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+    <!-- 卡片容器 -->
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="White" />
+      <Setter Property="BorderBrush" Value="#E5E7EB" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="Auto,*,Auto" Background="#F5F7FA">
+
+    <!-- ==================== 顶部标题栏 ==================== -->
+    <Border Grid.Row="0" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="16,10">
+      <Grid ColumnDefinitions="*,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+          <TextBlock Text="SCNET服务端管理工具" FontSize="18" FontWeight="Bold"
+                     Foreground="#2C3E50" VerticalAlignment="Center" />
+          <Border Background="#E8F4FD" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+            <TextBlock Text="Avalonia 版" FontSize="11" Foreground="#3498DB" />
+          </Border>
+        </StackPanel>
+        <Button x:Name="helpBtn" Grid.Column="1" Content="帮助"
+                Theme="{StaticResource ColorButton}" Background="#3498DB" Padding="20,6"
+                VerticalAlignment="Center" Click="HelpBtn_Click" />
+      </Grid>
+    </Border>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <Grid Grid.Row="1" ColumnDefinitions="2.2*,1*" Margin="10">
+
+      <!-- 左侧：服务器列表 + 操作按钮 + 指令输入 -->
+      <Grid Grid.Column="0" RowDefinitions="*,Auto,Auto" Margin="0,0,10,0">
+
+        <!-- 服务器列表 -->
+        <Border Grid.Row="0" Classes="card">
+          <Grid RowDefinitions="Auto,*">
+            <Border Padding="12,9" BorderBrush="#EEF1F4" BorderThickness="0,0,0,1">
+              <TextBlock Text="服务器列表" FontWeight="Bold" Foreground="#2C3E50" />
+            </Border>
+            <ListBox x:Name="serversListBox" Grid.Row="1" Background="Transparent"
+                     BorderThickness="0"
+                     SelectionChanged="ServersListBox_SelectionChanged">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <Border Padding="12,8" BorderBrush="#F0F2F5" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="Auto,2*,1.2*,2*,Auto">
+                      <TextBlock Grid.Column="0" Text="{Binding Id}" Foreground="#99A1A8"
+                                 Width="34" VerticalAlignment="Center" />
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="6,0,0,0">
+                        <TextBlock Text="{Binding Name}" FontWeight="Bold" Foreground="#2C3E50"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding ExeName}" FontSize="11" Foreground="#99A1A8"
+                                   TextTrimming="CharacterEllipsis" />
+                      </StackPanel>
+                      <TextBlock Grid.Column="2" Text="{Binding DisplayIpPort}" Foreground="#66707A"
+                                 VerticalAlignment="Center" Margin="6,0,0,0" />
+                      <TextBlock Grid.Column="3" Text="{Binding ExePath}" Foreground="#8A939B"
+                                 FontSize="12" TextTrimming="CharacterEllipsis"
+                                 VerticalAlignment="Center" Margin="6,0,6,0" />
+                      <Border Grid.Column="4" Background="{Binding StatusBrush}" CornerRadius="10"
+                              Padding="8,3" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding StatusText}" Foreground="White" FontSize="12"
+                                   HorizontalAlignment="Center" />
+                      </Border>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </Grid>
+        </Border>
+
+        <!-- 管理 / 运行控制 / 监控控制 -->
+        <Border Grid.Row="1" Classes="card" Padding="10,9" Margin="0,8,0,0">
+          <Grid ColumnDefinitions="*,*,*">
+            <!-- 服务器管理 -->
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+              <TextBlock Classes="groupTitle" Text="服务器管理" />
+              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="-3">
+                <Button x:Name="addBtn" Grid.Row="0" Grid.Column="0" Content="增加" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                        Click="AddBtn_Click" />
+                <Button x:Name="editBtn" Grid.Row="0" Grid.Column="1" Content="修改" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                        Click="EditBtn_Click" />
+                <Button x:Name="deleteBtn" Grid.Row="1" Grid.Column="0" Content="删除" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#E74C3C" IsEnabled="False"
+                        Click="DeleteBtn_Click" />
+                <Button x:Name="folderManagerBtn" Grid.Row="1" Grid.Column="1" Content="文件夹" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                        Click="FolderManagerBtn_Click" />
+              </Grid>
+            </StackPanel>
+
+            <!-- 运行控制 -->
+            <StackPanel Grid.Column="1" Margin="0,0,10,0">
+              <TextBlock Classes="groupTitle" Text="运行控制" />
+              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="-3">
+                <Button x:Name="startBtn" Grid.Row="0" Grid.Column="0" Content="启动" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#2ECC71" IsEnabled="False"
+                        Click="StartBtn_Click" />
+                <Button x:Name="stopBtn" Grid.Row="0" Grid.Column="1" Content="停止" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#E74C3C" IsEnabled="False"
+                        Click="StopBtn_Click" />
+                <Button x:Name="restartBtn" Grid.Row="1" Grid.Column="0" Content="重启" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#F1C40F" IsEnabled="False"
+                        Click="RestartBtn_Click" />
+                <Button x:Name="stopAllBtn" Grid.Row="1" Grid.Column="1" Content="停止全部" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#E74C3C" IsEnabled="False"
+                        Click="StopAllBtn_Click" />
+              </Grid>
+            </StackPanel>
+
+            <!-- 监控控制 -->
+            <StackPanel Grid.Column="2">
+              <TextBlock Classes="groupTitle" Text="监控控制" />
+              <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="-3">
+                <Button x:Name="startMonitorBtn" Grid.Row="0" Grid.Column="0" Content="开启监控" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#9B59B6" IsEnabled="False"
+                        FontSize="12" Click="StartMonitorBtn_Click" />
+                <Button x:Name="stopMonitorBtn" Grid.Row="0" Grid.Column="1" Content="关闭监控" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#9B59B6" IsEnabled="False"
+                        FontSize="12" Click="StopMonitorBtn_Click" />
+                <Button x:Name="sendCommandBtn" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                        Content="发送指令" Margin="3"
+                        Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                        Click="SendCommandBtn_Click" />
+              </Grid>
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- 指令输入 -->
+        <Border Grid.Row="2" Classes="card" Padding="10,9" Margin="0,8,0,0">
+          <Grid ColumnDefinitions="Auto,*">
+            <TextBlock Text="指令：" Foreground="#5A6672" VerticalAlignment="Center" Margin="0,0,6,0" />
+            <TextBox x:Name="commandInput" Grid.Column="1" Text="say 服务器即将重启"
+                     Watermark="输入要发送的指令" />
+          </Grid>
+        </Border>
+      </Grid>
+
+      <!-- 右侧：服务器配置编辑面板 -->
+      <Border Grid.Column="1" Classes="card" Padding="14">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Spacing="8">
+            <TextBlock Text="服务器配置" FontWeight="Bold" Foreground="#2C3E50" FontSize="15"
+                       Margin="0,0,0,2" />
+
+            <TextBlock Classes="label" Text="服务器名：" />
+            <TextBox x:Name="serverNameInput" IsEnabled="False" />
+
+            <TextBlock Classes="label" Text="程序路径：" Margin="0,4,0,4" />
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBox x:Name="exePathInput" IsEnabled="False" />
+              <Button x:Name="browseExeBtn" Grid.Column="1" Content="浏览" Margin="6,0,0,0"
+                      Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                      Padding="16,6" Click="BrowseExeBtn_Click" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+              <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                <TextBlock Classes="label" Text="IP：" />
+                <TextBox x:Name="ipInput" Text="127.0.0.1" IsEnabled="False" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                <TextBlock Classes="label" Text="端口：" />
+                <TextBox x:Name="portInput" Text="5612" IsEnabled="False" />
+              </StackPanel>
+            </Grid>
+
+            <TextBlock Classes="label" Text="密码（可选）：" Margin="0,4,0,4" />
+            <TextBox x:Name="passwordInput" PasswordChar="*" IsEnabled="False" />
+
+            <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+              <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                <TextBlock Classes="label" Text="定时重启（HH:mm）：" />
+                <TextBox x:Name="scheduleTimeInput" Text="01:00" IsEnabled="False" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                <TextBlock Classes="label" Text="间隔小时（0=关闭）：" />
+                <TextBox x:Name="intervalHoursInput" Text="0" IsEnabled="False" />
+              </StackPanel>
+            </Grid>
+
+            <CheckBox x:Name="enableCommandsChk" Content="启用指令功能" IsEnabled="False" Margin="0,6,0,0" />
+
+            <Grid ColumnDefinitions="*,*" Margin="0,6,0,0">
+              <Button x:Name="saveEditBtn" Grid.Column="0" Content="保存配置" Margin="0,0,4,0"
+                      Theme="{StaticResource ColorButton}" Background="#2ECC71" IsEnabled="False"
+                      Click="SaveEditBtn_Click" />
+              <Button x:Name="cancelEditBtn" Grid.Column="1" Content="取消编辑" Margin="4,0,0,0"
+                      Theme="{StaticResource ColorButton}" Background="#E74C3C" IsEnabled="False"
+                      Click="CancelEditBtn_Click" />
+            </Grid>
+
+            <TextBlock x:Name="statusHintText" FontSize="12" Foreground="#99A1A8"
+                       TextWrapping="Wrap" Margin="0,2,0,0"
+                       Text="提示：选择服务器后可进行编辑与操作" />
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+
+    <!-- ==================== 底部：运行日志 ==================== -->
+    <Border Grid.Row="2" Background="White" BorderBrush="#E5E7EB" BorderThickness="0,1,0,0" Padding="10,8">
+      <Grid RowDefinitions="Auto,*">
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+          <TextBlock Text="运行日志" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center" />
+          <Button x:Name="clearLogBtn" Grid.Column="1" Content="清空日志"
+                  Theme="{StaticResource ColorButton}" Background="#E74C3C" Padding="14,5"
+                  FontSize="12" Click="ClearLogBtn_Click" />
+        </Grid>
+        <TextBox x:Name="logTextBox" Grid.Row="1" Height="130"
+                 IsReadOnly="True" AcceptsReturn="True" TextWrapping="NoWrap"
+                 FontFamily="Consolas, Microsoft YaHei UI" FontSize="12" Foreground="#3C4650"
+                 Background="#FAFBFC" BorderBrush="#E5E7EB"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="SCNET_Restart_Tool.Avalonia.Controls.FolderBrowserControl">
+
+  <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="8">
+
+    <!-- 路径显示 -->
+    <Border Grid.Row="0" Background="#F5F6F8" Padding="8,6" Margin="0,0,0,6"
+            CornerRadius="6" BorderBrush="#E0E4E8" BorderThickness="1">
+      <Grid ColumnDefinitions="Auto,*">
+        <TextBlock Text="路径：" VerticalAlignment="Center" Foreground="#5A6672" />
+        <TextBlock x:Name="pathText" Grid.Column="1" VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" Foreground="#2C3E50" />
+      </Grid>
+    </Border>
+
+    <!-- 列表表头 -->
+    <Border Grid.Row="1" Background="#F8F9FA" Padding="8,6"
+            BorderBrush="#E5E7EB" BorderThickness="1,1,1,0" CornerRadius="6,6,0,0">
+      <Grid ColumnDefinitions="70,*,90,150">
+        <TextBlock Text="类型" FontWeight="Bold" FontSize="12" Foreground="#5A6672" />
+        <TextBlock Grid.Column="1" Text="名称" FontWeight="Bold" FontSize="12" Foreground="#5A6672" />
+        <TextBlock Grid.Column="2" Text="大小(KB)" FontWeight="Bold" FontSize="12" Foreground="#5A6672" />
+        <TextBlock Grid.Column="3" Text="修改时间" FontWeight="Bold" FontSize="12" Foreground="#5A6672" />
+      </Grid>
+    </Border>
+
+    <!-- 文件/文件夹列表 -->
+    <ListBox x:Name="fileListBox" Grid.Row="2" Background="White"
+             BorderBrush="#E5E7EB" BorderThickness="1" CornerRadius="0,0,6,6"
+             SelectionChanged="FileListBox_SelectionChanged">
+      <ListBox.ItemTemplate>
+        <DataTemplate>
+          <Grid ColumnDefinitions="70,*,90,150" Height="24">
+            <TextBlock Text="{Binding Type}" Foreground="#3498DB" FontWeight="Bold"
+                       VerticalAlignment="Center" FontSize="12" />
+            <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="#2C3E50"
+                       VerticalAlignment="Center" FontSize="12" TextTrimming="CharacterEllipsis"
+                       Margin="0,0,8,0" />
+            <TextBlock Grid.Column="2" Text="{Binding Size}" Foreground="#66707A"
+                       VerticalAlignment="Center" FontSize="12" />
+            <TextBlock Grid.Column="3" Text="{Binding LastWriteTime}" Foreground="#8A939B"
+                       VerticalAlignment="Center" FontSize="12" />
+          </Grid>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+
+    <!-- 操作按钮 -->
+    <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+      <Button x:Name="btnRefresh" Content="刷新" Click="BtnRefresh_Click"
+              Theme="{StaticResource ColorButton}" Background="#3498DB" Padding="16,6" />
+      <Button x:Name="btnBack" Content="返回上级" Click="BtnBack_Click"
+              Theme="{StaticResource ColorButton}" Background="#2980B9" Padding="16,6" />
+      <Button x:Name="btnOpen" Content="打开目录" Click="BtnOpen_Click"
+              Theme="{StaticResource ColorButton}" Background="#2980B9" Padding="16,6" />
+      <Button x:Name="btnAdd" Content="添加文件" Click="BtnAdd_Click"
+              Theme="{StaticResource ColorButton}" Background="#2ECC71" Padding="16,6" />
+      <Button x:Name="btnDelete" Content="删除选中" Click="BtnDelete_Click"
+              Theme="{StaticResource ColorButton}" Background="#E74C3C" Padding="16,6" />
+    </StackPanel>
+  </Grid>
+</UserControl>
