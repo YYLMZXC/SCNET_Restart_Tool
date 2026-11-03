@@ -34,8 +34,14 @@ public class ServerConfig : INotifyPropertyChanged
     /// <summary>RCON 指令通讯 IP 地址</summary>
     public string Ip { get; set; } = "127.0.0.1";
 
+    /// <summary>RCON 实际默认端口（与 ScNetworkDEV 服务端 ServerSetting.RconPort / RconOptions.Port 一致）</summary>
+    public const int DefaultRconPort = 28900;
+
+    /// <summary>旧协议时代的默认端口：加载时检测到该值即视为旧默认并迁移到实际默认端口</summary>
+    public const int LegacyPort = 5612;
+
     /// <summary>RCON 指令通讯端口（ScNetworkDEV 服务端默认 28900）</summary>
-    public int Port { get; set; } = 28900;
+    public int Port { get; set; } = DefaultRconPort;
 
     /// <summary>RCON 口令（标准协议必填：服务端未配置口令时不会监听指令通道）</summary>
     public string Password { get; set; } = "";

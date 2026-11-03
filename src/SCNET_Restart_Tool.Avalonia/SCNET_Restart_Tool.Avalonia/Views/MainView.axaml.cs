@@ -197,7 +197,7 @@ public partial class MainView : UserControl
             serverNameInput.Text = "";
             exePathInput.Text = "";
             ipInput.Text = "127.0.0.1";
-            portInput.Text = "28900";
+            portInput.Text = ServerConfig.DefaultRconPort.ToString();
             passwordInput.Text = "";
             scheduleTimeInput.Text = "01:00";
             intervalHoursInput.Text = "0";
@@ -216,6 +216,33 @@ public partial class MainView : UserControl
             enableCommandsChk.IsChecked = server.EnableCommands;
             useTlsChk.IsChecked = server.UseTls;
         }
+
+        // 服务端设置分组：选中即尝试从 ServerSetting.json 预填（文件缺失时用服务端默认值，不弹窗）
+        LoadServerSettingPanel(server);
+    }
+
+    /// <summary>
+    /// 从服务端根目录读取 ServerSetting.json 并填充服务端设置分组；
+    /// 读取失败（文件缺失 / 解析失败）时回退服务端默认值并记录调试日志，不打断界面。
+    /// </summary>
+    private void LoadServerSettingPanel(ServerConfig? server)
+    {
+        var snapshot = ServerSettingService.Defaults;
+        if (server != null)
+        {
+            if (ServerSettingService.TryRead(server, out var loaded, out string readError))
+            {
+                snapshot = loaded;
+            }
+            else
+            {
+                _logManager.AddLog(server.Name, $"ServerSetting.json 预填失败：{readError}（显示默认值）", "调试");
+            }
+        }
+
+        serverPortInput.Text = snapshot.ServerPort.ToString();
+        rconPortInput.Text = snapshot.RconPort.ToString();
+        rconEnabledChk.IsChecked = snapshot.RconEnabled;
     }
 
     #endregion
@@ -282,7 +309,7 @@ public partial class MainView : UserControl
                     ExePath = newExePath,
                     ExeName = Path.GetFileName(newExePath),
                     Ip = ipInput.Text?.Trim() ?? "",
-                    Port = ParseInt(portInput.Text, 28900),
+                    Port = ParseInt(portInput.Text, ServerConfig.DefaultRconPort),
                     Password = passwordInput.Text ?? "",
                     UseTls = useTlsChk.IsChecked == true,
                     ScheduleTime = scheduleTimeInput.Text?.Trim() ?? "",
@@ -599,6 +626,84 @@ public partial class MainView : UserControl
 
     #endregion
 
+    #region 服务端设置（ServerSetting.json）
+
+    /// <summary>
+    /// 读取服务端设置：从服务端根目录的 ServerSetting.json 加载
+    /// ServerPort / RconEnabled / RconPort 并填充服务端设置分组。
+    /// </summary>
+    private async void ReadServerSettingBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedServer == null) return;
+
+        if (ServerSettingService.TryRead(_selectedServer, out var snapshot, out string error))
+        {
+            serverPortInput.Text = snapshot.ServerPort.ToString();
+            rconPortInput.Text = snapshot.RconPort.ToString();
+            rconEnabledChk.IsChecked = snapshot.RconEnabled;
+            _logManager.AddLog(_selectedServer.Name,
+                $"已读取 ServerSetting.json：服务端端口 {snapshot.ServerPort}，RCON {(snapshot.RconEnabled ? $"开启（端口 {snapshot.RconPort}）" : "关闭")}");
+        }
+        else
+        {
+            _logManager.AddLog(_selectedServer.Name, $"读取 ServerSetting.json 失败：{error}", "错误");
+            await DialogService.ShowAsync("读取失败", error);
+        }
+    }
+
+    /// <summary>
+    /// 应用服务端设置：把面板中的服务端端口 / RCON 开关 / RCON 端口写回 ServerSetting.json。
+    /// 写入成功后同步工具侧配置：指令通讯端口对齐新 RCON 端口，开启 RCON 时顺带启用指令功能。
+    /// </summary>
+    private async void ApplyServerSettingBtn_Click(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedServer == null) return;
+
+        // 校验输入：两个端口必须是有效整数（范围校验由服务层完成）
+        if (!int.TryParse(serverPortInput.Text?.Trim(), out int serverPort))
+        {
+            await DialogService.ShowAsync("验证错误", "服务端端口必须是整数");
+            return;
+        }
+        if (!int.TryParse(rconPortInput.Text?.Trim(), out int rconPort))
+        {
+            await DialogService.ShowAsync("验证错误", "RCON 端口必须是整数");
+            return;
+        }
+
+        bool rconEnabled = rconEnabledChk.IsChecked == true;
+        if (!ServerSettingService.TryWrite(_selectedServer, serverPort, rconEnabled, rconPort, out string error))
+        {
+            _logManager.AddLog(_selectedServer.Name, $"写入 ServerSetting.json 失败：{error}", "错误");
+            await DialogService.ShowAsync("写入失败", error);
+            return;
+        }
+
+        _logManager.AddLog(_selectedServer.Name,
+            $"已写入 ServerSetting.json：服务端端口 {serverPort}，RCON {(rconEnabled ? $"开启（端口 {rconPort}）" : "关闭")}（重启服务端后生效）");
+
+        // 同步工具侧配置：指令通道端口必须指向 RCON 端口；开启 RCON 视为要使用指令功能
+        _selectedServer.Port = rconPort;
+        if (rconEnabled && !_selectedServer.EnableCommands)
+        {
+            _selectedServer.EnableCommands = true;
+            _logManager.AddLog(_selectedServer.Name, "已同步启用本工具的指令功能（对齐服务端 RCON 开关）");
+        }
+        _selectedServer.RaisePropertyChanged();
+        SaveServerConfigs();
+        LoadServerToEditPanel(_selectedServer); // 刷新编辑面板显示（端口 / 指令开关）
+        UpdateButtonStates();
+
+        var notes = "已写入 ServerSetting.json，重启服务端后生效。";
+        if (rconEnabled)
+        {
+            notes += "\n\nRCON 需先设置口令才会监听：在服务端控制台执行 rcon password（或设置环境变量 SC_RCON_PASSWORD）。";
+        }
+        await DialogService.ShowAsync("应用成功", notes);
+    }
+
+    #endregion
+
     #region 文件夹管理器
 
     /// <summary>请求打开文件夹管理界面（携带当前服务器）</summary>
@@ -683,6 +788,14 @@ public partial class MainView : UserControl
         // 监控按钮：按当前是否监控中互斥启用
         startMonitorBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring != true;
         stopMonitorBtn.IsEnabled = hasSelection && !_isEditing && _selectedServer?.IsMonitoring == true;
+
+        // 服务端设置分组（ServerSetting.json 直读直写）：选中服务器且非编辑中即可操作
+        bool serverSettingEnabled = hasSelection && !_isEditing;
+        serverPortInput.IsEnabled = serverSettingEnabled;
+        rconPortInput.IsEnabled = serverSettingEnabled;
+        rconEnabledChk.IsEnabled = serverSettingEnabled;
+        readServerSettingBtn.IsEnabled = serverSettingEnabled;
+        applyServerSettingBtn.IsEnabled = serverSettingEnabled;
 
         // 编辑模式按钮
         saveEditBtn.IsEnabled = _isEditing;

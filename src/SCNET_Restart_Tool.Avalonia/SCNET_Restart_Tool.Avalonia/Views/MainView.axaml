@@ -208,6 +208,34 @@
             <CheckBox x:Name="useTlsChk" Content="加密连接（TLS，服务端自签证书）"
                       IsEnabled="False" Margin="0,4,0,0" IsChecked="True" />
 
+            <!-- 服务端 ServerSetting.json 直读直写：与编辑面板无关，选中服务器即可操作 -->
+            <Border Classes="card" Background="#F8FAFC" Padding="10,8" Margin="0,12,0,0">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="groupTitle" Text="服务端设置（ServerSetting.json）" Margin="0" />
+                <Grid ColumnDefinitions="*,*" Margin="0,0,0,0">
+                  <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                    <TextBlock Classes="label" Text="服务端端口：" Margin="0" />
+                    <TextBox x:Name="serverPortInput" Text="28887" IsEnabled="False" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                    <TextBlock Classes="label" Text="RCON 端口：" Margin="0" />
+                    <TextBox x:Name="rconPortInput" Text="28900" IsEnabled="False" />
+                  </StackPanel>
+                </Grid>
+                <CheckBox x:Name="rconEnabledChk" Content="开启 RCON 远程控制" IsChecked="False" IsEnabled="False" />
+                <Grid ColumnDefinitions="*,*">
+                  <Button x:Name="readServerSettingBtn" Grid.Column="0" Content="读取设置" Margin="0,0,4,0"
+                          Theme="{StaticResource ColorButton}" Background="#3498DB" IsEnabled="False"
+                          Click="ReadServerSettingBtn_Click" />
+                  <Button x:Name="applyServerSettingBtn" Grid.Column="1" Content="应用到服务端" Margin="4,0,0,0"
+                          Theme="{StaticResource ColorButton}" Background="#2ECC71" IsEnabled="False"
+                          Click="ApplyServerSettingBtn_Click" />
+                </Grid>
+                <TextBlock FontSize="11" Foreground="#99A1A8" TextWrapping="Wrap"
+                           Text="修改需重启服务端生效；RCON 还需在服务端控制台执行 rcon password（或设置 SC_RCON_PASSWORD）设置口令，否则不会监听" />
+              </StackPanel>
+            </Border>
+
             <Grid ColumnDefinitions="*,*" Margin="0,6,0,0">
               <Button x:Name="saveEditBtn" Grid.Column="0" Content="保存配置" Margin="0,0,4,0"
                       Theme="{StaticResource ColorButton}" Background="#2ECC71" IsEnabled="False"
